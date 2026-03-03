@@ -1,12 +1,13 @@
 export const colors = {
-  brandDark: "#0B0F1A",
-  brandNight: "#111827",
-  brandSlate: "#1F2937",
-  brandAccent: "#22D3EE",
-  brandSuccess: "#10B981",
+  brandPrimary: "#0E7C3A",
+  brandDark: "#0F1115",
+  brandNight: "#13161C",
+  brandSlate: "#1A1D23",
+  brandAccent: "#22C55E",
+  brandSuccess: "#22C55E",
   brandWarning: "#F59E0B",
-  brandDanger: "#EF4444",
-  brandMuted: "#94A3B8",
+  brandDanger: "#DC2626",
+  brandMuted: "#9AA3AF",
   white: "#FFFFFF",
   black: "#000000"
 };

@@ -5,14 +5,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        "brand-dark": "#0B0F1A",
-        "brand-night": "#111827",
-        "brand-slate": "#1F2937",
-        "brand-accent": "#22D3EE",
-        "brand-success": "#10B981",
+        "brand-primary": "#0E7C3A",
+        "brand-dark": "#0F1115",
+        "brand-night": "#13161C",
+        "brand-slate": "#1A1D23",
+        "brand-accent": "#22C55E",
+        "brand-success": "#22C55E",
         "brand-warning": "#F59E0B",
-        "brand-danger": "#EF4444",
-        "brand-muted": "#94A3B8"
+        "brand-danger": "#DC2626",
+        "brand-muted": "#9AA3AF"
       }
     }
   },

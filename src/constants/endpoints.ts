@@ -13,6 +13,10 @@ export const endpoints = {
     list: "/payments",
     detail: (id: string) => `/payments/${id}`
   },
+  wallet: {
+    overview: "/wallet",
+    transactions: "/wallet/transactions"
+  },
   admin: {
     users: "/admin/users",
     contracts: "/admin/contracts",
