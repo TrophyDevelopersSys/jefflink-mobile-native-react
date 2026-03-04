@@ -1,82 +1,106 @@
-import { Text, View } from "react-native";
-import { Controller, useForm } from "react-hook-form";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import ScreenWrapper from "../../components/layout/ScreenWrapper";
-import Header from "../../components/layout/Header";
-import Input from "../../components/ui/Input";
-import Button from "../../components/ui/Button";
-import { validators } from "../../utils/validators";
-import { useAuth } from "../../hooks/useAuth";
-import type { AuthStackParamList } from "../../navigation/AuthNavigator";
-
-interface LoginForm {
-  email: string;
-  password: string;
-}
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  Switch
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function LoginScreen() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
-  const { signIn, status } = useAuth();
-  const { control, handleSubmit } = useForm<LoginForm>({
-    defaultValues: { email: "", password: "" }
-  });
-
-  const onSubmit = handleSubmit(async (values) => {
-    await signIn(values.email, values.password);
-  });
+  const [dealer, setDealer] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   return (
-    <ScreenWrapper className="px-6 pt-10">
-      <View className="gap-8">
-        <Header title="Welcome back" subtitle="Secure access to JEFFLink" />
+    <LinearGradient
+      colors={["#3b82f6", "#1e3a8a"]}
+      className="flex-1 justify-center px-6"
+    >
+      {/* Card */}
+      <View className="rounded-3xl bg-white/10 p-6">
 
-        <View className="gap-4">
-          <Controller
-            control={control}
-            name="email"
-            rules={{ required: true, validate: validators.email }}
-            render={({ field: { value, onChange } }) => (
-              <Input
-                label="Email"
-                value={value}
-                placeholder="name@company.com"
-                onChangeText={onChange}
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="password"
-            rules={{ required: true, validate: validators.password }}
-            render={({ field: { value, onChange } }) => (
-              <Input
-                label="Password"
-                value={value}
-                placeholder="********"
-                secureTextEntry
-                onChangeText={onChange}
-              />
-            )}
+        {/* Welcome */}
+        <Text className="text-2xl font-bold text-white">
+          Welcome Back
+        </Text>
+
+        {/* Dealer Toggle */}
+        <View className="mt-4 flex-row items-center justify-between">
+          <Text className="text-white">Are you a Dealer?</Text>
+          <Switch value={dealer} onValueChange={setDealer} />
+        </View>
+
+        {/* Email */}
+        <View className="mt-6">
+          <Text className="text-white text-sm">Email Address</Text>
+
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Enter email"
+            placeholderTextColor="#cbd5f5"
+            className="mt-2 rounded-lg border border-white/40 px-4 py-3 text-white"
           />
         </View>
 
-        <Button
-          label={status === "loading" ? "Signing in..." : "Sign in"}
-          onPress={onSubmit}
-          disabled={status === "loading"}
-        />
+        {/* Password */}
+        <View className="mt-5">
+          <Text className="text-white text-sm">Password</Text>
 
-        <View className="items-center">
-          <Text className="text-sm text-brand-muted">No account yet?</Text>
-          <Button
-            label="Create account"
-            variant="ghost"
-            onPress={() => navigation.navigate("Register")}
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Enter password"
+            placeholderTextColor="#cbd5f5"
+            secureTextEntry
+            className="mt-2 rounded-lg border border-white/40 px-4 py-3 text-white"
           />
         </View>
+
+        {/* Forgot Password */}
+        <Pressable className="mt-3">
+          <Text className="text-right text-sm text-white/80">
+            Forgot Password?
+          </Text>
+        </Pressable>
+
+        {/* Signin */}
+        <Pressable className="mt-6 rounded-xl bg-green-500 py-4">
+          <Text className="text-center font-semibold text-white">
+            Sign In
+          </Text>
+        </Pressable>
+
+        {/* Divider */}
+        <View className="mt-6 flex-row items-center">
+          <View className="h-px flex-1 bg-white/30" />
+          <Text className="mx-3 text-white/80">Social Login</Text>
+          <View className="h-px flex-1 bg-white/30" />
+        </View>
+
+        {/* Google Login */}
+        <Pressable className="mt-4 flex-row items-center justify-center rounded-xl bg-white py-3">
+          <Text className="font-semibold text-black">
+            Continue with Google
+          </Text>
+        </Pressable>
+
+        {/* Signup */}
+        <View className="mt-6 flex-row justify-center">
+          <Text className="text-white/80">
+            Don't have an account?
+          </Text>
+
+          <Pressable>
+            <Text className="ml-2 font-semibold text-white">
+              Signup
+            </Text>
+          </Pressable>
+        </View>
+
       </View>
-    </ScreenWrapper>
+    </LinearGradient>
   );
 }

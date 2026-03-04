@@ -1,5 +1,5 @@
 import { Image, Text, View } from "react-native";
-import { MotiView } from "moti";
+import { View as MotiView } from "moti/build/components/view";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { AuthStackParamList } from "../../../navigation/AuthNavigator";

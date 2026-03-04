@@ -1,6 +1,7 @@
 export * from "./data";
 export * from "./finance";
 export * from "./gps";
+export * from "./home";
 export * from "./layout";
 export * from "./listing";
 export * from "./marketplace";

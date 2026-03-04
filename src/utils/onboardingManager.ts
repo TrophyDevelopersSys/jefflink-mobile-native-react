@@ -1,7 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 
 const ONBOARDING_KEY = "jefflink_onboarding_complete";
-const ONBOARDING_VERSION = "1";
+const ONBOARDING_VERSION = "2";
 
 export const onboardingManager = {
   async isComplete(): Promise<boolean> {

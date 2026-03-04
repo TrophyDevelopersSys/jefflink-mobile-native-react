@@ -1,5 +1,5 @@
 import { Text, View } from "react-native";
-import { MotiView } from "moti";
+import { View as MotiView } from "moti/build/components/view";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { AuthStackParamList } from "../../../navigation/AuthNavigator";
@@ -9,7 +9,6 @@ import FixedCTAContainer from "../../../components/layout/FixedCTAContainer";
 import Button from "../../../components/ui/Button";
 import Stepper from "../../../components/ui/Stepper";
 import AlertBanner from "../../../components/ui/AlertBanner";
-import { onboardingManager } from "../../../utils/onboardingManager";
 
 type NavProp = NativeStackNavigationProp<AuthStackParamList>;
 
@@ -17,7 +16,6 @@ export default function OnboardingThreeScreen() {
   const navigation = useNavigation<NavProp>();
 
   const handleGetStarted = async () => {
-    await onboardingManager.markComplete();
     navigation.reset({ index: 0, routes: [{ name: "Login" }] });
   };
 

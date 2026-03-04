@@ -1,41 +1,141 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+##############################################
+#  JEFFLink Mobile — Professional .gitignore
+#  React Native 0.83 · Expo 55 · TypeScript
+##############################################
 
-# dependencies
+
+# ─── Dependencies ────────────────────────────
 node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
 
-# Expo
+
+# ─── Environment & Secrets ───────────────────
+# Never commit credentials or environment config
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.test
+.env*.local
+*.pem
+*.key
+*.p12
+*.p8
+*.jks
+*.keystore
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+secrets/
+
+
+# ─── Expo ────────────────────────────────────
 .expo/
 dist/
 web-build/
 expo-env.d.ts
 
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
 
-# Metro
+# ─── Metro Bundler ───────────────────────────
 .metro-health-check*
+.metro/
 
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
 
-# macOS
-.DS_Store
-*.pem
+# ─── Android Build Artifacts ─────────────────
+# Keep android/ source in VCS; ignore build output only
+android/.gradle/
+android/app/.cxx/
+android/app/build/
+android/build/
+android/local.properties
+android/captures/
+android/.idea/
+*.apk
+*.aab
+*.dex
 
-# local env files
-.env*.local
 
-# typescript
+# ─── iOS Build Artifacts ─────────────────────
+# Uncomment if you track the ios/ folder in VCS
+# ios/build/
+# ios/Pods/
+# ios/*.xcworkspace
+# ios/DerivedData/
+# *.ipa
+# *.xcuserstate
+# ios/**/.xcode.env.local
+
+
+# ─── TypeScript ──────────────────────────────
 *.tsbuildinfo
 
-# generated native folders
-/ios
-/android
+
+# ─── Test Coverage ───────────────────────────
+coverage/
+.nyc_output/
+jest-coverage/
+
+
+# ─── Logs ────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+
+# ─── OS Generated ────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+
+# ─── IDE & Editors ───────────────────────────
+# VS Code (keep settings.json & extensions.json if shared)
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+
+# JetBrains / Android Studio
+.idea/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.factorypath
+
+# Vim/Emacs
+*.swp
+*.swo
+*~
+\#*\#
+.#*
+
+
+# ─── React Native ────────────────────────────
+*.orig.*
+*.haste_cache/
+buck-out/
+\.buckd/
+*.keystore
+!debug.keystore
+
+
+# ─── Miscellaneous ───────────────────────────
+.cache/
+tmp/
+temp/
+.temp/
+.tmp/

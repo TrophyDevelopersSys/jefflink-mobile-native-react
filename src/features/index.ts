@@ -7,5 +7,6 @@ export * from "./listings";
 export * from "./notifications";
 export * from "./profile";
 export * from "./property";
+export * from "./search";
 export * from "./vendor";
 export * from "./wallet";

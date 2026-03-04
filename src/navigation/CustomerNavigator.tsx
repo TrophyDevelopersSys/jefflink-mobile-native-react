@@ -1,5 +1,5 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import HomeScreen from "../screens/customer/HomeScreen";
+import HomeScreen from "../screens/home/HomeScreen";
 import ListingsScreen from "../screens/customer/ListingsScreen";
 import PaymentsScreen from "../screens/customer/PaymentsScreen";
 import ProfileScreen from "../screens/customer/ProfileScreen";

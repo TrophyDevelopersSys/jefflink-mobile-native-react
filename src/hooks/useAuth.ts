@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { jwtDecode } from "jwt-decode";
 import { authApi } from "../api/auth.api";
 import { useAuthStore } from "../store/auth.store";
+import { onboardingManager } from "../utils/onboardingManager";
 import { tokenManager } from "../utils/tokenManager";
 import type { TokenPayload, UserProfile } from "../types/user.types";
 
@@ -47,6 +48,7 @@ export const useAuth = () => {
     setStatus("loading");
     const response = await authApi.login(email, password);
     await tokenManager.setToken(response.token);
+    await onboardingManager.markComplete();
     setSession(response.token, response.user);
   }, [setSession, setStatus]);
 
@@ -55,6 +57,7 @@ export const useAuth = () => {
       setStatus("loading");
       const response = await authApi.register(payload);
       await tokenManager.setToken(response.token);
+      await onboardingManager.markComplete();
       setSession(response.token, response.user);
     },
     [setSession, setStatus]
@@ -62,6 +65,7 @@ export const useAuth = () => {
 
   const signOut = useCallback(async () => {
     await tokenManager.clearToken();
+    await onboardingManager.reset();
     clearSession();
   }, [clearSession]);
 

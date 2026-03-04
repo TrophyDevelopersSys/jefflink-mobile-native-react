@@ -15,6 +15,8 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.jefflink.mobile",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -25,6 +27,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c6ec718a-0ddb-413b-8338-adbac48d82f4"
+      }
+    },
+    "plugins": [
+      "expo-web-browser"
+    ]
   }
 }
