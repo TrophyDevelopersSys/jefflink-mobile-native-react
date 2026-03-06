@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 
 export type Role =
+  // Internal back-office roles
   | "SYSTEM_ADMIN"
   | "DIRECTOR"
   | "FINANCE_OFFICER"
@@ -8,7 +9,12 @@ export type Role =
   | "BRANCH_OFFICER"
   | "VENDOR"
   | "BUYER"
-  | "SELLER";
+  | "SELLER"
+  // Mobile-app roles (stored in DB and emitted from JWT)
+  | "ADMIN"
+  | "MANAGER"
+  | "CUSTOMER"
+  | "AGENT";
 
 export interface AuthClaims {
   sub: string;
