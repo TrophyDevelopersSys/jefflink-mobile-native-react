@@ -38,16 +38,25 @@ async function bootstrap() {
 
   // ── CORS ─────────────────────────────────────────────────────────────────
   const rawOrigins = config.get<string>('CORS_ORIGINS', '');
-  const corsOrigins = (rawOrigins ?? '')
+  const configuredOrigins = (rawOrigins ?? '')
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean);
 
-  const isDev = config.get<string>('NODE_ENV', 'development') !== 'production';
+  // Always include local dev origins so the app works without env-var setup
+  const devOrigins = [
+    'http://localhost:8081',
+    'http://localhost:19006',
+    'exp://localhost:8081',
+    'http://10.0.2.2:8081',
+  ];
+
+  const corsOrigins = [
+    ...new Set([...configuredOrigins, ...devOrigins]),
+  ];
 
   app.enableCors({
-    // In development, allow all origins; in production require explicit list
-    origin: corsOrigins.length > 0 ? corsOrigins : isDev ? true : false,
+    origin: corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
