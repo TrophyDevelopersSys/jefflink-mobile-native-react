@@ -11,7 +11,7 @@ export default function SafeAreaWrapper({
   const insets = useSafeAreaInsets();
   return (
     <View
-      className={["flex-1 bg-brand-dark", className ?? ""]
+      className={["flex-1 bg-slate-50", className ?? ""]
         .filter(Boolean)
         .join(" ")}
       style={{

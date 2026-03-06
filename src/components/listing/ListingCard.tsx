@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import {
   View,
   Text,
@@ -14,36 +14,51 @@ type Props = {
   onPress?: () => void;
 };
 
-export default function ListingCard({ item, onPress }: Props) {
+function ListingCard({ item, onPress }: Props) {
   return (
     <Pressable
       onPress={onPress}
-      className="mr-4 w-64 rounded-2xl border border-brand-slate bg-brand-night overflow-hidden"
+      className="w-[340px] flex-row overflow-hidden rounded-2xl border border-brand-slate bg-brand-night"
     >
-      {/* Vehicle Image */}
+      {/* Image */}
       <Image
         source={item.coverUrl as ImageSourcePropType}
-        className="h-36 w-full"
+        className="h-[120px] w-[140px]"
         resizeMode="cover"
       />
 
       {/* Content */}
-      <View className="p-3">
-        <Text
-          numberOfLines={1}
-          className="text-sm font-semibold text-white"
-        >
-          {item.title}
-        </Text>
-
-        <Text className="mt-1 text-base font-bold text-brand-accent">
+      <View className="flex-1 p-3">
+        <Text className="text-base font-bold text-brand-accent" numberOfLines={1}>
           UGX {item.price}
         </Text>
 
-        <Text className="mt-1 text-xs text-brand-muted">
+        <Text numberOfLines={1} className="mt-1 text-sm font-semibold text-white">
+          {item.title}
+        </Text>
+
+        <Text numberOfLines={1} className="mt-1 text-xs text-brand-muted">
           {item.location}
         </Text>
+
+        <View className="mt-2 self-start rounded-full bg-brand-slate px-2 py-1">
+          <Text className="text-[10px] font-semibold text-brand-muted" numberOfLines={1}>
+            {item.type === "vehicle" ? "Vehicle" : "Property"}
+          </Text>
+        </View>
       </View>
     </Pressable>
   );
 }
+
+export default memo(ListingCard, (prev, next) => {
+  return (
+    prev.onPress === next.onPress &&
+    prev.item.id === next.item.id &&
+    prev.item.title === next.item.title &&
+    prev.item.price === next.item.price &&
+    prev.item.location === next.item.location &&
+    prev.item.type === next.item.type &&
+    prev.item.coverUrl === next.item.coverUrl
+  );
+});

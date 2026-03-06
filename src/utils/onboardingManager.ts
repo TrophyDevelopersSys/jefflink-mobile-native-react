@@ -1,17 +1,17 @@
-import * as SecureStore from "expo-secure-store";
+import { secureStorage } from "./secureStorage";
 
 const ONBOARDING_KEY = "jefflink_onboarding_complete";
 const ONBOARDING_VERSION = "2";
 
 export const onboardingManager = {
   async isComplete(): Promise<boolean> {
-    const value = await SecureStore.getItemAsync(ONBOARDING_KEY);
+    const value = await secureStorage.getItem(ONBOARDING_KEY);
     return value === ONBOARDING_VERSION;
   },
   async markComplete(): Promise<void> {
-    await SecureStore.setItemAsync(ONBOARDING_KEY, ONBOARDING_VERSION);
+    await secureStorage.setItem(ONBOARDING_KEY, ONBOARDING_VERSION);
   },
   async reset(): Promise<void> {
-    await SecureStore.deleteItemAsync(ONBOARDING_KEY);
+    await secureStorage.removeItem(ONBOARDING_KEY);
   }
 };

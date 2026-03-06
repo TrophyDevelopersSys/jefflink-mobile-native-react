@@ -1,7 +1,6 @@
 import axios from "axios";
 import { config } from "../constants/config";
 import { tokenManager } from "../utils/tokenManager";
-import { useAuthStore } from "../store/auth.store";
 
 export const apiClient = axios.create({
   baseURL: config.apiBaseUrl,
@@ -21,6 +20,9 @@ apiClient.interceptors.response.use(
   async (error) => {
     if (error?.response?.status === 401) {
       await tokenManager.clearToken();
+      // Lazy require avoids Hermes module init-order issues
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { useAuthStore } = require("../store/auth.store") as typeof import("../store/auth.store");
       useAuthStore.getState().clearSession();
     }
     return Promise.reject(error);

@@ -1,6 +1,6 @@
 import { ScrollView, Text, View } from "react-native";
 import { useEffect } from "react";
-import ScreenWrapper from "../../components/layout/ScreenWrapper";
+import AppChrome from "../../components/layout/AppChrome";
 import Header from "../../components/layout/Header";
 import ListingHeader from "../../components/listing/ListingHeader";
 import ListingMeta from "../../components/listing/ListingMeta";
@@ -19,8 +19,13 @@ export default function ListingsScreen() {
   }, [loadVehicles]);
 
   return (
-    <ScreenWrapper className="px-6 pt-6">
-      <ScrollView contentContainerClassName="gap-5">
+    <AppChrome
+      title="Listings"
+      activeKey="search"
+      variant="customer"
+      showBottomNav={false}
+    >
+      <ScrollView contentContainerClassName="gap-5 px-6 pt-6 pb-6">
         <Header title="Explore inventory" subtitle="Premium verified vehicles" />
         <Tabs tabs={["Vehicles", "Property"]} activeIndex={0} onChange={() => {}} />
         <View className="flex-row flex-wrap gap-2">
@@ -61,6 +66,6 @@ export default function ListingsScreen() {
           </Text>
         </View>
       </ScrollView>
-    </ScreenWrapper>
+    </AppChrome>
   );
 }

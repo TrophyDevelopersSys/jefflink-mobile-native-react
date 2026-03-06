@@ -22,18 +22,12 @@ export type AdminStackParamList = {
 
 const Tab = createBottomTabNavigator<AdminTabParamList>();
 const Stack = createNativeStackNavigator<AdminStackParamList>();
-const tabBarStyle = {
-  backgroundColor: "#111827",
-  borderTopColor: "#1F2937"
-};
 
 const AdminTabs = () => (
   <Tab.Navigator
     screenOptions={{
       headerShown: false,
-      tabBarStyle,
-      tabBarActiveTintColor: "#22D3EE",
-      tabBarInactiveTintColor: "#94A3B8"
+      tabBarStyle: { display: "none" }
     }}
   >
     <Tab.Screen name="Dashboard" component={DashboardScreen} />

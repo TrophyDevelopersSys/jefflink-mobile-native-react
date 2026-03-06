@@ -1,6 +1,6 @@
 import { ScrollView, Text, View } from "react-native";
 import { useEffect } from "react";
-import ScreenWrapper from "../../components/layout/ScreenWrapper";
+import AppChrome from "../../components/layout/AppChrome";
 import Header from "../../components/layout/Header";
 import PaymentItem from "../../components/finance/PaymentItem";
 import WalletCard from "../../components/wallet/WalletCard";
@@ -33,8 +33,13 @@ export default function PaymentsScreen() {
   }, [loadPayments, loadOverview, loadTransactions]);
 
   return (
-    <ScreenWrapper className="px-6 pt-6">
-      <ScrollView contentContainerClassName="gap-4">
+    <AppChrome
+      title="Payments"
+      activeKey="finance"
+      variant="customer"
+      showBottomNav={false}
+    >
+      <ScrollView contentContainerClassName="gap-4 px-6 pt-6 pb-6">
         <Header title="Payments" subtitle="Neon-backed records" />
         {walletLoading ? (
           <Spinner size="large" />
@@ -94,6 +99,6 @@ export default function PaymentsScreen() {
           </Text>
         </View>
       </ScrollView>
-    </ScreenWrapper>
+    </AppChrome>
   );
 }

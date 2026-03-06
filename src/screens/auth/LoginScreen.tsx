@@ -7,19 +7,36 @@ import {
   Switch
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "@react-navigation/native";
+import AppChrome from "../../components/layout/AppChrome";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function LoginScreen() {
+  const navigation = useNavigation<any>();
   const [dealer, setDealer] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [apiError, setApiError] = useState<string | null>(null);
+  const { signIn, status } = useAuth();
+
+  const handleSignIn = async () => {
+    if (!email || !password) return;
+    setApiError(null);
+    try {
+      await signIn(email, password);
+    } catch {
+      setApiError("Invalid credentials. Please try again.");
+    }
+  };
 
   return (
-    <LinearGradient
-      colors={["#3b82f6", "#1e3a8a"]}
-      className="flex-1 justify-center px-6"
-    >
-      {/* Card */}
-      <View className="rounded-3xl bg-white/10 p-6">
+    <AppChrome title="Login" activeKey="profile" showLogin={false}>
+      <LinearGradient
+        colors={["#3b82f6", "#1e3a8a"]}
+        className="flex-1 justify-center px-6"
+      >
+        {/* Card */}
+        <View className="rounded-3xl bg-white/10 p-6">
 
         {/* Welcome */}
         <Text className="text-2xl font-bold text-white">
@@ -41,6 +58,8 @@ export default function LoginScreen() {
             onChangeText={setEmail}
             placeholder="Enter email"
             placeholderTextColor="#cbd5f5"
+            keyboardType="email-address"
+            autoCapitalize="none"
             className="mt-2 rounded-lg border border-white/40 px-4 py-3 text-white"
           />
         </View>
@@ -66,10 +85,21 @@ export default function LoginScreen() {
           </Text>
         </Pressable>
 
+        {/* API Error */}
+        {apiError && (
+          <View className="mt-3 rounded-lg bg-red-500/20 px-4 py-3">
+            <Text className="text-sm text-red-200">{apiError}</Text>
+          </View>
+        )}
+
         {/* Signin */}
-        <Pressable className="mt-6 rounded-xl bg-green-500 py-4">
+        <Pressable
+          onPress={handleSignIn}
+          disabled={status === "loading"}
+          className="mt-6 rounded-[48px] bg-green-500 py-4"
+        >
           <Text className="text-center font-semibold text-white">
-            Sign In
+            {status === "loading" ? "Signing in..." : "Sign In"}
           </Text>
         </Pressable>
 
@@ -81,7 +111,7 @@ export default function LoginScreen() {
         </View>
 
         {/* Google Login */}
-        <Pressable className="mt-4 flex-row items-center justify-center rounded-xl bg-white py-3">
+        <Pressable className="mt-4 flex-row items-center justify-center rounded-[48px] bg-white py-3">
           <Text className="font-semibold text-black">
             Continue with Google
           </Text>
@@ -93,14 +123,15 @@ export default function LoginScreen() {
             Don't have an account?
           </Text>
 
-          <Pressable>
+          <Pressable onPress={() => navigation.navigate("Register")}>
             <Text className="ml-2 font-semibold text-white">
-              Signup
+              Sign Up
             </Text>
           </Pressable>
         </View>
 
-      </View>
-    </LinearGradient>
+        </View>
+      </LinearGradient>
+    </AppChrome>
   );
 }

@@ -1,5 +1,5 @@
 import { Text, View } from "react-native";
-import ScreenWrapper from "../../components/layout/ScreenWrapper";
+import AppChrome from "../../components/layout/AppChrome";
 import Header from "../../components/layout/Header";
 import ListingGallery from "../../components/listing/ListingGallery";
 import ListingHeader from "../../components/listing/ListingHeader";
@@ -11,8 +11,8 @@ import StatusBadge from "../../components/ui/StatusBadge";
 
 export default function ListingDetailsScreen() {
   return (
-    <ScreenWrapper className="px-6 pt-6">
-      <View className="gap-4">
+    <AppChrome title="Details" activeKey="search" variant="customer">
+      <View className="gap-4 px-6 pt-6">
         <Header title="Listing details" subtitle="Verified asset info" />
         <ListingGallery count={14} />
         <ListingHeader
@@ -35,6 +35,6 @@ export default function ListingDetailsScreen() {
           </View>
         </View>
       </View>
-    </ScreenWrapper>
+    </AppChrome>
   );
 }

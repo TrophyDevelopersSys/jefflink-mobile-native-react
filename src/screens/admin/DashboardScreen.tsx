@@ -1,5 +1,5 @@
 import { Text, View } from "react-native";
-import ScreenWrapper from "../../components/layout/ScreenWrapper";
+import AppChrome from "../../components/layout/AppChrome";
 import Header from "../../components/layout/Header";
 import BalanceSummary from "../../components/finance/BalanceSummary";
 import Button from "../../components/ui/Button";
@@ -12,8 +12,8 @@ export default function DashboardScreen() {
     useNavigation<NativeStackNavigationProp<AdminStackParamList>>();
 
   return (
-    <ScreenWrapper className="px-6 pt-6">
-      <View className="gap-6">
+    <AppChrome title="Dashboard" activeKey="home" variant="admin">
+      <View className="gap-6 px-6 pt-6">
         <Header title="Admin command" subtitle="Enterprise finance control" />
         <View className="gap-4">
           <BalanceSummary
@@ -35,6 +35,6 @@ export default function DashboardScreen() {
           Financial actions remain enforced server-side.
         </Text>
       </View>
-    </ScreenWrapper>
+    </AppChrome>
   );
 }

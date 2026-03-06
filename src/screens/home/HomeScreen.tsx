@@ -1,38 +1,63 @@
 import React from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView } from "react-native";
 
-import AdBanner from "../../components/ads/AdBanner";
 import HeroCarousel from "../../components/hero/HeroCarousel";
-import ScreenWrapper from "../../components/layout/ScreenWrapper";
-import BottomNav from "../../components/navigation/BottomNav";
-import TopBar from "../../components/navigation/TopBar";
+import AppChrome from "../../components/layout/AppChrome";
 import GlobalSearchBar from "../../components/search/GlobalSearchBar";
 import ListingCarousel from "../../components/sections/ListingCarousel";
+import { ErrorBoundary } from "../../components/ui/ErrorBoundary";
+import FeaturedListingsCarousel from "../../components/feed/FeaturedListingsCarousel";
+
 import { useGlobalSearch } from "../../features/search/search.hooks";
 
-export default function HomeScreen() {
+// ── FeedHeader lives at module level so it always receives the SAME
+// component reference — prevents Netflix-style header unmount/remount on
+// Android when the parent HomeScreen re-renders.
+const FeedHeader = React.memo(function FeedHeader() {
   const { query, setQuery } = useGlobalSearch();
 
   return (
-    <ScreenWrapper className="bg-brand-dark">
-      <View className="flex-1">
-        <TopBar title="Home" />
+    <>
+      <ErrorBoundary name="HeroCarousel">
+        <HeroCarousel />
+      </ErrorBoundary>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
-        >
-          <GlobalSearchBar value={query} onChangeText={setQuery} />
-          <HeroCarousel />
-          <AdBanner />
+      <ErrorBoundary name="GlobalSearchBar">
+        <GlobalSearchBar value={query} onChangeText={setQuery} />
+      </ErrorBoundary>
 
-          <ListingCarousel title="Cars For Sale" type="cars" />
-          <ListingCarousel title="Land For Sale" type="land" />
-          <ListingCarousel title="Vendors on JeffLink" type="vendors" />
-        </ScrollView>
+      <ErrorBoundary name="ListingCarousel-Cars">
+        <ListingCarousel title="Cars For Sale" type="cars" />
+      </ErrorBoundary>
 
-        <BottomNav activeKey="home" />
-      </View>
-    </ScreenWrapper>
+      <ErrorBoundary name="ListingCarousel-Land">
+        <ListingCarousel title="Land For Sale" type="land" />
+      </ErrorBoundary>
+
+      <ErrorBoundary name="ListingCarousel-Vendors">
+        <ListingCarousel title="Vendors on JeffLink" type="vendors" />
+      </ErrorBoundary>
+
+      <FeaturedListingsCarousel />
+    </>
+  );
+});
+
+export default function HomeScreen() {
+  return (
+    <AppChrome
+      title="Home"
+      activeKey="home"
+      variant="customer"
+      showBottomNav={false}
+      className="bg-white dark:bg-[#0F1115]"
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 32 }}
+      >
+        <FeedHeader />
+      </ScrollView>
+    </AppChrome>
   );
 }

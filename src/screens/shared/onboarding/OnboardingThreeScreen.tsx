@@ -3,24 +3,32 @@ import { View as MotiView } from "moti/build/components/view";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { AuthStackParamList } from "../../../navigation/AuthNavigator";
-import ScreenWrapper from "../../../components/layout/ScreenWrapper";
+import AppChrome from "../../../components/layout/AppChrome";
 import ScrollContainer from "../../../components/layout/ScrollContainer";
 import FixedCTAContainer from "../../../components/layout/FixedCTAContainer";
 import Button from "../../../components/ui/Button";
 import Stepper from "../../../components/ui/Stepper";
 import AlertBanner from "../../../components/ui/AlertBanner";
+import { useAuthStore } from "../../../store/auth.store";
+import { onboardingManager } from "../../../utils/onboardingManager";
 
 type NavProp = NativeStackNavigationProp<AuthStackParamList>;
 
 export default function OnboardingThreeScreen() {
   const navigation = useNavigation<NavProp>();
+  const setGuestMode = useAuthStore((s) => s.setGuestMode);
 
   const handleGetStarted = async () => {
     navigation.reset({ index: 0, routes: [{ name: "Login" }] });
   };
 
+  const handleBrowseAsGuest = async () => {
+    await onboardingManager.markComplete();
+    setGuestMode(true);
+  };
+
   return (
-    <ScreenWrapper>
+    <AppChrome title="Welcome" activeKey="home" showLogin={false}>
       <View className="flex-1">
         <ScrollContainer className="gap-8 px-6 pb-10 pt-12">
           <MotiView
@@ -59,8 +67,13 @@ export default function OnboardingThreeScreen() {
             label="Get started"
             onPress={handleGetStarted}
           />
+          <Button
+            label="Browse as Guest"
+            variant="ghost"
+            onPress={handleBrowseAsGuest}
+          />
         </FixedCTAContainer>
       </View>
-    </ScreenWrapper>
+    </AppChrome>
   );
 }

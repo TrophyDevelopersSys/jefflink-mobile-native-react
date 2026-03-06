@@ -1,15 +1,15 @@
-import * as SecureStore from "expo-secure-store";
+import { secureStorage } from "./secureStorage";
 
 const TOKEN_KEY = "jefflink_access_token";
 
 export const tokenManager = {
-  async getToken(): Promise<string | null> {
-    return SecureStore.getItemAsync(TOKEN_KEY);
+  getToken(): Promise<string | null> {
+    return secureStorage.getItem(TOKEN_KEY);
   },
-  async setToken(token: string): Promise<void> {
-    await SecureStore.setItemAsync(TOKEN_KEY, token);
+  setToken(token: string): Promise<void> {
+    return secureStorage.setItem(TOKEN_KEY, token);
   },
-  async clearToken(): Promise<void> {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
-  }
+  clearToken(): Promise<void> {
+    return secureStorage.removeItem(TOKEN_KEY);
+  },
 };

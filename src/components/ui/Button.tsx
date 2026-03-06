@@ -22,7 +22,7 @@ export default function Button({
   disabled
 }: ButtonProps) {
   const containerClass = [
-    "w-full rounded-xl px-4 py-3",
+    "w-full rounded-[48px] px-4 py-3",
     variantStyles[variant],
     disabled ? "opacity-50" : ""
   ]

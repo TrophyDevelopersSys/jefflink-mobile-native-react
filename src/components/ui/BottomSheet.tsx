@@ -21,7 +21,7 @@ export default function BottomSheet({
           <Text className="text-base font-semibold text-white">{title}</Text>
         ) : null}
         <View>{children}</View>
-        <Pressable onPress={onClose} className="rounded-xl bg-brand-slate p-3">
+        <Pressable onPress={onClose} className="rounded-[48px] bg-brand-slate p-3">
           <Text className="text-center text-sm text-white">Close</Text>
         </Pressable>
       </View>

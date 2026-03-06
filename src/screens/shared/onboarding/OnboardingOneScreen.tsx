@@ -3,7 +3,7 @@ import { View as MotiView } from "moti/build/components/view";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { AuthStackParamList } from "../../../navigation/AuthNavigator";
-import ScreenWrapper from "../../../components/layout/ScreenWrapper";
+import AppChrome from "../../../components/layout/AppChrome";
 import ScrollContainer from "../../../components/layout/ScrollContainer";
 import FixedCTAContainer from "../../../components/layout/FixedCTAContainer";
 import Button from "../../../components/ui/Button";
@@ -17,7 +17,7 @@ export default function OnboardingOneScreen() {
   const navigation = useNavigation<NavProp>();
 
   return (
-    <ScreenWrapper>
+    <AppChrome title="Welcome" activeKey="home" showLogin={false}>
       <View className="flex-1">
         <ScrollContainer className="gap-8 px-6 pb-10 pt-12">
           <MotiView
@@ -60,6 +60,6 @@ export default function OnboardingOneScreen() {
           />
         </FixedCTAContainer>
       </View>
-    </ScreenWrapper>
+    </AppChrome>
   );
 }

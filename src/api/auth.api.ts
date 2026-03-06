@@ -19,6 +19,7 @@ export const authApi = {
     fullName: string;
     email: string;
     password: string;
+    role: string;
   }): Promise<AuthResponse> {
     const response = await apiClient.post(endpoints.auth.register, payload);
     return response.data as AuthResponse;

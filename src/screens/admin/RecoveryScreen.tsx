@@ -1,12 +1,12 @@
 import { Text, View } from "react-native";
-import ScreenWrapper from "../../components/layout/ScreenWrapper";
+import AppChrome from "../../components/layout/AppChrome";
 import Header from "../../components/layout/Header";
 import Card from "../../components/ui/Card";
 
 export default function RecoveryScreen() {
   return (
-    <ScreenWrapper className="px-6 pt-6">
-      <View className="gap-6">
+    <AppChrome title="Recovery" activeKey="profile" variant="admin">
+      <View className="gap-6 px-6 pt-6">
         <Header title="Recovery" subtitle="Delinquency tracking" />
         <Card>
           <Text className="text-base font-semibold text-white">
@@ -17,6 +17,6 @@ export default function RecoveryScreen() {
           </Text>
         </Card>
       </View>
-    </ScreenWrapper>
+    </AppChrome>
   );
 }
