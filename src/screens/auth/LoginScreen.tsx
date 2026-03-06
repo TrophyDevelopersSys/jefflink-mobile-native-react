@@ -15,6 +15,7 @@ import { Controller, useForm } from "react-hook-form";
 import AppChrome from "../../components/layout/AppChrome";
 import { useAuth } from "../../hooks/useAuth";
 import { validators } from "../../utils/validators";
+import { AuthMessages } from "../../constants/authMessages";
 
 interface LoginForm {
   email: string;
@@ -119,8 +120,8 @@ export default function LoginScreen() {
                       control={control}
                       name="email"
                       rules={{
-                        required: "Email is required",
-                        validate: (v) => validators.email(v.trim()) || "Enter a valid email address",
+                        required: AuthMessages.required.email,
+                        validate: (v) => validators.email(v.trim()),
                       }}
                       render={({ field: { value, onChange } }) => (
                         <TextInput
@@ -151,7 +152,7 @@ export default function LoginScreen() {
                   <Controller
                     control={control}
                     name="password"
-                    rules={{ required: "Password is required" }}
+                    rules={{ required: AuthMessages.required.password }}
                     render={({ field: { value, onChange } }) => (
                       <View className="mt-2 flex-row items-center rounded-lg border border-white/40 px-4">
                         <TextInput

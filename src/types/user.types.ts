@@ -8,6 +8,7 @@ export interface UserProfile {
   fullName: string;
   role: UserRole;
   status: UserStatus;
+  avatarUrl?: string;
 }
 
 export interface TokenPayload {

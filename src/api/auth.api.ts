@@ -10,7 +10,7 @@ export interface AuthResponse {
 // Backend wraps every response: { success: true, data: { ... } }
 // Backend auth endpoints return: { accessToken, refreshToken, user: { id, email, name, role } }
 function mapAuthResponse(raw: unknown): AuthResponse {
-  const body = raw as { data: { accessToken: string; user: { id: string; email: string; name: string; role: string } } };
+  const body = raw as { data: { accessToken: string; user: { id: string; email: string; name: string; role: string; avatarUrl?: string } } };
   const { accessToken, user } = body.data;
   return {
     token: accessToken,
@@ -20,6 +20,7 @@ function mapAuthResponse(raw: unknown): AuthResponse {
       fullName: user.name,
       role: user.role as UserProfile["role"],
       status: "active",
+      avatarUrl: user.avatarUrl,
     },
   };
 }
@@ -46,7 +47,7 @@ export const authApi = {
 
   async me(): Promise<UserProfile> {
     const response = await apiClient.get(endpoints.auth.me);
-    const body = response.data as { data: { id: string; email: string; name: string; role: string } };
+    const body = response.data as { data: { id: string; email: string; name: string; role: string; avatarUrl?: string } };
     const u = body.data;
     return {
       id: u.id,
@@ -54,6 +55,7 @@ export const authApi = {
       fullName: u.name,
       role: u.role as UserProfile["role"],
       status: "active",
+      avatarUrl: u.avatarUrl,
     };
   },
 };

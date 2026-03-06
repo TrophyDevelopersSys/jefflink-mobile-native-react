@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
   Home,
+  LayoutDashboard,
   LayoutList,
   CreditCard,
   UserCircle,
@@ -14,6 +15,7 @@ import PaymentsScreen from "../screens/customer/PaymentsScreen";
 import ProfileScreen from "../screens/customer/ProfileScreen";
 import SellScreen from "../screens/customer/SellScreen";
 import BoostListingScreen from "../screens/vendor/BoostListingScreen";
+import VendorDashboardScreen from "../screens/vendor/VendorDashboardScreen";
 import { useTheme } from "../theme/useTheme";
 import { useAuth } from "../hooks/useAuth";
 import { useAuthStore } from "../store/auth.store";
@@ -21,6 +23,7 @@ import { Roles } from "../constants/roles";
 
 export type CustomerTabParamList = {
   Home: undefined;
+  VendorDashboard: undefined;
   Listings: undefined;
   Search: undefined;
   Sell: undefined;
@@ -48,14 +51,17 @@ export default function CustomerNavigator() {
     tabBarInactiveTintColor: theme.textMuted,
   };
 
-  // ── Vendor / Dealer (AGENT): Home | Boost Listing | Sell | Profile ──────
+  // ── Vendor / Dealer (AGENT): Dashboard | Boost | Sell | Profile ──────
   if (role === Roles.Agent) {
     return (
       <Tab.Navigator screenOptions={screenOptions}>
         <Tab.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ tabBarIcon: ({ color, size }) => <Home color={color} size={size} strokeWidth={1.8} /> }}
+          name="VendorDashboard"
+          component={VendorDashboardScreen}
+          options={{
+            title: "Dashboard",
+            tabBarIcon: ({ color, size }) => <LayoutDashboard color={color} size={size} strokeWidth={1.8} />,
+          }}
         />
         <Tab.Screen
           name="BoostListing"

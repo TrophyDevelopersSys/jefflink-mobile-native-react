@@ -15,6 +15,7 @@ import { Controller, useForm } from "react-hook-form";
 import AppChrome from "../../components/layout/AppChrome";
 import { validators } from "../../utils/validators";
 import { useAuth } from "../../hooks/useAuth";
+import { AuthMessages } from "../../constants/authMessages";
 
 interface RegisterForm {
   fullName: string;
@@ -71,12 +72,10 @@ export default function RegisterScreen() {
       });
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string } }; message?: string; code?: string };
-      const isNetworkError = !err.response && (err.message === "Network Error" || err.code === "ECONNABORTED");
+      const isNetworkError = !err.response && (err.message === "Network Error" || err.code === "ECONNABORTED" || err.code === "ERR_NETWORK");
       const msg =
         err?.response?.data?.message ??
-        (isNetworkError
-          ? "Cannot reach the server. Check your internet connection or the server may be starting up — please retry in a moment."
-          : err?.message ?? "Registration failed. Check your connection.");
+        (isNetworkError ? AuthMessages.general.networkOffline : AuthMessages.general.unexpected);
       setApiError(msg);
     }
   });
@@ -145,7 +144,7 @@ export default function RegisterScreen() {
                     <Controller
                       control={control}
                       name="fullName"
-                      rules={{ required: "Full name is required" }}
+                      rules={{ required: AuthMessages.required.name, validate: (v) => validators.fullName(v) }}
                       render={({ field: { value, onChange } }) => (
                         <TextInput
                           value={value}
@@ -171,8 +170,8 @@ export default function RegisterScreen() {
                     control={control}
                     name="email"
                     rules={{
-                      required: "Email is required",
-                      validate: (v) => validators.email(v) || "Enter a valid email address",
+                      required: AuthMessages.required.email,
+                      validate: (v) => validators.email(v),
                     }}
                     render={({ field: { value, onChange } }) => (
                       <TextInput
@@ -202,8 +201,8 @@ export default function RegisterScreen() {
                       control={control}
                       name="password"
                       rules={{
-                        required: "Password is required",
-                        validate: (v) => validators.password(v) || "Password must be at least 8 characters",
+                        required: AuthMessages.required.password,
+                        validate: (v) => validators.password(v),
                       }}
                       render={({ field: { value, onChange } }) => (
                         <View className="mt-2 flex-row items-center rounded-lg border border-white/40 px-4">
@@ -232,8 +231,8 @@ export default function RegisterScreen() {
                       control={control}
                       name="confirmPassword"
                       rules={{
-                        required: "Please confirm your password",
-                        validate: (v) => v === watch("password") || "Passwords do not match",
+                        required: AuthMessages.required.passwordConfirm,
+                        validate: (v) => v === watch("password") || AuthMessages.passwordConfirm.mismatch,
                       }}
                       render={({ field: { value, onChange } }) => (
                         <View className="mt-2 flex-row items-center rounded-lg border border-white/40 px-4">

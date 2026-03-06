@@ -23,5 +23,12 @@ export const endpoints = {
     payments: "/admin/payments",
     recovery: "/admin/recovery",
     sync: "/admin/sync"
-  }
+  },
+  users: {
+    me: "/users/me",
+    updateAvatar: "/users/me/avatar",
+  },
+  media: {
+    upload: "/media/upload",
+  },
 };

@@ -6,6 +6,22 @@ import { onboardingManager } from "../utils/onboardingManager";
 import { tokenManager } from "../utils/tokenManager";
 import type { TokenPayload, UserProfile } from "../types/user.types";
 import { Roles } from "../constants/roles";
+import { AuthMessages } from "../constants/authMessages";
+
+type ApiError = { response?: { data?: { message?: string }; status?: number }; message?: string; code?: string };
+
+function resolveApiError(e: unknown, fallback: string): string {
+  const err = e as ApiError;
+  const serverMsg = err?.response?.data?.message;
+  if (serverMsg) return serverMsg;
+  const status = err?.response?.status;
+  if (status === 401) return AuthMessages.login.invalidCredentials;
+  if (status === 403) return AuthMessages.account.suspended;
+  if (status === 429) return AuthMessages.rateLimit.login;
+  const isNetwork = !err.response && (err.message === "Network Error" || err.code === "ECONNABORTED" || err.code === "ERR_NETWORK");
+  if (isNetwork) return AuthMessages.general.networkOffline;
+  return fallback;
+}
 
 const buildUserFromToken = (payload: TokenPayload): UserProfile | null => {
   if (!payload.sub || !payload.role || !payload.email) return null;
@@ -71,12 +87,7 @@ export const useAuth = () => {
       await onboardingManager.markComplete();
       setSession(response.token, response.user);
     } catch (e: unknown) {
-      const msg =
-        (e as { response?: { data?: { message?: string } }; message?: string })
-          ?.response?.data?.message ??
-        (e as { message?: string })?.message ??
-        "Login failed. Please try again.";
-      setError(msg);
+      setError(resolveApiError(e, AuthMessages.general.unexpected));
       setStatus("error");
     }
   }, [setSession, setStatus, setError]);
@@ -97,12 +108,7 @@ export const useAuth = () => {
         await onboardingManager.markComplete();
         setSession(response.token, response.user);
       } catch (e: unknown) {
-        const msg =
-          (e as { response?: { data?: { message?: string } }; message?: string })
-            ?.response?.data?.message ??
-          (e as { message?: string })?.message ??
-          "Registration failed. Please try again.";
-        setError(msg);
+        setError(resolveApiError(e, AuthMessages.general.unexpected));
         setStatus("error");
         throw e; // re-throw so the screen can react
       }

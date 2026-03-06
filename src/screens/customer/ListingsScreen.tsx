@@ -1,5 +1,6 @@
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View, Pressable } from "react-native";
 import { useEffect } from "react";
+import { useNavigation } from "@react-navigation/native";
 import AppChrome from "../../components/layout/AppChrome";
 import Header from "../../components/layout/Header";
 import ListingHeader from "../../components/listing/ListingHeader";
@@ -13,6 +14,7 @@ import { useListingsFeature } from "../../features/listings";
 
 export default function ListingsScreen() {
   const { listings, loadVehicles, loading, error } = useListingsFeature();
+  const navigation = useNavigation<any>();
 
   useEffect(() => {
     loadVehicles();
@@ -45,15 +47,20 @@ export default function ListingsScreen() {
             <EmptyState title="Unable to load" message={error} />
           ) : listings.length ? (
             listings.map((listing) => (
-              <VehicleCard
+              <Pressable
                 key={listing.id}
-                title={listing.title}
-                price={listing.price}
-                location={listing.location}
-                dealer="Jefflink Motors"
-                verified
-                hirePurchaseReady
-              />
+                onPress={() => navigation.navigate("ListingDetails" as never)}
+                className="active:opacity-75"
+              >
+                <VehicleCard
+                  title={listing.title}
+                  price={listing.price}
+                  location={listing.location}
+                  dealer="Jefflink Motors"
+                  verified
+                  hirePurchaseReady
+                />
+              </Pressable>
             ))
           ) : (
             <EmptyState

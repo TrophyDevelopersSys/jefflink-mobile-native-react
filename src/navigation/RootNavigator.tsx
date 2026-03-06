@@ -22,11 +22,19 @@ import CustomerNavigator from "./CustomerNavigator";
 import LoginScreen from "../screens/auth/LoginScreen";
 import RegisterScreen from "../screens/auth/RegisterScreen";
 import LoadingScreen from "../screens/shared/LoadingScreen";
+import ListingDetailsScreen from "../screens/customer/ListingDetailsScreen";
+import MyVehiclesScreen from "../screens/customer/MyVehiclesScreen";
+import VendorAnalyticsScreen from "../screens/vendor/VendorAnalyticsScreen";
+import VendorLeadsScreen from "../screens/vendor/VendorLeadsScreen";
 
 export type CustomerRootStackParamList = {
   CustomerTabs: undefined;
   Login: undefined;
   Register: undefined;
+  ListingDetails: undefined;
+  MyVehicles: undefined;
+  VendorAnalytics: undefined;
+  VendorLeads: undefined;
 };
 
 const CustomerRootStack = createNativeStackNavigator<CustomerRootStackParamList>();
@@ -37,6 +45,10 @@ function CustomerRootNavigator() {
       <CustomerRootStack.Screen name="CustomerTabs" component={CustomerNavigator} />
       <CustomerRootStack.Screen name="Login" component={LoginScreen} />
       <CustomerRootStack.Screen name="Register" component={RegisterScreen} />
+      <CustomerRootStack.Screen name="ListingDetails" component={ListingDetailsScreen} />
+      <CustomerRootStack.Screen name="MyVehicles" component={MyVehiclesScreen} />
+      <CustomerRootStack.Screen name="VendorAnalytics" component={VendorAnalyticsScreen} />
+      <CustomerRootStack.Screen name="VendorLeads" component={VendorLeadsScreen} />
     </CustomerRootStack.Navigator>
   );
 }
@@ -66,14 +78,14 @@ export default function RootNavigator() {
         <LoadingScreen />
       ) : user ? (
         isAdmin ? (
-          <AdminNavigator />
+          <AdminNavigator key="admin" />
         ) : (
-          <CustomerRootNavigator />
+          <CustomerRootNavigator key="authenticated" />
         )
       ) : isGuest || devBypassAuth ? (
-        <CustomerRootNavigator />
+        <CustomerRootNavigator key="guest" />
       ) : (
-        <AuthNavigator />
+        <AuthNavigator key="auth" />
       )}
     </NavigationContainer>
   );

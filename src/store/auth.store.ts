@@ -22,6 +22,7 @@ interface AuthState {
   clearSession: () => void;
   setGuestMode: (value: boolean) => void;
   setInitialized: () => void;
+  patchAvatar: (avatarUrl: string) => void;
 }
 
 // Zustand v5 requires the curried create<T>()((set) => ...) pattern
@@ -40,4 +41,6 @@ export const useAuthStore = create<AuthState>()((set) => ({
     set({ token: null, user: null, status: "unauthenticated", error: null, isGuest: false }),
   setGuestMode: (value) => set({ isGuest: value }),
   setInitialized: () => set({ initialized: true }),
+  patchAvatar: (avatarUrl) =>
+    set((s) => (s.user ? { user: { ...s.user, avatarUrl } } : {})),
 }));

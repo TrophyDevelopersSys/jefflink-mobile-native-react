@@ -22,6 +22,7 @@ import Avatar from "../../components/ui/Avatar";
 import Divider from "../../components/ui/Divider";
 import { useAuth } from "../../hooks/useAuth";
 import { useTheme } from "../../theme/useTheme";
+import { useNavigation } from "@react-navigation/native";
 import type { ThemePreference } from "../../theme/useTheme";
 
 type MenuItem = {
@@ -74,6 +75,7 @@ function MenuRow({
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const { preference, setPreference } = useTheme();
+  const navigation = useNavigation<any>();
 
   const appearanceOptions: { label: string; value: ThemePreference; Icon: any }[] = [
     { label: "System", value: "system", Icon: Monitor },
@@ -90,14 +92,14 @@ export default function ProfileScreen() {
           icon: Car,
           label: "Vehicles you own",
           description: "Set MOT and service reminders and track your vehicle's value",
-          onPress: () => {},
+          onPress: () => navigation.navigate("MyVehicles" as never),
         },
         {
           id: "vehicles-selling",
           icon: Tag,
           label: "Vehicles you're selling",
           description: "Create, edit and manage your ads",
-          onPress: () => {},
+          onPress: () => navigation.navigate("Listings" as never),
         },
         {
           id: "vehicle-checks",
@@ -149,7 +151,7 @@ export default function ProfileScreen() {
           icon: History,
           label: "Payment history",
           description: "See your advert and payment history",
-          onPress: () => {},
+          onPress: () => navigation.navigate("Payments" as never),
         },
         {
           id: "payment-methods",

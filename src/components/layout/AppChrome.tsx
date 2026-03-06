@@ -10,7 +10,7 @@ import { useAuth } from "../../hooks/useAuth";
 type AppChromeProps = PropsWithChildren<{
   title?: string;
   activeKey?: BottomNavItemKey;
-  variant?: "customer" | "admin" | "auth" | "none";
+  variant?: "customer" | "vendor" | "admin" | "auth" | "none";
   className?: string;
   showLogin?: boolean;
   onLoginPress?: () => void;
@@ -38,7 +38,17 @@ function AppChrome({
       return {
         home: "Home",
         search: "Listings",
-        sell: "Listings",
+        sell: "Sell",
+        finance: "Payments",
+        profile: "Profile"
+      };
+    }
+
+    if (variant === "vendor") {
+      return {
+        home: "VendorDashboard",
+        search: "Listings",
+        sell: "Sell",
         finance: "Payments",
         profile: "Profile"
       };
