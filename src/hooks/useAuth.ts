@@ -19,31 +19,48 @@ const buildUserFromToken = (payload: TokenPayload): UserProfile | null => {
 };
 
 export const useAuth = () => {
-  const { setSession, clearSession, setStatus, setError, status, error, user, token } =
+  const { setSession, clearSession, setStatus, setError, setInitialized, status, error, user, token } =
     useAuthStore();
 
   const initialize = useCallback(async () => {
     setStatus("loading");
     const storedToken = await tokenManager.getToken();
-    if (!storedToken) {
-      clearSession();
-      return;
-    }
 
     try {
+      if (!storedToken) {
+        clearSession();
+        return;
+      }
+
       const payload = jwtDecode<TokenPayload>(storedToken);
-      const sessionUser = buildUserFromToken(payload);
-      if (!sessionUser) {
+
+      // Reject expired tokens (exp is in seconds)
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
         await tokenManager.clearToken();
         clearSession();
         return;
       }
-      setSession(storedToken, sessionUser);
+
+      const sessionUser = buildUserFromToken(payload);
+      if (sessionUser) {
+        setSession(storedToken, sessionUser);
+      } else {
+        // JWT lacks local claims (email/role) – verify identity with server
+        try {
+          const me = await authApi.me();
+          setSession(storedToken, me);
+        } catch {
+          await tokenManager.clearToken();
+          clearSession();
+        }
+      }
     } catch {
       await tokenManager.clearToken();
       clearSession();
+    } finally {
+      setInitialized();
     }
-  }, [clearSession, setSession, setStatus]);
+  }, [clearSession, setSession, setStatus, setInitialized]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     setStatus("loading");

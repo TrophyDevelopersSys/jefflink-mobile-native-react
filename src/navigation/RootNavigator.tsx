@@ -45,6 +45,11 @@ export default function RootNavigator() {
   const { status, user, initialize } = useAuth();
   const { isAdmin } = useRoleGuard(user?.role);
   const isGuest = useAuthStore((s) => s.isGuest);
+  // initialized becomes true once the first initialize() call completes.
+  // Using this — not status — to gate the LoadingScreen prevents AuthNavigator
+  // from unmounting mid-login, which was causing it to re-run its onboarding
+  // check and route back to OnboardingOne on any failed login attempt.
+  const initialized = useAuthStore((s) => s.initialized);
 
   const devBypassAuth =
     __DEV__ &&
@@ -57,7 +62,7 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer theme={AppTheme}>
-      {status === "loading" || status === "idle" ? (
+      {!initialized ? (
         <LoadingScreen />
       ) : user ? (
         isAdmin ? (

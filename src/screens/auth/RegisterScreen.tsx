@@ -44,8 +44,15 @@ export default function RegisterScreen() {
         password: values.password,
         isDealer: dealer,
       });
-    } catch {
-      setApiError(authError ?? "Registration failed. Check your connection.");
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } }; message?: string; code?: string };
+      const isNetworkError = !err.response && (err.message === "Network Error" || err.code === "ECONNABORTED");
+      const msg =
+        err?.response?.data?.message ??
+        (isNetworkError
+          ? "Cannot reach the server. Check your internet connection or the server may be starting up — please retry in a moment."
+          : err?.message ?? "Registration failed. Check your connection.");
+      setApiError(msg);
     }
   });
 
