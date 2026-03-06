@@ -59,7 +59,7 @@ export default function RegisterScreen() {
   });
 
   return (
-    <AppChrome title="Register" activeKey="profile" showLogin={false}>
+    <AppChrome title="Register" activeKey="profile" variant="auth" showLogin={false}>
       <LinearGradient colors={["#3b82f6", "#1e3a8a"]} style={{ flex: 1 }}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}

@@ -4,9 +4,9 @@ import { useTheme } from "../../theme/useTheme";
 import {
   Home,
   Search,
-  PlusCircle,
+  PlusSquare,
   Wallet,
-  User,
+  UserCircle,
   type LucideProps
 } from "lucide-react-native";
 
@@ -22,21 +22,23 @@ const items: Array<{
   label: string;
   Icon: React.ComponentType<LucideProps>;
 }> = [
-  { key: "home",    label: "Home",    Icon: Home      },
-  { key: "search",  label: "Search",  Icon: Search    },
-  { key: "sell",    label: "Sell",    Icon: PlusCircle },
-  { key: "finance", label: "Finance", Icon: Wallet    },
-  { key: "profile", label: "Profile", Icon: User      }
+  { key: "home",    label: "Home",    Icon: Home        },
+  { key: "search",  label: "Explore", Icon: Search      },
+  { key: "sell",    label: "Sell",    Icon: PlusSquare  },
+  { key: "finance", label: "Finance", Icon: Wallet      },
+  { key: "profile", label: "Account", Icon: UserCircle  },
 ];
+
+const ACCENT = "#22C55E";
 
 export default function BottomNav({
   activeKey = "home",
   onItemPress
 }: BottomNavProps) {
   const { theme } = useTheme();
-  return (
-    <View className="flex-row justify-between border-t border-border bg-surface px-4 py-2">
 
+  return (
+    <View className="flex-row border-t border-border bg-surface px-2 pb-1 pt-2">
       {items.map((item) => {
         const isActive = item.key === activeKey;
         const Icon = item.Icon;
@@ -44,16 +46,32 @@ export default function BottomNav({
         return (
           <TouchableOpacity
             key={item.key}
-            activeOpacity={0.85}
+            activeOpacity={0.75}
             onPress={() => onItemPress?.(item.key)}
             className="flex-1 items-center"
           >
-            <Icon size={22} color={isActive ? theme.accent : theme.text} />
-
+            {/* Active indicator pill */}
+            <View
+              style={{
+                width: 32,
+                height: 3,
+                borderRadius: 99,
+                backgroundColor: isActive ? ACCENT : "transparent",
+                marginBottom: 5,
+              }}
+            />
+            <Icon
+              size={22}
+              color={isActive ? ACCENT : theme.text}
+              strokeWidth={isActive ? 2.2 : 1.6}
+            />
             <Text
-              className={`mt-1 text-xs ${
-                isActive ? "text-brand-accent" : "text-text"
-              }`}
+              style={{
+                marginTop: 3,
+                fontSize: 10,
+                fontWeight: isActive ? "700" : "400",
+                color: isActive ? ACCENT : theme.text,
+              }}
             >
               {item.label}
             </Text>

@@ -39,7 +39,7 @@ export default function LoginScreen() {
   });
 
   return (
-    <AppChrome title="Login" activeKey="profile" showLogin={false}>
+    <AppChrome title="Login" activeKey="profile" variant="auth" showLogin={false}>
       <LinearGradient colors={["#3b82f6", "#1e3a8a"]} style={{ flex: 1 }}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}

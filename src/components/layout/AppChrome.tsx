@@ -10,7 +10,7 @@ import { useAuth } from "../../hooks/useAuth";
 type AppChromeProps = PropsWithChildren<{
   title?: string;
   activeKey?: BottomNavItemKey;
-  variant?: "customer" | "admin" | "none";
+  variant?: "customer" | "admin" | "auth" | "none";
   className?: string;
   showLogin?: boolean;
   onLoginPress?: () => void;
@@ -21,7 +21,7 @@ function AppChrome({
   children,
   title,
   activeKey,
-  variant = "none",
+  variant = "auth",
   className,
   showLogin,
   onLoginPress,
@@ -51,6 +51,17 @@ function AppChrome({
         sell: "Contracts",
         finance: "Payments",
         profile: "Recovery"
+      };
+    }
+
+    if (variant === "auth") {
+      // On auth screens every tab routes back to Login
+      return {
+        home: "Login",
+        search: "Login",
+        sell: "Login",
+        finance: "Login",
+        profile: "Login",
       };
     }
 
