@@ -5,6 +5,9 @@ import {
   TextInput,
   Pressable,
   Switch,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
@@ -37,10 +40,17 @@ export default function LoginScreen() {
 
   return (
     <AppChrome title="Login" activeKey="profile" showLogin={false}>
-      <LinearGradient
-        colors={["#3b82f6", "#1e3a8a"]}
-        className="flex-1 justify-center px-6"
-      >
+      <LinearGradient colors={["#3b82f6", "#1e3a8a"]} style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+        >
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: 24, paddingVertical: 32 }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
         {/* Card */}
         <View className="rounded-3xl bg-white/10 p-6">
 
@@ -168,6 +178,8 @@ export default function LoginScreen() {
           </View>
 
         </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </LinearGradient>
     </AppChrome>
   );
