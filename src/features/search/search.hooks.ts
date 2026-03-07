@@ -1,12 +1,36 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  type SearchFilters,
   type SearchResult,
   type SearchScope,
-  searchMarketplace
+  DEFAULT_FILTERS,
+  buildSearchQuery,
+  searchMarketplace,
 } from "./search.service";
 
 const defaultScopes: SearchScope[] = ["cars", "land", "houses", "vendors", "ads"];
+
+export function useSearchFilters() {
+  const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
+
+  function setFilter<K extends keyof SearchFilters>(key: K, value: SearchFilters[K]) {
+    setFilters((prev) => {
+      const next = { ...prev, [key]: value };
+      // Reset price range when property type changes
+      if (key === "propertyType") next.priceRange = null;
+      return next;
+    });
+  }
+
+  function resetFilters() {
+    setFilters(DEFAULT_FILTERS);
+  }
+
+  const queryString = useMemo(() => buildSearchQuery(filters), [filters]);
+
+  return { filters, setFilter, resetFilters, queryString };
+}
 
 export function useGlobalSearch(scopes: SearchScope[] = defaultScopes) {
   const [query, setQuery] = useState("");
@@ -38,6 +62,6 @@ export function useGlobalSearch(scopes: SearchScope[] = defaultScopes) {
     query,
     setQuery,
     loading,
-    results
+    results,
   };
 }

@@ -15,10 +15,12 @@ export function useListingsFeature() {
     error: null
   });
 
-  const loadVehicles = useCallback(async () => {
+  const loadVehicles = useCallback(async (params?: import("../../api/listings.api").ListingsSearchParams) => {
     setState({ loading: true, error: null });
     try {
-      const data = await listingsService.listVehicles();
+      const data = params && Object.keys(params).length > 0
+        ? await listingsService.search(params)
+        : await listingsService.listVehicles();
       setListings(data);
       setState({ loading: false, error: null });
     } catch (error) {

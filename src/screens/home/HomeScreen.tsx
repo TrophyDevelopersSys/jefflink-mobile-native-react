@@ -3,19 +3,15 @@ import { ScrollView } from "react-native";
 
 import HeroCarousel from "../../components/hero/HeroCarousel";
 import AppChrome from "../../components/layout/AppChrome";
-import GlobalSearchBar from "../../components/search/GlobalSearchBar";
+import SearchFilterBar from "../../components/search/SearchFilterBar";
 import ListingCarousel from "../../components/sections/ListingCarousel";
 import { ErrorBoundary } from "../../components/ui/ErrorBoundary";
 import FeaturedListingsCarousel from "../../components/feed/FeaturedListingsCarousel";
-
-import { useGlobalSearch } from "../../features/search/search.hooks";
 
 // ── FeedHeader lives at module level so it always receives the SAME
 // component reference — prevents Netflix-style header unmount/remount on
 // Android when the parent HomeScreen re-renders.
 const FeedHeader = React.memo(function FeedHeader() {
-  const { query, setQuery } = useGlobalSearch();
-
   return (
     <>
       <ErrorBoundary name="HeroCarousel">
@@ -23,7 +19,7 @@ const FeedHeader = React.memo(function FeedHeader() {
       </ErrorBoundary>
 
       <ErrorBoundary name="GlobalSearchBar">
-        <GlobalSearchBar value={query} onChangeText={setQuery} />
+        <SearchFilterBar />
       </ErrorBoundary>
 
       <ErrorBoundary name="ListingCarousel-Cars">

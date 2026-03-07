@@ -21,10 +21,18 @@ import { useAuth } from "../hooks/useAuth";
 import { useAuthStore } from "../store/auth.store";
 import { Roles } from "../constants/roles";
 
+export type ListingsFilterParams = {
+  propertyType?: string;
+  seller?: string;
+  location?: string;
+  priceMin?: number;
+  priceMax?: number;
+};
+
 export type CustomerTabParamList = {
   Home: undefined;
   VendorDashboard: undefined;
-  Listings: undefined;
+  Listings: ListingsFilterParams | undefined;
   Search: undefined;
   Sell: undefined;
   Payments: undefined;

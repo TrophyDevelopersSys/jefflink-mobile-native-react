@@ -7,7 +7,8 @@ export const endpoints = {
   listings: {
     vehicles: "/listings/vehicles",
     properties: "/listings/properties",
-    detail: (id: string) => `/listings/${id}`
+    detail: (id: string) => `/listings/${id}`,
+    search: "/listings/search",
   },
   payments: {
     list: "/payments",

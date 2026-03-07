@@ -1,7 +1,15 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
+    "strict": true,
+    "paths": {
+      "@jefflink/design-tokens": ["../packages/design-tokens/src/index.ts"],
+      "@jefflink/types": ["../packages/types/src/index.ts"],
+      "@jefflink/api": ["../packages/api/src/index.ts"],
+      "@jefflink/auth": ["../packages/auth/src/index.ts"],
+      "@jefflink/ui": ["../packages/ui/src/index.ts"],
+      "@jefflink/utils": ["../packages/utils/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "backend", "database"]
 }
