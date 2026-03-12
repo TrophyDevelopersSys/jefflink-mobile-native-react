@@ -1,56 +1,169 @@
-# ─── Dependencies ────────────────────────────────────────────────────────────
+##############################################
+#  JEFFLink Monorepo — .gitignore
+#  React Native 0.83 · Expo 55 · TypeScript
+#  pnpm workspaces · Turbo · Next.js
+##############################################
+
+
+# ─── Dependencies ────────────────────────────
 node_modules/
 **/node_modules/
 apps/node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
 
-# ─── Turbo ───────────────────────────────────────────────────────────────────
+
+# ─── Environment & Secrets ───────────────────
+# Never commit credentials or environment config
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.test
+.env*.local
+*.pem
+*.key
+*.p12
+*.p8
+*.jks
+*.keystore
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+secrets/
+
+
+# ─── Turbo ───────────────────────────────────
 .turbo/
 **/.turbo/
 
-# ─── Build outputs ───────────────────────────────────────────────────────────
-dist/
-**/dist/
-build/
-**/build/
-out/
-**/out/
-.next/
-**/.next/
-*.tsbuildinfo
-**/*.tsbuildinfo
 
-# ─── Expo / React Native ─────────────────────────────────────────────────────
+# ─── Expo ────────────────────────────────────
 .expo/
 **/.expo/
+dist/
+**/dist/
+web-build/
+expo-env.d.ts
+
+
+# ─── Metro Bundler ───────────────────────────
+.metro-health-check*
+.metro/
+
+
+# ─── Next.js ─────────────────────────────────
+.next/
+**/.next/
+out/
+**/out/
+
+
+# ─── Android Build Artifacts ─────────────────
+# Keep android/ source in VCS; ignore build output only
+android/.gradle/
+android/app/.cxx/
+android/app/build/
+android/build/
+android/local.properties
+android/captures/
+android/.idea/
 jefflink-mobile/android/build/
 jefflink-mobile/android/.gradle/
 jefflink-mobile/android/.kotlin/
 jefflink-mobile/android/app/build/
 jefflink-mobile/android/local.properties
+*.apk
+*.aab
+*.dex
 
-# ─── Environment variables ───────────────────────────────────────────────────
-.env
-**/.env
-.env.local
-**/.env.local
-.env.development
-.env.production
-# Keep the example as documentation
-!.env.example
-!**/.env.example
 
-# ─── Test & coverage ─────────────────────────────────────────────────────────
+# ─── iOS Build Artifacts ─────────────────────
+# ios/build/
+# ios/Pods/
+# ios/*.xcworkspace
+# ios/DerivedData/
+# *.ipa
+# *.xcuserstate
+# ios/**/.xcode.env.local
+
+
+# ─── TypeScript ──────────────────────────────
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+
+# ─── Test Coverage ───────────────────────────
 coverage/
 **/coverage/
+.nyc_output/
+jest-coverage/
 
-# ─── IDE / editors ───────────────────────────────────────────────────────────
-.vscode/
-**/.vscode/
-.idea/
-**/.idea/
 
-# ─── OS files ────────────────────────────────────────────────────────────────
+# ─── Logs ────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+
+# ─── OS Generated ────────────────────────────
 .DS_Store
 **/.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
+
+
+# ─── IDE & Editors ───────────────────────────
+# VS Code (keep settings.json & extensions.json if shared)
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+
+# JetBrains / Android Studio
+.idea/
+**/.idea/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.factorypath
+
+# Vim/Emacs
+*.swp
+*.swo
+*~
+\#*\#
+.#*
+
+
+# ─── React Native ────────────────────────────
+*.orig.*
+*.haste_cache/
+buck-out/
+\.buckd/
+*.keystore
+!debug.keystore
+
+
+# ─── Miscellaneous ───────────────────────────
+build/
+**/build/
+.cache/
+tmp/
+temp/
+.temp/
+.tmp/
 
