@@ -1,0 +1,37 @@
+{
+  "name": "@jefflink/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "type-check": "tsc --noEmit",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@jefflink/api": "workspace:*",
+    "@jefflink/auth": "workspace:*",
+    "@jefflink/design-tokens": "workspace:*",
+    "@jefflink/types": "workspace:*",
+    "@jefflink/ui": "workspace:*",
+    "@jefflink/utils": "workspace:*",
+    "axios": "^1.13.6",
+    "next": "^15.2.3",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "recharts": "^2.15.1",
+    "zustand": "^5.0.11"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.2",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.21.0",
+    "eslint-config-next": "^15.2.3",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.19",
+    "typescript": "~5.9.2"
+  }
+}

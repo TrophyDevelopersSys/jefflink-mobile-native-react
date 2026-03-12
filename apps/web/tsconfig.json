@@ -1,0 +1,53 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "ES2022"
+    ],
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@jefflink/types": [
+        "../../packages/types/src/index.ts"
+      ],
+      "@jefflink/api": [
+        "../../packages/api/src/index.ts"
+      ],
+      "@jefflink/auth": [
+        "../../packages/auth/src/index.ts"
+      ],
+      "@jefflink/design-tokens": [
+        "../../packages/design-tokens/src/index.ts"
+      ],
+      "@jefflink/ui": [
+        "../../packages/ui/src/index.ts"
+      ],
+      "@jefflink/utils": [
+        "../../packages/utils/src/index.ts"
+      ]
+    },
+    "allowJs": true,
+    "noEmit": true,
+    "isolatedModules": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

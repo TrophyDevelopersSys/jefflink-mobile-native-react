@@ -1,0 +1,56 @@
+# ─── Dependencies ────────────────────────────────────────────────────────────
+node_modules/
+**/node_modules/
+apps/node_modules/
+
+# ─── Turbo ───────────────────────────────────────────────────────────────────
+.turbo/
+**/.turbo/
+
+# ─── Build outputs ───────────────────────────────────────────────────────────
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+.next/
+**/.next/
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# ─── Expo / React Native ─────────────────────────────────────────────────────
+.expo/
+**/.expo/
+jefflink-mobile/android/build/
+jefflink-mobile/android/.gradle/
+jefflink-mobile/android/.kotlin/
+jefflink-mobile/android/app/build/
+jefflink-mobile/android/local.properties
+
+# ─── Environment variables ───────────────────────────────────────────────────
+.env
+**/.env
+.env.local
+**/.env.local
+.env.development
+.env.production
+# Keep the example as documentation
+!.env.example
+!**/.env.example
+
+# ─── Test & coverage ─────────────────────────────────────────────────────────
+coverage/
+**/coverage/
+
+# ─── IDE / editors ───────────────────────────────────────────────────────────
+.vscode/
+**/.vscode/
+.idea/
+**/.idea/
+
+# ─── OS files ────────────────────────────────────────────────────────────────
+.DS_Store
+**/.DS_Store
+Thumbs.db
+

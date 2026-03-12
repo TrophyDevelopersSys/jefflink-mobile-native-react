@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Semantic design token variables
+ * ──────────────────────────────────────────────────────────────────────────────
+ * :root    → light-mode values (default / class-less)
+ * .dark    → dark-mode values  (injected by NativeWind's setColorScheme("dark"))
+ *
+ * Values here must stay in sync with src/theme/tokens.ts.
+ * Tailwind maps bg-background → var(--color-background), etc.
+ */
+@layer base {
+  :root {
+    --color-background:  #FFFFFF;
+    --color-surface:     #F5F5F5;
+    --color-card:        #EFEFEF;
+    --color-border:      #E4E4E4;
+    --color-text:        #0F1115;
+    --color-text-muted:  #6B7280;
+    --color-accent:      #22C55E;
+    --color-primary:     #0E7C3A;
+    --color-danger:      #DC2626;
+    --color-warning:     #F59E0B;
+  }
+
+  .dark {
+    --color-background:  #0F1115;
+    --color-surface:     #1A1D23;
+    --color-card:        #13161C;
+    --color-border:      #2A2F36;
+    --color-text:        #F9FAFB;
+    --color-text-muted:  #9AA3AF;
+    --color-accent:      #22C55E;
+    --color-primary:     #0E7C3A;
+    --color-danger:      #DC2626;
+    --color-warning:     #F59E0B;
+  }
+}

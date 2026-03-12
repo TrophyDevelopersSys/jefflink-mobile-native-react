@@ -1,0 +1,114 @@
+import 'reflect-metadata';
+import { NestFactory } from '@nestjs/core';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Logger } from 'nestjs-pino';
+import compression from 'compression';
+import helmet from 'helmet';
+import * as Sentry from '@sentry/node';
+import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+
+  const config = app.get(ConfigService);
+
+  // ── Sentry error monitoring ──────────────────────────────────────────────
+  const sentryDsn = config.get<string>('SENTRY_DSN');
+  if (sentryDsn) {
+    Sentry.init({
+      dsn: sentryDsn,
+      environment: config.get('NODE_ENV', 'development'),
+      tracesSampleRate: 0.1,
+    });
+  }
+
+  // ── Structured logging via Pino ──────────────────────────────────────────
+  app.useLogger(app.get(Logger));
+
+  // ── Security headers ─────────────────────────────────────────────────────
+  app.use(helmet());
+
+  // ── Gzip compression ─────────────────────────────────────────────────────
+  app.use(compression());
+
+  // ── CORS ─────────────────────────────────────────────────────────────────
+  const rawOrigins = config.get<string>('CORS_ORIGINS', '');
+  const configuredOrigins = (rawOrigins ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  // Always include local dev origins so the app works without env-var setup
+  const devOrigins = [
+    'http://localhost:8081',
+    'http://localhost:19006',
+    'exp://localhost:8081',
+    'http://10.0.2.2:8081',
+  ];
+
+  const corsOrigins = [
+    ...new Set([...configuredOrigins, ...devOrigins]),
+  ];
+
+  app.enableCors({
+    origin: corsOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
+  // ── Global validation pipe ────────────────────────────────────────────────
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  );
+
+  // ── Global filters & interceptors ─────────────────────────────────────────
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalInterceptors(new LoggingInterceptor(), new TransformInterceptor());
+
+  // ── URI versioning: /api/v1/... ───────────────────────────────────────────
+  app.enableVersioning({ type: VersioningType.URI });
+  app.setGlobalPrefix('api');
+
+  // ── OpenAPI / Swagger docs ────────────────────────────────────────────────
+  if (config.get('NODE_ENV') !== 'production') {
+    const swaggerCfg = new DocumentBuilder()
+      .setTitle('JeffLink API')
+      .setDescription('JeffLink multi-vendor marketplace REST API v2')
+      .setVersion('2.0.0')
+      .addBearerAuth(
+        { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+        'access-token',
+      )
+      .build();
+    SwaggerModule.setup(
+      'api/docs',
+      app,
+      SwaggerModule.createDocument(app, swaggerCfg),
+    );
+  }
+
+  // ── Graceful shutdown ─────────────────────────────────────────────────────
+  app.enableShutdownHooks();
+
+  const port = config.get<number>('PORT', 3000);
+  await app.listen(port, '0.0.0.0');
+
+  const url = await app.getUrl();
+  console.log(`✓ JeffLink API v2 listening at ${url}`);
+  if (config.get('NODE_ENV') !== 'production') {
+    console.log(`✓ Swagger docs:  ${url}/api/docs`);
+  }
+}
+
+void bootstrap();
