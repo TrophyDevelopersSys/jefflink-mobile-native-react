@@ -5,10 +5,19 @@
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "dev": "turbo run dev",
+    "dev:mobile": "turbo run dev --filter=jefflink-mobile",
+    "dev:web": "turbo run dev --filter=@jefflink/web",
+    "dev:backend": "turbo run start:dev --filter=jefflink-backend",
     "build": "turbo run build",
+    "build:web": "turbo run build --filter=@jefflink/web",
+    "build:backend": "turbo run build --filter=jefflink-backend",
     "type-check": "turbo run type-check",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "db:generate": "turbo run db:generate --filter=jefflink-backend",
+    "db:migrate": "turbo run db:migrate --filter=jefflink-backend",
+    "db:push": "turbo run db:push --filter=jefflink-backend",
+    "db:studio": "turbo run db:studio --filter=jefflink-backend",
     "clean": "turbo run clean && rimraf node_modules"
   },
   "devDependencies": {
@@ -20,5 +29,4 @@
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
   }
-}
 }

@@ -8,6 +8,14 @@
     "moduleResolution": "bundler",
     "module": "ESNext",
     "target": "ES2022",
-    "lib": ["ES2022", "DOM"]
+    "lib": ["ES2022", "DOM"],
+    "paths": {
+      "@jefflink/types": ["./packages/types/src/index.ts"],
+      "@jefflink/api": ["./packages/api/src/index.ts"],
+      "@jefflink/auth": ["./packages/auth/src/index.ts"],
+      "@jefflink/ui": ["./packages/ui/src/index.ts"],
+      "@jefflink/utils": ["./packages/utils/src/index.ts"],
+      "@jefflink/design-tokens": ["./packages/design-tokens/src/index.ts"]
+    }
   }
 }

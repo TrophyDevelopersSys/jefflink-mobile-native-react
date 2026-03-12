@@ -70,6 +70,11 @@ android/build/
 android/local.properties
 android/captures/
 android/.idea/
+apps/mobile/android/build/
+apps/mobile/android/.gradle/
+apps/mobile/android/.kotlin/
+apps/mobile/android/app/build/
+apps/mobile/android/local.properties
 jefflink-mobile/android/build/
 jefflink-mobile/android/.gradle/
 jefflink-mobile/android/.kotlin/
@@ -167,3 +172,25 @@ temp/
 .temp/
 .tmp/
 
+
+# ─── NestJS / Backend ────────────────────────
+apps/backend/dist/
+apps/backend/node_modules/
+jefflink-mobile/backend/dist/
+
+# ─── Legacy / Orphaned Directories ───────────
+# jefflink-mobile/ at root is an orphaned copy; ignore entirely
+jefflink-mobile/
+
+# ─── Lock file hygiene ───────────────────────
+# This is a pnpm monorepo — do not commit npm or yarn lock files
+**/package-lock.json
+**/yarn.lock
+
+# ─── Expo generated ──────────────────────────
+expo-env.d.ts
+**/.expo-shared/
+
+# ─── Temporary / scratch projects ────────────
+apps/mobile/my-expo-app/
+**/my-expo-app/

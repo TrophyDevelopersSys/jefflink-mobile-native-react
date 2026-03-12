@@ -1,12 +1,69 @@
 # JeffLink Platform — Architecture Report
 
-## Premium Appending: SEO Web Platform Integration into Existing Expo Mobile App
-### Cross-Platform Monorepo (Next.js + Expo + Shared Packages)
+## Scalable Monorepo Architecture
+### Cross-Platform Monorepo (Next.js + Expo + NestJS + Shared Packages)
 
-**Report Date:** March 7, 2026  
+**Last Updated:** March 12, 2026  
 **Author:** JeffLink Engineering Team  
 **Project:** JeffLink Marketplace Platform  
-**Classification:** Technical Architecture Document — Step 1 Foundation  
+**Classification:** Technical Architecture Document  
+
+---
+
+## Monorepo Structure
+
+```
+jefflinkapp/                       ← Monorepo root
+├── package.json                   ← pnpm workspace root (Turbo orchestrator)
+├── pnpm-workspace.yaml            ← Workspace definitions
+├── turbo.json                     ← Full pipeline (build, dev, test, db:*)
+├── tsconfig.base.json             ← Shared TypeScript config + @jefflink/* paths
+├── tailwind.config.base.js        ← Shared Tailwind base config
+│
+├── apps/
+│   ├── mobile/                    ← jefflink-mobile  (Expo 55 + RN 0.83)
+│   │   ├── src/                   ← Feature modules, screens, navigation, stores
+│   │   ├── android/               ← Native Android project
+│   │   └── package.json           ← name: "jefflink-mobile"
+│   │
+│   ├── web/                       ← @jefflink/web  (Next.js 15)
+│   │   ├── app/                   ← App router pages
+│   │   └── package.json           ← name: "@jefflink/web"
+│   │
+│   └── backend/                   ← jefflink-backend  (NestJS 10 + Drizzle)
+│       ├── src/                   ← Modules, services, guards, DTOs
+│       ├── drizzle/               ← Generated migrations
+│       ├── Dockerfile             ← Production Docker build
+│       ├── docker-compose.yml     ← Local dev Docker stack
+│       └── package.json           ← name: "jefflink-backend"
+│
+└── packages/
+    ├── types/                     ← @jefflink/types   — shared TypeScript types
+    ├── api/                       ← @jefflink/api     — Axios client + endpoints
+    ├── auth/                      ← @jefflink/auth    — JWT helpers
+    ├── ui/                        ← @jefflink/ui      — shared UI primitives
+    ├── utils/                     ← @jefflink/utils   — shared utilities
+    └── design-tokens/             ← @jefflink/design-tokens — colors, spacing
+```
+
+---
+
+## Root Scripts Reference
+
+| Command | Action |
+|---|---|
+| `pnpm dev` | Start all apps in dev mode |
+| `pnpm dev:mobile` | Expo dev server only |
+| `pnpm dev:web` | Next.js dev server only |
+| `pnpm dev:backend` | NestJS dev server only |
+| `pnpm build` | Build all apps |
+| `pnpm db:generate` | Generate Drizzle migration |
+| `pnpm db:migrate` | Apply Drizzle migration |
+| `pnpm db:push` | Push schema (dev only) |
+| `pnpm db:studio` | Open Drizzle Studio |
+| `pnpm test` | Run all test suites |
+| `pnpm lint` | Lint all workspaces |
+| `pnpm type-check` | Type-check all workspaces |
 
 ---
 

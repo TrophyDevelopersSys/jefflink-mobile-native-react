@@ -1,4 +1,8 @@
 packages:
-  - "apps/web"
-  - "packages/*"
-  - "jefflink-mobile"
+  # ─── Apps ──────────────────────────────────────────────────
+  - "apps/mobile"       # jefflink-mobile  (Expo 55 + RN 0.83)
+  - "apps/web"          # @jefflink/web    (Next.js 15)
+  - "apps/backend"      # jefflink-backend (NestJS 10)
+
+  # ─── Shared packages ───────────────────────────────────────
+  - "packages/*"        # @jefflink/{types,api,auth,ui,utils,design-tokens}
