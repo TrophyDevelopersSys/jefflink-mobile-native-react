@@ -43,29 +43,33 @@ async function bootstrap() {
     .map((o) => o.trim())
     .filter(Boolean);
 
-  // Always include known origins so the app works without env-var setup
-  const devOrigins = [
-    // Production
+  // Hardcoded production + dev origins (supplemented by CORS_ORIGINS env var)
+  const defaultOrigins = new Set([
     'https://jefflinkcars.com',
     'https://www.jefflinkcars.com',
-    // Local dev
+    'https://admin.jefflinkcars.com',
     'http://localhost:3000',
     'http://localhost:5173',
     'http://localhost:8081',
     'http://localhost:19006',
     'exp://localhost:8081',
     'http://10.0.2.2:8081',
-  ];
-
-  const corsOrigins = [
-    ...new Set([...configuredOrigins, ...devOrigins]),
-  ];
+    ...configuredOrigins,
+  ]);
 
   app.enableCors({
-    origin: corsOrigins,
+    // Callback gives granular control: undefined origin = server-to-server /
+    // mobile native (allowed); unknown browser origin = rejected.
+    origin: (origin, callback) => {
+      if (!origin || defaultOrigins.has(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin '${origin}' not allowed`));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
 
   // ── Global validation pipe ────────────────────────────────────────────────
