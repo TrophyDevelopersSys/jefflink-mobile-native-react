@@ -18,7 +18,8 @@ function resolveApiError(e: unknown, fallback: string): string {
   if (status === 401) return AuthMessages.login.invalidCredentials;
   if (status === 403) return AuthMessages.account.suspended;
   if (status === 429) return AuthMessages.rateLimit.login;
-  const isNetwork = !err.response && (err.message === "Network Error" || err.code === "ECONNABORTED" || err.code === "ERR_NETWORK");
+  if (!err.response && err.code === "ECONNABORTED") return AuthMessages.general.timeout;
+  const isNetwork = !err.response && (err.message === "Network Error" || err.code === "ERR_NETWORK");
   if (isNetwork) return AuthMessages.general.networkOffline;
   return fallback;
 }
