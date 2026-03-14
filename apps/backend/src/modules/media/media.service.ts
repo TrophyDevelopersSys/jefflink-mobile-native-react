@@ -45,6 +45,36 @@ export class MediaService {
     });
   }
 
+  /**
+   * Generate a short-lived (5 min) presigned PUT URL so the client can upload
+   * directly to R2 without routing the binary through the API server.
+   *
+   * Bucket key convention:
+   *   cms/sliders/<uuid>.ext
+   *   cars/<carId>/<uuid>.ext
+   *   users/avatars/<userId>/<uuid>.ext
+   *   vendors/<vendorId>/<uuid>.ext
+   *   documents/<uuid>.ext
+   *   uploads/<uuid>.ext  (generic / unscoped)
+   */
+  async presignUpload(path: string, contentType: string) {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'application/pdf'];
+    if (!allowed.includes(contentType)) {
+      throw new BadRequestException('Unsupported content type for presigned upload');
+    }
+
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: path,
+      ContentType: contentType,
+    });
+
+    const uploadUrl = await getSignedUrl(this.s3, command, { expiresIn: 300 });
+    const publicUrl = `${this.publicUrl}/${path}`;
+
+    return { uploadUrl, publicUrl, expiresIn: 300 };
+  }
+
   async upload(
     file: Express.Multer.File,
     uploadedBy: string,

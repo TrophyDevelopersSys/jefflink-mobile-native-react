@@ -292,11 +292,84 @@ export const mediaAssets = pgTable(
     referenceId: uuid('reference_id'),
     referenceType: varchar('reference_type', { length: 50 }),
     isCover: boolean('is_cover').default(false),
+    // ACTIVE | DELETED
+    status: varchar('status', { length: 20 }).notNull().default('ACTIVE'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (t) => ({
     referenceIdx: index('media_reference_idx').on(t.referenceId),
     uploadedByIdx: index('media_uploaded_by_idx').on(t.uploadedBy),
+    statusIdx: index('media_status_idx').on(t.status),
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CMS – Hero Sliders
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const cmsSliders = pgTable(
+  'cms_sliders',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: varchar('title', { length: 255 }).notNull(),
+    subtitle: text('subtitle'),
+    imageUrl: text('image_url').notNull(),       // R2 CDN URL
+    buttonLabel: varchar('button_label', { length: 100 }),
+    buttonLink: varchar('button_link', { length: 500 }),
+    // display order (lower = first)
+    sortOrder: integer('sort_order').notNull().default(0),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    activeIdx: index('cms_sliders_active_idx').on(t.active),
+    orderIdx: index('cms_sliders_order_idx').on(t.sortOrder),
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CMS – Banners (promo strips, section banners)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const cmsBanners = pgTable(
+  'cms_banners',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    // e.g. "home_top", "home_mid", "cars_sidebar"
+    placement: varchar('placement', { length: 100 }).notNull(),
+    imageUrl: text('image_url').notNull(),
+    linkUrl: varchar('link_url', { length: 500 }),
+    altText: varchar('alt_text', { length: 255 }),
+    active: boolean('active').notNull().default(true),
+    startsAt: timestamp('starts_at'),
+    endsAt: timestamp('ends_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    placementIdx: index('cms_banners_placement_idx').on(t.placement),
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CMS – Generic text/SEO content blocks
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const cmsContent = pgTable(
+  'cms_content',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    // unique machine key, e.g. "homepage_hero_title", "footer_tagline"
+    key: varchar('key', { length: 255 }).notNull().unique(),
+    value: text('value').notNull(),
+    // "text" | "html" | "json" | "url"
+    type: varchar('type', { length: 50 }).notNull().default('text'),
+    description: text('description'),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    keyIdx: uniqueIndex('cms_content_key_idx').on(t.key),
   }),
 );
 

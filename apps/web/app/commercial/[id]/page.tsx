@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BriefcaseBusiness } from "lucide-react";
 import type { ListingDetail, ListingSummary, VendorProfile } from "@jefflink/types";
 import ListingDetailLayout from "../../../src/components/listing/ListingDetailLayout";
 
@@ -71,7 +72,7 @@ export default async function CommercialDetailPage({
       related={related}
       category="commercial"
       categoryLabel="Commercial"
-      fallbackIcon="🏢"
+      fallbackIcon={BriefcaseBusiness}
       contactLabel="Contact Vendor"
       typeBadge="Commercial"
     />

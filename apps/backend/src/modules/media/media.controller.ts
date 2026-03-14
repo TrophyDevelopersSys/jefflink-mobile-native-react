@@ -13,7 +13,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
 import { MediaService } from './media.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -26,9 +26,31 @@ import { Roles } from '../../common/decorators/roles.decorator';
 export class MediaController {
   constructor(private readonly svc: MediaService) {}
 
+  /**
+   * Direct-to-R2 upload via presigned URL.
+   * Frontend calls this, gets { uploadUrl, publicUrl }, then PUTs directly to R2.
+   * No binary data passes through the API server.
+   */
+  @Post('presign')
+  @ApiOperation({ summary: 'Get a presigned R2 URL for direct client upload' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['path', 'contentType'],
+      properties: {
+        path: { type: 'string', example: 'cars/car_123/main.jpg' },
+        contentType: { type: 'string', example: 'image/jpeg' },
+      },
+    },
+  })
+  presign(@Body('path') path: string, @Body('contentType') contentType: string) {
+    if (!path || !contentType) throw new BadRequestException('path and contentType are required');
+    return this.svc.presignUpload(path, contentType);
+  }
+
   @Post('upload')
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Upload a media file (image or video)' })
+  @ApiOperation({ summary: 'Upload a media file (image or video) via multipart' })
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   upload(
     @UploadedFile() file: Express.Multer.File,
