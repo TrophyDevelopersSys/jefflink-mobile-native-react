@@ -28,16 +28,24 @@ services:
         sync: false
       - key: JWT_EXPIRES_IN
         value: 7d
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
       - key: REDIS_URL
         sync: false
       - key: CORS_ORIGINS
         value: https://jefflinkcars.com,https://www.jefflinkcars.com
-      - key: R2_ACCESS_KEY
+      - key: R2_ACCOUNT_ID
         sync: false
-      - key: R2_SECRET_KEY
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
         sync: false
       - key: R2_BUCKET_NAME
         sync: false
+      - key: R2_PUBLIC_URL
+        value: https://cdn.jefflinkcars.com
       - key: CDN_BASE_URL
         value: https://cdn.jefflinkcars.com
 
