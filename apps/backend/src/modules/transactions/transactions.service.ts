@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Optional } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, ConflictException, Optional } from '@nestjs/common';
 import { eq, and, desc } from 'drizzle-orm';
 import * as bcrypt from 'bcryptjs';
 import { DatabaseService } from '../../database/database.service';
@@ -229,5 +229,271 @@ export class TransactionsService {
       type: 'penalty-sweep',
       payload: { graceDays, defaultDays },
     });
+  }
+
+  // ── Customer Finance: Create Contract ─────────────────────────────────────
+
+  /**
+   * Creates a hire-purchase contract for a customer, calculates the monthly
+   * EMI via reducing-balance amortization, and seeds the full installment
+   * schedule.  The initial deposit is NOT recorded here — use
+   * `recordInitialDeposit` after the contract is created.
+   */
+  async createContract(
+    userId: string,
+    dto: {
+      vehicleId?: string;
+      propertyId?: string;
+      totalAmount: number;
+      initialDeposit: number;
+      interestRate: number;  // annual, e.g. 0.18 for 18 %
+      termMonths: number;
+      currency?: string;
+    },
+  ) {
+    const { totalAmount, initialDeposit, interestRate, termMonths } = dto;
+
+    if (initialDeposit >= totalAmount) {
+      throw new BadRequestException('Initial deposit must be less than total amount');
+    }
+
+    const currency = dto.currency ?? 'UGX';
+    const principal = totalAmount - initialDeposit;
+    const emi = this._calculateEMI(principal, interestRate, termMonths);
+
+    // Determine end date based on term
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + termMonths);
+
+    const [contract] = await this.db.db
+      .insert(contracts)
+      .values({
+        userId,
+        vehicleId: dto.vehicleId,
+        propertyId: dto.propertyId,
+        status: 'DRAFT',
+        totalAmount: totalAmount.toFixed(2),
+        initialDeposit: initialDeposit.toFixed(2),
+        interestRate: interestRate.toFixed(4),
+        termMonths,
+        monthlyAmount: emi.toFixed(2),
+        currency,
+        startDate,
+        endDate,
+        depositPaid: false,
+      })
+      .returning();
+
+    // Generate the full amortization schedule
+    await this._seedAmortizationSchedule(contract.id, principal, interestRate, termMonths, emi, currency, startDate);
+
+    return contract;
+  }
+
+  // ── Customer Finance: Amortization Schedule ───────────────────────────────
+
+  /** Returns the full amortization schedule for a contract. */
+  async getAmortizationSchedule(contractId: string, userId: string, isAdmin = false) {
+    const contract = await this.getContractById(contractId, userId, isAdmin);
+
+    const rows = await this.db.db
+      .select()
+      .from(installments)
+      .where(eq(installments.contractId, contractId))
+      .orderBy(installments.installmentNumber);
+
+    return {
+      contract,
+      schedule: rows,
+    };
+  }
+
+  // ── Customer Finance: Initial Deposit ─────────────────────────────────────
+
+  /**
+   * Records the customer's initial deposit payment against a contract.
+   * This must be called once; subsequent calls will throw a conflict error.
+   */
+  async recordInitialDeposit(
+    contractId: string,
+    userId: string,
+    dto: {
+      amount: number;
+      paymentMethod?: string;
+      momoTransactionId?: string;
+      idempotencyKey?: string;
+      notes?: string;
+    },
+  ) {
+    const [contract] = await this.db.db
+      .select()
+      .from(contracts)
+      .where(eq(contracts.id, contractId))
+      .limit(1);
+
+    if (!contract) throw new NotFoundException('Contract not found');
+    if (contract.userId !== userId) throw new ForbiddenException('Access denied');
+    if (contract.depositPaid) throw new ConflictException('Initial deposit already recorded for this contract');
+
+    const expected = parseFloat(contract.initialDeposit ?? '0');
+    if (dto.amount < expected) {
+      throw new BadRequestException(
+        `Deposit amount ${dto.amount} is less than the required initial deposit of ${expected}`,
+      );
+    }
+
+    const [payment] = await this.db.db
+      .insert(payments)
+      .values({
+        contractId,
+        userId,
+        amount: dto.amount.toFixed(2),
+        currency: contract.currency ?? 'UGX',
+        status: 'PENDING',
+        paymentType: 'INITIAL_DEPOSIT',
+        paymentMethod: dto.paymentMethod,
+        momoTransactionId: dto.momoTransactionId,
+        idempotencyKey: dto.idempotencyKey,
+        notes: dto.notes,
+      })
+      .returning();
+
+    // Mark deposit as paid on the contract
+    await this.db.db
+      .update(contracts)
+      .set({ depositPaid: true, updatedAt: new Date() })
+      .where(eq(contracts.id, contractId));
+
+    return payment;
+  }
+
+  // ── Customer Finance: Monthly Payment ─────────────────────────────────────
+
+  /**
+   * Records a monthly instalment payment.  Marks the instalment row as PAID
+   * and creates a corresponding payment record.
+   */
+  async recordMonthlyPayment(
+    contractId: string,
+    installmentId: string,
+    userId: string,
+    dto: {
+      amount: number;
+      paymentMethod?: string;
+      momoTransactionId?: string;
+      idempotencyKey?: string;
+      notes?: string;
+    },
+  ) {
+    const [contract] = await this.db.db
+      .select()
+      .from(contracts)
+      .where(eq(contracts.id, contractId))
+      .limit(1);
+
+    if (!contract) throw new NotFoundException('Contract not found');
+    if (contract.userId !== userId) throw new ForbiddenException('Access denied');
+    if (!contract.depositPaid) {
+      throw new BadRequestException('Initial deposit must be paid before monthly instalments can be recorded');
+    }
+
+    const [installment] = await this.db.db
+      .select()
+      .from(installments)
+      .where(and(eq(installments.id, installmentId), eq(installments.contractId, contractId)))
+      .limit(1);
+
+    if (!installment) throw new NotFoundException('Installment not found');
+    if (installment.status === 'PAID') throw new ConflictException('Installment already paid');
+
+    const required = parseFloat(installment.amount);
+    if (dto.amount < required) {
+      throw new BadRequestException(
+        `Payment amount ${dto.amount} is less than the required installment amount of ${required}`,
+      );
+    }
+
+    const [payment] = await this.db.db
+      .insert(payments)
+      .values({
+        contractId,
+        userId,
+        amount: dto.amount.toFixed(2),
+        currency: contract.currency ?? 'UGX',
+        status: 'PENDING',
+        paymentType: 'MONTHLY',
+        paymentMethod: dto.paymentMethod,
+        momoTransactionId: dto.momoTransactionId,
+        idempotencyKey: dto.idempotencyKey,
+        notes: dto.notes,
+      })
+      .returning();
+
+    // Link payment to installment and mark it paid
+    await this.db.db
+      .update(installments)
+      .set({
+        status: 'PAID',
+        paymentId: payment.id,
+        paidAt: new Date(),
+      })
+      .where(eq(installments.id, installmentId));
+
+    return payment;
+  }
+
+  // ── Private helpers ────────────────────────────────────────────────────────
+
+  /**
+   * Reducing-balance (French amortization) EMI formula:
+   *   EMI = P * r * (1+r)^n / ((1+r)^n - 1)
+   * where r = monthly rate, n = term in months, P = principal
+   */
+  private _calculateEMI(principal: number, annualRate: number, months: number): number {
+    if (annualRate === 0) return principal / months;
+    const r = annualRate / 12;
+    const factor = Math.pow(1 + r, months);
+    return (principal * r * factor) / (factor - 1);
+  }
+
+  /** Seeds installment rows with full amortization breakdown (principal + interest split). */
+  private async _seedAmortizationSchedule(
+    contractId: string,
+    principal: number,
+    annualRate: number,
+    months: number,
+    emi: number,
+    currency: string,
+    startDate: Date,
+  ): Promise<void> {
+    const r = annualRate / 12;
+    let balance = principal;
+    const rows: typeof installments.$inferInsert[] = [];
+
+    for (let i = 1; i <= months; i++) {
+      const interestPortion = balance * r;
+      const principalPortion = emi - interestPortion;
+      balance = Math.max(0, balance - principalPortion);
+
+      const dueDate = new Date(startDate);
+      dueDate.setMonth(dueDate.getMonth() + i);
+
+      rows.push({
+        contractId,
+        installmentNumber: i,
+        dueDate,
+        amount: emi.toFixed(2),
+        principal: principalPortion.toFixed(2),
+        interest: interestPortion.toFixed(2),
+        balance: balance.toFixed(2),
+        status: 'PENDING',
+      });
+    }
+
+    // Insert in batches of 50 to avoid overly large queries
+    for (let i = 0; i < rows.length; i += 50) {
+      await this.db.db.insert(installments).values(rows.slice(i, i + 50));
+    }
   }
 }

@@ -22,7 +22,7 @@ interface VendorSummary {
 async function fetchVendors(): Promise<VendorSummary[]> {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/vendors?limit=24`,
+      `${process.env["INTERNAL_API_URL"] ?? "https://jefflink.onrender.com/api/v1"}/vendors?limit=24`,
       { next: { revalidate: 60 } }
     );
     if (!res.ok) return [];

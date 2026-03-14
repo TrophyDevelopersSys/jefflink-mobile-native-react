@@ -16,7 +16,7 @@ export const revalidate = 60;
 async function getCars(): Promise<ListingSummary[]> {
   try {
     const res = await fetch(
-      `${process.env["NEXT_PUBLIC_API_BASE_URL"] ?? "https://jefflink.onrender.com/api/v1"}/listings?type=vehicle&limit=20`,
+      `${process.env["INTERNAL_API_URL"] ?? "https://jefflink.onrender.com/api/v1"}/listings?type=vehicle&limit=20`,
       { next: { revalidate: 60 } }
     );
     if (!res.ok) return [];

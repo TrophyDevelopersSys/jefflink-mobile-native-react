@@ -133,6 +133,13 @@ export const contracts = pgTable(
     status: varchar('status', { length: 50 }).notNull().default('DRAFT'),
     totalAmount: numeric('total_amount', { precision: 15, scale: 2 }),
     currency: varchar('currency', { length: 10 }).default('UGX'),
+    // ── Finance terms ──────────────────────────────────────────────────────
+    initialDeposit: numeric('initial_deposit', { precision: 15, scale: 2 }),
+    interestRate: numeric('interest_rate', { precision: 5, scale: 4 }),   // annual rate, e.g. 0.18 = 18%
+    termMonths: integer('term_months'),                                    // number of monthly instalments
+    monthlyAmount: numeric('monthly_amount', { precision: 15, scale: 2 }), // calculated EMI
+    depositPaid: boolean('deposit_paid').default(false).notNull(),
+    // ────────────────────────────────────────────────────────────────────────
     startDate: timestamp('start_date'),
     endDate: timestamp('end_date'),
     terms: jsonb('terms'),
@@ -162,6 +169,7 @@ export const payments = pgTable(
     amount: numeric('amount', { precision: 15, scale: 2 }).notNull(),
     currency: varchar('currency', { length: 10 }).default('UGX'),
     status: varchar('status', { length: 50 }).notNull().default('PENDING'),
+    paymentType: varchar('payment_type', { length: 50 }).notNull().default('MONTHLY'), // INITIAL_DEPOSIT | MONTHLY | PENALTY | SETTLEMENT
     paymentMethod: varchar('payment_method', { length: 100 }),
     momoTransactionId: varchar('momo_transaction_id', { length: 255 }),
     idempotencyKey: varchar('idempotency_key', { length: 255 }).unique(),
@@ -186,7 +194,11 @@ export const installments = pgTable(
       .references(() => contracts.id)
       .notNull(),
     dueDate: timestamp('due_date').notNull(),
-    amount: numeric('amount', { precision: 15, scale: 2 }).notNull(),
+    installmentNumber: integer('installment_number').notNull(), // 1-based month index
+    amount: numeric('amount', { precision: 15, scale: 2 }).notNull(),   // total EMI
+    principal: numeric('principal', { precision: 15, scale: 2 }),       // principal portion
+    interest: numeric('interest', { precision: 15, scale: 2 }),         // interest portion
+    balance: numeric('balance', { precision: 15, scale: 2 }),           // outstanding after payment
     status: varchar('status', { length: 50 }).notNull().default('PENDING'),
     paidAt: timestamp('paid_at'),
     paymentId: uuid('payment_id').references(() => payments.id),

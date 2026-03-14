@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { VendorProfile } from "@jefflink/types";
 
-const API = process.env["NEXT_PUBLIC_API_BASE_URL"] ?? "https://jefflink.onrender.com/api/v1";
+const API = process.env["INTERNAL_API_URL"] ?? "https://jefflink.onrender.com/api/v1";
 
 async function getVendor(id: string): Promise<VendorProfile | null> {
   try {

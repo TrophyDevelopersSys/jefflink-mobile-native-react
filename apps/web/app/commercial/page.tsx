@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 const API =
-  process.env["NEXT_PUBLIC_API_BASE_URL"] ?? "https://jefflink.onrender.com/api/v1";
+  process.env["INTERNAL_API_URL"] ?? "https://jefflink.onrender.com/api/v1";
 
 async function getCommercialListings(): Promise<ListingSummary[]> {
   try {

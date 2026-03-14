@@ -9,6 +9,8 @@ import {
   HttpCode,
   HttpStatus,
   Version,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TransactionsService } from './transactions.service';
@@ -16,6 +18,9 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthUser } from '../../common/types/auth-user.type';
+import { CreateContractDto } from './dto/create-contract.dto';
+import { InitialDepositDto } from './dto/initial-deposit.dto';
+import { MonthlyPaymentDto } from './dto/monthly-payment.dto';
 
 @ApiTags('transactions')
 @ApiBearerAuth()
@@ -24,6 +29,16 @@ export class TransactionsController {
   constructor(private readonly svc: TransactionsService) {}
 
   // ── Contracts ──────────────────────────────────────────────────────────────
+
+  @Post('contracts')
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  @ApiOperation({ summary: 'Create a hire-purchase contract with amortization schedule' })
+  createContract(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: CreateContractDto,
+  ) {
+    return this.svc.createContract(user.sub, dto);
+  }
 
   @Get('contracts')
   @ApiOperation({ summary: 'List contracts for current user' })
@@ -40,6 +55,41 @@ export class TransactionsController {
   ) {
     const isAdmin = ['ADMIN', 'MANAGER', 'SYSTEM_ADMIN', 'DIRECTOR'].includes(user.role);
     return this.svc.getContractById(id, user.sub, isAdmin);
+  }
+
+  @Get('contracts/:id/amortization')
+  @ApiOperation({ summary: 'Get amortization schedule for a contract' })
+  getAmortizationSchedule(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+  ) {
+    const isAdmin = ['ADMIN', 'MANAGER', 'SYSTEM_ADMIN', 'DIRECTOR', 'FINANCE_OFFICER'].includes(user.role);
+    return this.svc.getAmortizationSchedule(id, user.sub, isAdmin);
+  }
+
+  @Post('contracts/:id/initial-deposit')
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Record initial deposit payment for a contract' })
+  recordInitialDeposit(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+    @Body() dto: InitialDepositDto,
+  ) {
+    return this.svc.recordInitialDeposit(id, user.sub, dto);
+  }
+
+  @Post('contracts/:id/monthly-payment/:installmentId')
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Record a monthly instalment payment' })
+  recordMonthlyPayment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('installmentId', ParseUUIDPipe) installmentId: string,
+    @CurrentUser() user: AuthUser,
+    @Body() dto: MonthlyPaymentDto,
+  ) {
+    return this.svc.recordMonthlyPayment(id, installmentId, user.sub, dto);
   }
 
   @Post('contracts/:id/activate')
