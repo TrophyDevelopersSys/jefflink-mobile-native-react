@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Car } from "lucide-react";
 import type { ListingDetail, ListingSummary, VendorProfile } from "@jefflink/types";
 import ListingDetailLayout from "../../../src/components/listing/ListingDetailLayout";
 
@@ -71,8 +72,8 @@ export default async function CarDetailPage({
       related={related}
       category="cars"
       categoryLabel="Cars"
-      fallbackIcon="🚗"
-      contactLabel="Contact Dealer"
+      fallbackIcon={Car}
+      contactLabel="Verified Sellers"
       typeBadge="Car"
     />
   );

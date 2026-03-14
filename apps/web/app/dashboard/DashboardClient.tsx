@@ -4,6 +4,8 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "../../src/context/AuthContext";
 import Link from "next/link";
+import { Search, Car, LandPlot, Store, Plus } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export default function DashboardPage() {
   const { user, isAuthenticated, status } = useAuthContext();
@@ -77,13 +79,13 @@ export default function DashboardPage() {
         <section className="mb-8">
           <h2 className="text-base font-semibold text-white mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <QuickActionCard href="/search" icon="🔍" label="Search Listings" />
-            <QuickActionCard href="/cars" icon="🚗" label="Browse Cars" />
-            <QuickActionCard href="/land" icon="🏘️" label="Browse Land" />
+            <QuickActionCard href="/search" icon={Search} label="Search Listings" />
+            <QuickActionCard href="/cars" icon={Car} label="Browse Cars" />
+            <QuickActionCard href="/land" icon={LandPlot} label="Browse Land" />
             {isDealer || isAdmin ? (
-              <QuickActionCard href="/sell" icon="➕" label="Post Listing" highlight />
+              <QuickActionCard href="/sell" icon={Plus} label="Post Listing" highlight />
             ) : (
-              <QuickActionCard href="/vendors" icon="🏪" label="Find Vendors" />
+              <QuickActionCard href="/vendors" icon={Store} label="Find Vendors" />
             )}
           </div>
         </section>
@@ -176,12 +178,12 @@ export default function DashboardPage() {
 
 function QuickActionCard({
   href,
-  icon,
+  icon: Icon,
   label,
   highlight = false,
 }: {
   href: string;
-  icon: string;
+  icon: LucideIcon;
   label: string;
   highlight?: boolean;
 }) {
@@ -194,7 +196,7 @@ function QuickActionCard({
           : "bg-card border-border hover:border-brand-primary/40"
       }`}
     >
-      <span className="text-2xl">{icon}</span>
+      <Icon size={24} strokeWidth={1.75} className="text-brand-accent" />
       <span className="text-xs font-medium text-white leading-tight">{label}</span>
     </Link>
   );

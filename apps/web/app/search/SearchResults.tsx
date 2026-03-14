@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Search, Store, Car, LandPlot } from "lucide-react";
 import type { ListingSummary } from "@jefflink/types";
 
 const API = process.env["NEXT_PUBLIC_API_BASE_URL"] ?? "https://jefflink.onrender.com/api/v1";
@@ -195,7 +196,7 @@ export default function SearchResults() {
 
         {!loading && !error && results.length === 0 && (q || type) && (
           <div className="text-center py-24">
-            <p className="text-5xl mb-4">🔍</p>
+            <Search size={48} strokeWidth={1.5} className="text-brand-muted mx-auto mb-4" />
             <p className="text-white font-semibold text-lg mb-2">No results found</p>
             <p className="text-brand-muted text-sm mb-6">
               Try adjusting your search term or removing filters.
@@ -213,7 +214,7 @@ export default function SearchResults() {
 
         {!loading && !error && !q && !type && (
           <div className="text-center py-24">
-            <p className="text-5xl mb-4">🏪</p>
+            <Store size={48} strokeWidth={1.5} className="text-brand-muted mx-auto mb-4" />
             <p className="text-white font-semibold text-lg mb-2">Start Searching</p>
             <p className="text-brand-muted text-sm">Enter a keyword above to find listings.</p>
           </div>
@@ -236,8 +237,8 @@ export default function SearchResults() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-4xl">
-                      {listing.type === "vehicle" ? "🚗" : "🏘️"}
+                    <div className="w-full h-full flex items-center justify-center text-brand-muted">
+                      {listing.type === "vehicle" ? <Car size={48} strokeWidth={1.5} /> : <LandPlot size={48} strokeWidth={1.5} />}
                     </div>
                   )}
                   <span className="absolute top-2 left-2 text-xs font-medium bg-brand-night/80 text-brand-muted px-2 py-0.5 rounded-badge capitalize">

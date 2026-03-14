@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Store } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "How It Works",
@@ -115,7 +116,7 @@ export default function HowItWorksPage() {
       {/* Seller flow */}
       <section className="max-w-4xl mx-auto px-4 py-14">
         <div className="flex items-center gap-3 mb-8">
-          <span className="text-3xl">🏪</span>
+          <Store size={32} strokeWidth={1.5} className="text-brand-accent" />
           <h2 className="text-2xl font-bold text-white">For Sellers & Dealers</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import type { ListingDetail, ListingSummary, VendorProfile } from "@jefflink/types";
 import ActionBar from "./ActionBar";
 
@@ -78,8 +79,8 @@ interface ListingDetailLayoutProps {
   category: string;
   /** e.g. "Cars" — used for breadcrumb label */
   categoryLabel: string;
-  /** Fallback emoji when no coverUrl */
-  fallbackIcon: string;
+  /** Fallback icon component when no coverUrl */
+  fallbackIcon: LucideIcon;
   /** CTA label e.g. "Contact Dealer" */
   contactLabel: string;
   /** Type badge label e.g. "Car" */
@@ -94,7 +95,7 @@ export default function ListingDetailLayout({
   related,
   category,
   categoryLabel,
-  fallbackIcon,
+  fallbackIcon: FallbackIcon,
   contactLabel,
   typeBadge,
 }: ListingDetailLayoutProps) {
@@ -146,7 +147,7 @@ export default function ListingDetailLayout({
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-brand-muted">
-                  <span className="text-7xl">{fallbackIcon}</span>
+                  <FallbackIcon size={72} strokeWidth={1.5} />
                   <span className="text-xs">No photos available</span>
                 </div>
               )}

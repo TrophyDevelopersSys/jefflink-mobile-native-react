@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Car } from "lucide-react";
 import type { ListingSummary } from "@jefflink/types";
 
 export const metadata: Metadata = {
@@ -70,8 +71,8 @@ function ListingCard({ listing }: { listing: ListingSummary }) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-brand-muted text-4xl">
-            🚗
+          <div className="w-full h-full flex items-center justify-center text-brand-muted">
+            <Car size={48} strokeWidth={1.5} />
           </div>
         )}
       </div>

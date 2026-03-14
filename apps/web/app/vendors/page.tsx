@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Metadata } from "next";
+import { MapPin } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Verified Vendors",
@@ -45,7 +46,7 @@ export default async function VendorsPage() {
             Verified Vendors
           </h1>
           <p className="text-text-muted text-lg">
-            Connect with trusted dealers, agents, and service providers
+            Connect with trusted Verified Sellers, agents, and service providers
             verified by JeffLink.
           </p>
         </div>
@@ -95,7 +96,10 @@ export default async function VendorsPage() {
                 </div>
 
                 <div className="flex items-center justify-between text-sm text-text-muted">
-                  <span>📍 {vendor.city}</span>
+                  <span className="flex items-center gap-1 text-brand-muted text-xs">
+                    <MapPin size={12} strokeWidth={1.75} />
+                    {vendor.city}
+                  </span>
                   <span>{vendor.listingCount} listing{vendor.listingCount !== 1 ? "s" : ""}</span>
                 </div>
               </Link>

@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Building2 } from "lucide-react";
 import type { ListingSummary } from "@jefflink/types";
 
 export const metadata: Metadata = {
@@ -49,7 +50,7 @@ export default async function CommercialPage() {
 
         {listings.length === 0 ? (
           <div className="text-center py-24">
-            <div className="text-6xl mb-4">🏢</div>
+            <Building2 size={64} strokeWidth={1.5} className="text-brand-muted mx-auto mb-4" />
             <p className="text-brand-muted text-lg">
               No commercial listings available yet.
             </p>
@@ -72,8 +73,8 @@ export default async function CommercialPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-brand-muted text-4xl">
-                      🏢
+                    <div className="w-full h-full flex items-center justify-center text-brand-muted">
+                      <Building2 size={48} strokeWidth={1.5} />
                     </div>
                   )}
                 </div>

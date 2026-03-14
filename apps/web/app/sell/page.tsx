@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Car, LandPlot, Home, Building2, Users, BadgeCheck, BarChart2, DollarSign } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Post a Listing — Sell on JeffLink",
@@ -13,10 +14,10 @@ export const metadata: Metadata = {
 };
 
 const CATEGORIES = [
-  { icon: "🚗", label: "Car / Vehicle", description: "Saloons, SUVs, trucks, motorbikes, and more." },
-  { icon: "🏘️", label: "Land / Plot", description: "Residential, agricultural, and commercial plots." },
-  { icon: "🏠", label: "House", description: "Standalone homes, maisonettes, and apartments." },
-  { icon: "🏢", label: "Commercial Property", description: "Offices, warehouses, retail spaces, and industrial units." },
+  { Icon: Car, label: "Car / Vehicle", description: "Saloons, SUVs, trucks, motorbikes, and more." },
+  { Icon: LandPlot, label: "Land / Plot", description: "Residential, agricultural, and commercial plots." },
+  { Icon: Home, label: "House", description: "Standalone homes, maisonettes, and apartments." },
+  { Icon: Building2, label: "Commercial Property", description: "Offices, warehouses, retail spaces, and industrial units." },
 ];
 
 export default function SellPage() {
@@ -63,7 +64,7 @@ export default function SellPage() {
               key={cat.label}
               className="bg-card border border-border rounded-card p-6 flex gap-4 items-start"
             >
-              <span className="text-3xl flex-shrink-0">{cat.icon}</span>
+              <cat.Icon size={32} strokeWidth={1.75} className="text-brand-accent flex-shrink-0" />
               <div>
                 <h3 className="text-white font-semibold">{cat.label}</h3>
                 <p className="text-text-muted text-sm mt-1">{cat.description}</p>
@@ -104,13 +105,13 @@ export default function SellPage() {
         </h2>
         <div className="space-y-4">
           {[
-            { icon: "👥", title: "Thousands of Active Buyers", body: "Your listing reaches buyers searching daily across Uganda." },
-            { icon: "✅", title: "Verified Seller Badge", body: "Build trust with buyers — verified dealers get priority placement." },
-            { icon: "📊", title: "Dashboard Analytics", body: "Track views, leads, and listing performance from your dashboard." },
-            { icon: "💰", title: "Competitive Pricing", body: "Affordable listing fees with free tier available for private sellers." },
+            { Icon: Users, title: "Thousands of Active Buyers", body: "Your listing reaches buyers searching daily across Uganda." },
+            { Icon: BadgeCheck, title: "Verified Seller Badge", body: "Build trust with buyers — verified dealers get priority placement." },
+            { Icon: BarChart2, title: "Dashboard Analytics", body: "Track views, leads, and listing performance from your dashboard." },
+            { Icon: DollarSign, title: "Competitive Pricing", body: "Affordable listing fees with free tier available for private sellers." },
           ].map((v) => (
             <div key={v.title} className="flex gap-4 bg-card border border-border rounded-card p-5">
-              <span className="text-2xl flex-shrink-0">{v.icon}</span>
+              <v.Icon size={24} strokeWidth={1.75} className="text-brand-accent flex-shrink-0" />
               <div>
                 <h3 className="text-white font-semibold mb-1">{v.title}</h3>
                 <p className="text-text-muted text-sm">{v.body}</p>

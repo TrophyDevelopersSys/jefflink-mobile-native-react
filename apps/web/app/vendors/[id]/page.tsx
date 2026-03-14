@@ -2,6 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { Store, MapPin, Phone, Mail } from "lucide-react";
 import type { VendorProfile } from "@jefflink/types";
 
 const API = process.env["INTERNAL_API_URL"] ?? "https://jefflink.onrender.com/api/v1";
@@ -70,7 +71,7 @@ export default async function VendorProfilePage({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-3xl">🏪</span>
+              <Store size={32} strokeWidth={1.5} className="text-brand-muted" />
             )}
           </div>
 
@@ -83,7 +84,10 @@ export default async function VendorProfilePage({
                 </span>
               )}
             </div>
-            <p className="text-text-muted text-sm mt-1">📍 {vendor.location}</p>
+            <p className="text-text-muted text-sm mt-1 flex items-center gap-1.5">
+              <MapPin size={14} strokeWidth={1.75} className="flex-shrink-0" />
+              {vendor.location}
+            </p>
             {vendor.description && (
               <p className="text-text-muted text-sm mt-3 leading-relaxed">
                 {vendor.description}
@@ -94,17 +98,19 @@ export default async function VendorProfilePage({
               {vendor.phone && (
                 <a
                   href={`tel:${vendor.phone}`}
-                  className="text-brand-accent text-sm hover:underline"
+                  className="text-brand-accent text-sm hover:underline flex items-center gap-1.5"
                 >
-                  📞 {vendor.phone}
+                  <Phone size={14} strokeWidth={1.75} />
+                  {vendor.phone}
                 </a>
               )}
               {vendor.email && (
                 <a
                   href={`mailto:${vendor.email}`}
-                  className="text-brand-accent text-sm hover:underline"
+                  className="text-brand-accent text-sm hover:underline flex items-center gap-1.5"
                 >
-                  ✉️ {vendor.email}
+                  <Mail size={14} strokeWidth={1.75} />
+                  {vendor.email}
                 </a>
               )}
             </div>

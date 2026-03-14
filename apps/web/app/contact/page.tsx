@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Mail, Phone, MapPin } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Contact Us",
@@ -31,12 +32,12 @@ export default function ContactPage() {
           <h2 className="text-xl font-bold text-white mb-6">Get In Touch</h2>
           <div className="space-y-5">
             {[
-              { icon: "📧", label: "Email", value: "support@jefflink.ug", href: "mailto:support@jefflink.ug" },
-              { icon: "📞", label: "Phone", value: "+256 700 000 000", href: "tel:+256700000000" },
-              { icon: "📍", label: "Location", value: "Kampala, Uganda", href: null },
+              { Icon: Mail, label: "Email", value: "support@jefflink.ug", href: "mailto:support@jefflink.ug" },
+              { Icon: Phone, label: "Phone", value: "+256 700 000 000", href: "tel:+256700000000" },
+              { Icon: MapPin, label: "Location", value: "Kampala, Uganda", href: null },
             ].map((c) => (
               <div key={c.label} className="flex gap-4 items-start bg-card border border-border rounded-card p-4">
-                <span className="text-2xl flex-shrink-0">{c.icon}</span>
+                <c.Icon size={24} strokeWidth={1.75} className="text-brand-accent flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-brand-muted text-xs uppercase tracking-wide mb-0.5">{c.label}</p>
                   {c.href ? (

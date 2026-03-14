@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { LandPlot } from "lucide-react";
 import type { ListingDetail, ListingSummary, VendorProfile } from "@jefflink/types";
 import ListingDetailLayout from "../../../src/components/listing/ListingDetailLayout";
 
@@ -71,7 +72,7 @@ export default async function LandDetailPage({
       related={related}
       category="land"
       categoryLabel="Land"
-      fallbackIcon="🏘️"
+      fallbackIcon={LandPlot}
       contactLabel="Contact Owner"
       typeBadge="Land"
     />

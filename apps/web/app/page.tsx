@@ -1,6 +1,8 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Search, MessageCircle, Handshake, Car, LandPlot } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import HeroCarousel from "../src/components/HeroCarousel";
 import SearchFilterBar from "../src/components/SearchFilterBar";
 import type { ListingSummary } from "@jefflink/types";
@@ -110,7 +112,7 @@ export default async function HomePage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {cars.map((c) => (
-              <ListingCard key={c.id} listing={c} href={`/cars/${c.id}`} fallbackIcon="🚗" />
+              <ListingCard key={c.id} listing={c} href={`/cars/${c.id}`} fallbackIcon={Car} />
             ))}
           </div>
         )}
@@ -124,7 +126,7 @@ export default async function HomePage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {land.map((p) => (
-              <ListingCard key={p.id} listing={p} href={`/land/${p.id}`} fallbackIcon="🏘️" />
+              <ListingCard key={p.id} listing={p} href={`/land/${p.id}`} fallbackIcon={LandPlot} />
             ))}
           </div>
         )}
@@ -182,12 +184,12 @@ export default async function HomePage() {
           <h2 className="text-2xl font-semibold text-brand-white mb-10 text-center">How JeffLink Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { step: "01", title: "Search & Filter", desc: "Browse listings by category, location, and price range across Uganda.", icon: "🔍" },
-              { step: "02", title: "Contact Directly", desc: "Message verified sellers and dealers without any middlemen or fees.", icon: "💬" },
-              { step: "03", title: "Close the Deal", desc: "Meet up, inspect, and seal your deal safely with our verified sellers.", icon: "🤝" },
+              { step: "01", title: "Search & Filter", desc: "Browse listings by category, location, and price range across Uganda.", Icon: Search },
+              { step: "02", title: "Contact Directly", desc: "Message verified sellers and dealers without any middlemen or fees.", Icon: MessageCircle },
+              { step: "03", title: "Close the Deal", desc: "Meet up, inspect, and seal your deal safely with our verified sellers.", Icon: Handshake },
             ].map((item) => (
               <div key={item.step} className="flex flex-col items-center text-center gap-3">
-                <span className="text-4xl">{item.icon}</span>
+                <item.Icon size={40} strokeWidth={1.5} className="text-brand-accent" />
                 <span className="text-brand-accent text-xs font-bold tracking-widest">STEP {item.step}</span>
                 <h3 className="text-brand-white font-semibold text-lg">{item.title}</h3>
                 <p className="text-brand-muted text-sm leading-relaxed">{item.desc}</p>
@@ -236,7 +238,7 @@ function EmptySlot({ label }: { label: string }) {
   return <p className="text-brand-muted text-center py-16">{label}</p>;
 }
 
-function ListingCard({ listing, href, fallbackIcon }: { listing: ListingSummary; href: string; fallbackIcon: string }) {
+function ListingCard({ listing, href, fallbackIcon: FallbackIcon }: { listing: ListingSummary; href: string; fallbackIcon: LucideIcon }) {
   return (
     <Link
       href={href}
@@ -246,7 +248,7 @@ function ListingCard({ listing, href, fallbackIcon }: { listing: ListingSummary;
         {listing.coverUrl
           // eslint-disable-next-line @next/next/no-img-element
           ? <img src={listing.coverUrl} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-          : <div className="w-full h-full flex items-center justify-center text-4xl">{fallbackIcon}</div>
+          : <div className="w-full h-full flex items-center justify-center text-brand-muted"><FallbackIcon size={48} strokeWidth={1.5} /></div>
         }
       </div>
       <div className="p-4">
@@ -262,7 +264,7 @@ function ListingCard({ listing, href, fallbackIcon }: { listing: ListingSummary;
 function FeaturedListingCard({ listing }: { listing: ListingSummary }) {
   const href = listing.type === "vehicle" ? `/cars/${listing.id}` : `/land/${listing.id}`;
   const badge = listing.type === "vehicle" ? "Car" : "Property";
-  const icon  = listing.type === "vehicle" ? "🚗" : "🏘️";
+  const FallbackIcon = listing.type === "vehicle" ? Car : LandPlot;
 
   return (
     <Link
@@ -273,7 +275,7 @@ function FeaturedListingCard({ listing }: { listing: ListingSummary }) {
         {listing.coverUrl
           // eslint-disable-next-line @next/next/no-img-element
           ? <img src={listing.coverUrl} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-          : <div className="w-full h-full flex items-center justify-center text-4xl">{icon}</div>
+          : <div className="w-full h-full flex items-center justify-center text-brand-muted"><FallbackIcon size={48} strokeWidth={1.5} /></div>
         }
         {/* Type badge — matches mobile FeedListingCard badge */}
         <span className="absolute top-2 left-2 bg-brand-primary/90 text-brand-white text-[10px] font-bold px-2 py-0.5 rounded-full">

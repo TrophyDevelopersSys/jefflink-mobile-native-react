@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LandPlot } from "lucide-react";
 import type { ListingSummary } from "@jefflink/types";
 
 export const metadata: Metadata = {
@@ -62,8 +63,8 @@ export default async function LandPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-4xl">
-                      🏘️
+                    <div className="w-full h-full flex items-center justify-center text-brand-muted">
+                      <LandPlot size={48} strokeWidth={1.5} />
                     </div>
                   )}
                 </div>
