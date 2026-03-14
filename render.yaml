@@ -1,19 +1,29 @@
+# Single render.yaml at repo root — Render auto-detects this file.
+# Both services build from workspace root so Turbo caching works across packages.
+# Mobile (Expo) is NOT deployed here — use EAS Build instead.
+#
+# CURRENT DNS (Cloudflare):
+#   CNAME  www  → jefflink.onrender.com       ← update to jefflink-web.onrender.com  after deploy
+#   CNAME  api  → jefflink.onrender.com       ← update to jefflink-api.onrender.com  after deploy
+#   CNAME  cdn  → pub-ac2067b6a2264561b99c6c807174ff78.r2.dev  (Proxied — no change needed)
+
 services:
-  # ─── API Service (NestJS) ───────────────────────────────────
-  # Domain: api.jefflinkcars.com → jefflink-api.onrender.com
+
+  # ─── API Service (NestJS) ─────────────────────────────────────────────────
+  # After deploy: update Cloudflare CNAME api → jefflink-api.onrender.com
   - type: web
     name: jefflink-api
-    runtime: node
-    region: oregon
-    plan: free
-    buildCommand: pnpm install --frozen-lockfile && pnpm turbo run build --filter=jefflink-backend
+    env: node
+    plan: starter
+    rootDir: .
+    buildCommand: "pnpm install --frozen-lockfile && pnpm turbo run build --filter=jefflink-backend"
     startCommand: node apps/backend/dist/main.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false          # set in Render dashboard → Environment
+        sync: false
       - key: JWT_SECRET
         sync: false
       - key: JWT_EXPIRES_IN
@@ -21,27 +31,31 @@ services:
       - key: REDIS_URL
         sync: false
       - key: CORS_ORIGINS
-        value: https://jefflinkcars.com,https://jefflink-web.onrender.com
+        value: https://jefflinkcars.com,https://www.jefflinkcars.com
       - key: R2_ACCESS_KEY
         sync: false
       - key: R2_SECRET_KEY
         sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
+      - key: CDN_BASE_URL
+        value: https://cdn.jefflinkcars.com
 
-  # ─── Web Service (Next.js 15) ───────────────────────────────
-  # Domain: jefflinkcars.com → jefflink-web.onrender.com
+  # ─── Web Service (Next.js 15) ──────────────────────────────────────────────
+  # After deploy: update Cloudflare CNAME www → jefflink-web.onrender.com
   - type: web
     name: jefflink-web
-    runtime: node
-    region: oregon
-    plan: free
-    buildCommand: pnpm install --frozen-lockfile && pnpm turbo run build --filter=@jefflink/web
-    startCommand: cd apps/web && pnpm start
+    env: node
+    plan: starter
+    rootDir: .
+    buildCommand: "pnpm install --frozen-lockfile && pnpm turbo run build --filter=@jefflink/web"
+    startCommand: pnpm --filter @jefflink/web start
     envVars:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_API_BASE_URL
-        value: https://jefflink-api.onrender.com/api/v1
-      - key: NEXT_PUBLIC_CDN_URL
-        sync: false          # e.g. https://cdn.jefflinkcars.com
+        value: https://api.jefflinkcars.com/api/v1
       - key: NEXT_PUBLIC_SITE_URL
         value: https://jefflinkcars.com
+      - key: NEXT_PUBLIC_CDN_URL
+        value: https://cdn.jefflinkcars.com

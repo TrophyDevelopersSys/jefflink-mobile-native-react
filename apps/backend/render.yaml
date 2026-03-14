@@ -1,29 +1,3 @@
-# Standalone service config — used when Render is pointed at this file directly.
-# For full monorepo deployments (API + Web together), use /render.yaml at repo root.
-services:
-  - type: web
-    name: jefflink-api
-    runtime: node
-    region: oregon
-    plan: free
-    rootDir: apps/backend
-    buildCommand: cd ../.. && pnpm install --frozen-lockfile && pnpm turbo run build --filter=jefflink-backend
-    startCommand: node dist/main.js
-    healthCheckPath: /health
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        sync: false          # set in Render dashboard → Environment
-      - key: JWT_SECRET
-        sync: false
-      - key: JWT_EXPIRES_IN
-        value: 7d
-      - key: REDIS_URL
-        sync: false
-      - key: CORS_ORIGINS
-        value: https://jefflinkcars.com,https://jefflink-web.onrender.com
-      - key: R2_ACCESS_KEY
-        sync: false
-      - key: R2_SECRET_KEY
-        sync: false
+# NOTE: Render is configured via /render.yaml at the repo root.
+# Do not add service definitions here — Render should only read one render.yaml.
+# Keeping this file as a placeholder to avoid accidental service creation.
