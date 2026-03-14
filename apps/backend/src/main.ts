@@ -43,8 +43,14 @@ async function bootstrap() {
     .map((o) => o.trim())
     .filter(Boolean);
 
-  // Always include local dev origins so the app works without env-var setup
+  // Always include known origins so the app works without env-var setup
   const devOrigins = [
+    // Production
+    'https://jefflinkcars.com',
+    'https://www.jefflinkcars.com',
+    // Local dev
+    'http://localhost:3000',
+    'http://localhost:5173',
     'http://localhost:8081',
     'http://localhost:19006',
     'exp://localhost:8081',
