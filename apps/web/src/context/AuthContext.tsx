@@ -104,3 +104,6 @@ export function useAuthContext(): AuthContextValue {
   if (!ctx) throw new Error("useAuthContext must be used inside <AuthProvider>");
   return ctx;
 }
+
+/** Alias for useAuthContext — use either name. */
+export const useAuth = useAuthContext;
