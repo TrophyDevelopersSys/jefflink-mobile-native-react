@@ -4,6 +4,7 @@ import {
   ConflictException,
   Logger,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
@@ -157,6 +158,34 @@ export class AuthService {
 
   async logout(userId: string): Promise<void> {
     await this.redis.del(`refresh:${userId}`);
+  }
+
+  /**
+   * Generates a password-reset token for the given email, stores it in Redis
+   * with a 1-hour TTL, and returns a generic response (to prevent email
+   * enumeration).  Actual email dispatch should be wired up here once a
+   * mailer service is available.
+   */
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const normalised = email.toLowerCase();
+
+    const result = await this.db.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, normalised))
+      .limit(1);
+
+    if (result.length > 0) {
+      const token = crypto.randomBytes(32).toString('hex');
+      // Store hashed token: reset:<userId> → token hash, TTL = 1 hour
+      const tokenHash = await bcrypt.hash(token, 10);
+      await this.redis.set(`reset:${result[0].id}`, tokenHash, 3600);
+      this.logger.log(`Password reset token generated for user ${result[0].id}`);
+      // TODO: dispatch email with reset link once MailerService is integrated
+    }
+
+    // Always return the same message to prevent email enumeration
+    return { message: 'If that email is registered you will receive a reset link shortly.' };
   }
 
   async getMe(userId: string): Promise<Omit<AuthUser, 'sub'> & { id: string }> {

@@ -30,13 +30,7 @@ async function bootstrap() {
   // ── Structured logging via Pino ──────────────────────────────────────────
   app.useLogger(app.get(Logger));
 
-  // ── Security headers ─────────────────────────────────────────────────────
-  app.use(helmet());
-
-  // ── Gzip compression ─────────────────────────────────────────────────────
-  app.use(compression());
-
-  // ── CORS ─────────────────────────────────────────────────────────────────
+  // ── CORS — must be registered before helmet so headers are never stripped ─
   const rawOrigins = config.get<string>('CORS_ORIGINS', '');
   const configuredOrigins = (rawOrigins ?? '')
     .split(',')
@@ -57,9 +51,23 @@ async function bootstrap() {
     ...configuredOrigins,
   ]);
 
+  // Belt-and-suspenders: explicit middleware that handles OPTIONS before any
+  // other handler so proxy-level preflight requests always get a response.
+  app.use((req: import('express').Request, res: import('express').Response, next: import('express').NextFunction) => {
+    const origin = req.headers['origin'] as string | undefined;
+    if (origin && defaultOrigins.has(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization');
+    }
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    return next();
+  });
+
   app.enableCors({
-    // Callback gives granular control: undefined origin = server-to-server /
-    // mobile native (allowed); unknown browser origin = rejected.
     origin: (origin, callback) => {
       if (!origin || defaultOrigins.has(origin)) {
         callback(null, true);
@@ -68,9 +76,17 @@ async function bootstrap() {
       }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    preflightContinue: false,
+    optionsSuccessStatus: 200,
   });
+
+  // ── Security headers ─────────────────────────────────────────────────────
+  app.use(helmet());
+
+  // ── Gzip compression ─────────────────────────────────────────────────────
+  app.use(compression());
 
   // ── Global validation pipe ────────────────────────────────────────────────
   app.useGlobalPipes(
