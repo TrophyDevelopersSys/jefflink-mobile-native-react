@@ -6,8 +6,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ADMIN_ROLES } from '../../common/decorators/roles.decorator';
-import type { AuthUser } from '../../common/types/auth-user.type';
+import { ADMIN_ROLES } from '../../../common/decorators/roles.decorator';
+import type { AuthUser } from '../../../common/types/auth-user.type';
 import { Request } from 'express';
 
 /**
