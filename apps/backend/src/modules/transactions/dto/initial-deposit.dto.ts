@@ -5,7 +5,7 @@ export class InitialDepositDto {
   @ApiProperty({ description: 'Deposit amount', example: 5000000 })
   @IsNumber()
   @IsPositive()
-  amount: number;
+  amount!: number;
 
   @ApiPropertyOptional({ description: 'Payment method (MOBILE_MONEY, CASH, BANK_TRANSFER)', example: 'MOBILE_MONEY' })
   @IsString()

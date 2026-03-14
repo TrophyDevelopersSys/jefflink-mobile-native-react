@@ -15,24 +15,24 @@ export class CreateContractDto {
   @ApiProperty({ description: 'Total hire-purchase price', example: 25000000 })
   @IsNumber()
   @IsPositive()
-  totalAmount: number;
+  totalAmount!: number;
 
   @ApiProperty({ description: 'Initial deposit / down payment', example: 5000000 })
   @IsNumber()
   @IsPositive()
-  initialDeposit: number;
+  initialDeposit!: number;
 
   @ApiProperty({ description: 'Annual interest rate as a decimal (e.g. 0.18 for 18%)', example: 0.18 })
   @IsNumber()
   @Min(0)
   @Max(1)
-  interestRate: number;
+  interestRate!: number;
 
   @ApiProperty({ description: 'Repayment term in months', example: 24 })
   @IsNumber()
   @IsPositive()
   @Max(360)
-  termMonths: number;
+  termMonths!: number;
 
   @ApiPropertyOptional({ description: 'ISO currency code', example: 'UGX' })
   @IsString()

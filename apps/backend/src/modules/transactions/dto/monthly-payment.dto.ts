@@ -5,7 +5,7 @@ export class MonthlyPaymentDto {
   @ApiProperty({ description: 'Amount paid (must be >= installment amount)', example: 1200000 })
   @IsNumber()
   @IsPositive()
-  amount: number;
+  amount!: number;
 
   @ApiPropertyOptional({ description: 'Payment method', example: 'MOBILE_MONEY' })
   @IsString()
