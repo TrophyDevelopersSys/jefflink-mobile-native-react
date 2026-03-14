@@ -3,6 +3,21 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import {
+  LayoutDashboard,
+  Users,
+  Store,
+  Car,
+  FileText,
+  CreditCard,
+  CalendarClock,
+  Banknote,
+  Flag,
+  Search,
+  Settings,
+  LogOut,
+  type LucideIcon,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 // ── Role → accessible admin sections ─────────────────────────────────────────
@@ -19,18 +34,18 @@ const ROLE_MENUS: Record<string, string[]> = {
   SUPPORT:        ["dashboard","users","reports"],
 };
 
-const NAV_ITEMS = [
-  { key: "dashboard",    label: "Dashboard",    icon: "⊞" },
-  { key: "users",        label: "Users",        icon: "👥" },
-  { key: "vendors",      label: "Vendors",      icon: "🏪" },
-  { key: "listings",     label: "Listings",     icon: "🚗" },
-  { key: "contracts",    label: "Contracts",    icon: "📄" },
-  { key: "payments",     label: "Payments",     icon: "💳" },
-  { key: "installments", label: "Installments", icon: "📅" },
-  { key: "withdrawals",  label: "Withdrawals",  icon: "💰" },
-  { key: "reports",      label: "Reports",      icon: "🚩" },
-  { key: "audit-logs",   label: "Audit Logs",   icon: "🔍" },
-  { key: "settings",     label: "Settings",     icon: "⚙️" },
+const NAV_ITEMS: { key: string; label: string; Icon: LucideIcon }[] = [
+  { key: "dashboard",    label: "Dashboard",    Icon: LayoutDashboard },
+  { key: "users",        label: "Users",        Icon: Users },
+  { key: "vendors",      label: "Vendors",      Icon: Store },
+  { key: "listings",     label: "Listings",     Icon: Car },
+  { key: "contracts",    label: "Contracts",    Icon: FileText },
+  { key: "payments",     label: "Payments",     Icon: CreditCard },
+  { key: "installments", label: "Installments", Icon: CalendarClock },
+  { key: "withdrawals",  label: "Withdrawals",  Icon: Banknote },
+  { key: "reports",      label: "Reports",      Icon: Flag },
+  { key: "audit-logs",   label: "Audit Logs",   Icon: Search },
+  { key: "settings",     label: "Settings",     Icon: Settings },
 ];
 
 export function AdminSidebar() {
@@ -69,8 +84,8 @@ export function AdminSidebar() {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
         {visibleItems.map((item) => {
-          const href    = `/admin/${item.key}`;
-          const active  = pathname === href || pathname.startsWith(`${href}/`);
+          const href   = `/admin/${item.key}`;
+          const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={item.key}
@@ -81,7 +96,7 @@ export function AdminSidebar() {
                   : "text-[var(--color-text-muted)] hover:bg-[var(--color-border)] hover:text-[var(--color-text)]"
               }`}
             >
-              <span className="text-base leading-none">{item.icon}</span>
+              <item.Icon size={16} strokeWidth={1.75} />
               {item.label}
             </Link>
           );
@@ -92,8 +107,9 @@ export function AdminSidebar() {
       <div className="px-4 py-4 border-t border-[var(--color-border)]">
         <button
           onClick={handleSignOut}
-          className="w-full text-sm text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-colors text-left px-2 py-1.5"
+          className="flex items-center gap-2 w-full text-sm text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-colors px-2 py-1.5"
         >
+          <LogOut size={16} strokeWidth={1.75} />
           Sign out
         </button>
       </div>
