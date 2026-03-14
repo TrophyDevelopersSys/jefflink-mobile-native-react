@@ -10,13 +10,14 @@ export const metadata: Metadata = {
   keywords: ["land for sale Uganda", "property Uganda", "plots Kampala", "apartments Uganda"],
 };
 
-export const revalidate = 60;
+// Render dynamically at request time — avoids cold-start timeouts during build.
+export const dynamic = "force-dynamic";
 
 async function getLandListings(): Promise<ListingSummary[]> {
   try {
     const res = await fetch(
       `${process.env["NEXT_PUBLIC_API_BASE_URL"] ?? "https://jefflink.onrender.com/api/v1"}/listings?type=property&limit=20`,
-      { next: { revalidate: 60 } }
+      { cache: "no-store" }
     );
     if (!res.ok) return [];
     return res.json();

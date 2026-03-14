@@ -10,7 +10,8 @@ export const metadata: Metadata = {
   keywords: ["houses for sale Uganda", "buy house Uganda", "apartments Kampala", "homes Uganda"],
 };
 
-export const revalidate = 60;
+// Render dynamically at request time — avoids cold-start timeouts during build.
+export const dynamic = "force-dynamic";
 
 const API =
   process.env["NEXT_PUBLIC_API_BASE_URL"] ?? "https://jefflink.onrender.com/api/v1";
@@ -18,7 +19,7 @@ const API =
 async function getHouses(): Promise<ListingSummary[]> {
   try {
     const res = await fetch(`${API}/listings?type=house&limit=20`, {
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
     if (!res.ok) return [];
     return res.json();
