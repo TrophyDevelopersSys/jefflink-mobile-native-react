@@ -12,11 +12,17 @@
     },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.jefflinkcars.com/api/v1"
+      },
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.jefflinkcars.com/api/v1"
+      },
       "android": {
         "buildType": "app-bundle"
       }

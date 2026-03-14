@@ -2,15 +2,15 @@
 # Both services build from workspace root so Turbo caching works across packages.
 # Mobile (Expo) is NOT deployed here — use EAS Build instead.
 #
-# CURRENT DNS (Cloudflare):
-#   CNAME  www  → jefflink.onrender.com       ← update to jefflink-web.onrender.com  after deploy
-#   CNAME  api  → jefflink.onrender.com       ← update to jefflink-api.onrender.com  after deploy
+# DNS (Cloudflare) — target state:
+#   CNAME  www  → jefflink-web.onrender.com
+#   CNAME  api  → jefflink-api.onrender.com        ← mobile app hits https://api.jefflinkcars.com/api/v1
 #   CNAME  cdn  → pub-ac2067b6a2264561b99c6c807174ff78.r2.dev  (Proxied — no change needed)
 
 services:
 
   # ─── API Service (NestJS) ─────────────────────────────────────────────────
-  # After deploy: update Cloudflare CNAME api → jefflink-api.onrender.com
+  # Cloudflare CNAME: api.jefflinkcars.com → jefflink-api.onrender.com
   - type: web
     name: jefflink-api
     env: node
@@ -42,7 +42,7 @@ services:
         value: https://cdn.jefflinkcars.com
 
   # ─── Web Service (Next.js 15) ──────────────────────────────────────────────
-  # After deploy: update Cloudflare CNAME www → jefflink-web.onrender.com
+  # Cloudflare CNAME: www.jefflinkcars.com → jefflink-web.onrender.com
   - type: web
     name: jefflink-web
     env: node
