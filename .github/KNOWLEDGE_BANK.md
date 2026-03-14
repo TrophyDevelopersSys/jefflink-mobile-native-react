@@ -1,5 +1,5 @@
 # JeffLink Platform — Knowledge Bank
-> **Last Updated:** March 12, 2026  
+> **Last Updated:** March 13, 2026  
 > **Purpose:** Living reference document. Update this file after every major change to architecture, modules, or data flows. No need to re-analyse the codebase from scratch — start here.
 
 ---
@@ -548,20 +548,100 @@ getSession(adapter): Promise<TokenPayload | null>
 ### 6.4 @jefflink/design-tokens (`packages/design-tokens/`)
 
 ```typescript
-colors: { brandPrimary="#0E7C3A", brandAccent="#22C55E", brandDark="#0F1115", ... }
-spacing: { xs, sm, md, lg, xl, 2xl, ... }
-radius: { sm, md, lg, full }
-typography: { xs, sm, md, lg, xl, 2xl, 3xl, ... }
+// colors.ts
+colors: { brandPrimary="#0E7C3A", brandAccent="#22C55E", brandDark="#0F1115",
+          brandNight="#13161C", brandSlate="#1A1D23", brandWarning="#F59E0B",
+          brandDanger="#DC2626", brandMuted="#9AA3AF", ... }
+
+// spacing.ts
+spacing: { none=0, xs=4, sm=8, md=16, lg=24, xl=32, xxl=48, xxxl=64 }
+
+// radius.ts  
+radius: { none=0, badge=6, input=8, button=12, card=16, modal=20, full=9999 }
+
+// typography.ts — Tailwind class strings
+typography: { display, title, subtitle, body, caption, label }
+
+// shadows.ts  ← NEW
+shadows: { sm, md, lg, xl, card }   // CSS box-shadow strings (web)
+elevation: { sm=2, md=4, lg=8, xl=12, card=6 }  // RN elevation integers (Android)
+
+// breakpoints.ts  ← NEW
+breakpoints: { sm=640, md=768, lg=1024, xl=1280, xxl=1536 }  // numeric px values
 ```
 
 ### 6.5 @jefflink/ui (`packages/ui/`)
 
-```typescript
-Button       { variant: "solid"|"outline"|"ghost", size: "sm"|"md"|"lg" }
-StatCard     { label, value, change }
-Badge        { variant, label }
-Spinner      { size, color }
-```
+All components ship as dual-render: `ComponentName.native.tsx` (RN + NativeWind) and `ComponentName.web.tsx` (HTML + Tailwind). Metro picks `.native` automatically; web bundlers use the default `.ts` barrel.
+
+**Import:** `import { ListingCard, Toast } from "@jefflink/ui"`
+
+#### Primitives
+
+| Component | Key Props |
+| --------- | --------- |
+| `Button` | `variant: primary\|secondary\|danger\|ghost`, `size: sm\|md\|lg`, `loading`, `disabled` |
+| `Badge` | `variant: default\|success\|warning\|danger\|info`, `label` |
+| `Spinner` | `size`, `color` |
+| `Input` | `label`, `error`, `leftIcon`, `rightIcon` |
+| `Select` | `options: SelectOption[]`, `value`, `onChange` — bottom-sheet native / `<select>` web |
+| `PriceTag` | `amount` (UGX auto-formatted), `size: sm\|md\|lg` |
+| `Avatar` | `uri?`, `name?` (initials fallback), `size: xs\|sm\|md\|lg\|xl` |
+
+#### Search & Filter
+
+| Component | Key Props |
+| --------- | --------- |
+| `SearchBar` | `filters: SearchFilter[]`, `onSearch` |
+| `FilterPanel` | `fields: FilterField[]`, `values`, `onChange`, `onReset` |
+
+#### Listing Display
+
+| Component | Key Props |
+| --------- | --------- |
+| `Card` | Base wrapper, `pressable?`, `onPress` |
+| `ListingCard` | `listing: ListingSummary`, `onSave`, `onPress` |
+| `ListingGrid` | `listings[]`, `onSelect`, `columns: 1\|2` (native) / 1–4 cols responsive (web) |
+| `ImageGallery` | `images: string[]`, lightbox overlay |
+
+#### Vendor
+
+| Component | Key Props |
+| --------- | --------- |
+| `VendorCard` | `vendor: VendorProfile`, `listingCount`, `rating` |
+
+#### Engagement
+
+| Component | Key Props |
+| --------- | --------- |
+| `FavoriteButton` | `saved`, `onToggle` — heart toggle with ARIA |
+| `ActionBar` | `price`, `onContact`, `onCall`, `onChat` — sticky bottom bar |
+
+#### Navigation & Structure
+
+| Component | Key Props |
+| --------- | --------- |
+| `Tabs` | `tabs: TabItem[]`, `active`, `onChange` |
+| `Pagination` | `page`, `totalPages`, `onChange` |
+| `Modal` | `visible`, `onClose`, `title` — bottom-sheet native / centered overlay web |
+
+#### Map
+
+| Component | Key Props |
+| --------- | --------- |
+| `MapView` | `lat`, `lng`, `zoom?` — OSM iframe (web) / stub with install note (native) |
+
+#### Feedback
+
+| Component | Key Props |
+| --------- | --------- |
+| `Toast` | `message`, `variant: success\|error\|warning\|info`, `visible`, `onHide` — auto-hides |
+
+#### Dashboard
+
+| Component | Key Props |
+| --------- | --------- |
+| `StatCard` | `label`, `value`, `change` |
 
 ### 6.6 @jefflink/utils (`packages/utils/`)
 
@@ -970,6 +1050,8 @@ Authorization: Bearer {accessToken}
 | Date | Change | Updated By |
 |------|--------|-----------|
 | 2026-03-12 | Initial knowledge bank created | Copilot |
+| 2026-03-13 | `@jefflink/design-tokens` — added `shadows.ts` (CSS + RN elevation) and `breakpoints.ts` (JS numeric values); updated `index.ts` barrel | Copilot |
+| 2026-03-13 | `@jefflink/ui` — expanded from 4 to 20 components: Input, Select, SearchBar, Card, PriceTag, Avatar, ListingCard, VendorCard, ListingGrid, FilterPanel, ImageGallery, Modal, Tabs, Pagination, FavoriteButton, ActionBar, MapView, Toast; all dual `.native.tsx` + `.web.tsx`; barrel `index.ts` updated | Copilot |
 
 ---
 

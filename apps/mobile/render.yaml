@@ -1,25 +1,4 @@
-services:
-  - type: web
-    name: jefflink-backend
-    runtime: node
-    region: oregon
-    plan: free
-    rootDir: backend
-    buildCommand: npm install && npm run build
-    startCommand: npm run start:prod
-    healthCheckPath: /health
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 3000
-      - key: DATABASE_URL
-        sync: false
-      - key: JWT_SECRET
-        sync: false
-      - key: JWT_EXPIRES_IN
-        value: 7d
-      - key: REDIS_URL
-        sync: false
-      - key: CORS_ORIGINS
-        value: https://jefflink.onrender.com
+# NOTE: The Expo / React Native mobile app is NOT deployed to Render.
+# Builds are handled via EAS Build (eas build --platform android|ios).
+# This file is intentionally left as a placeholder — do not configure
+# a Render service pointing to apps/mobile.

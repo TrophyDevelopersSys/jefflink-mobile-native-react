@@ -437,6 +437,9 @@ importers:
         specifier: '>=18.0.0'
         version: 19.2.0
     devDependencies:
+      '@jefflink/design-tokens':
+        specifier: workspace:*
+        version: link:../design-tokens
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.14

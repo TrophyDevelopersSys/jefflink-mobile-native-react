@@ -1,0 +1,47 @@
+services:
+  # ─── API Service (NestJS) ───────────────────────────────────
+  # Domain: api.jefflinkcars.com → jefflink-api.onrender.com
+  - type: web
+    name: jefflink-api
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: pnpm install --frozen-lockfile && pnpm turbo run build --filter=jefflink-backend
+    startCommand: node apps/backend/dist/main.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false          # set in Render dashboard → Environment
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: REDIS_URL
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://jefflinkcars.com,https://jefflink-web.onrender.com
+      - key: R2_ACCESS_KEY
+        sync: false
+      - key: R2_SECRET_KEY
+        sync: false
+
+  # ─── Web Service (Next.js 15) ───────────────────────────────
+  # Domain: jefflinkcars.com → jefflink-web.onrender.com
+  - type: web
+    name: jefflink-web
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: pnpm install --frozen-lockfile && pnpm turbo run build --filter=@jefflink/web
+    startCommand: cd apps/web && pnpm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_BASE_URL
+        value: https://jefflink-api.onrender.com/api/v1
+      - key: NEXT_PUBLIC_CDN_URL
+        sync: false          # e.g. https://cdn.jefflinkcars.com
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://jefflinkcars.com

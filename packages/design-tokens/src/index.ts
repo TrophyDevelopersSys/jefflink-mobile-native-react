@@ -9,3 +9,9 @@ export type { RadiusKey } from "./radius";
 
 export { typography } from "./typography";
 export type { TypographyKey } from "./typography";
+
+export { shadows, elevation } from "./shadows";
+export type { ShadowKey } from "./shadows";
+
+export { breakpoints } from "./breakpoints";
+export type { BreakpointKey } from "./breakpoints";

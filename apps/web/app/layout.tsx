@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import React from "react";
 import "../src/globals.css";
+import { Providers } from "../src/components/Providers";
+import Navbar from "../src/components/Navbar";
+import Footer from "../src/components/Footer";
 
 export const metadata: Metadata = {
   title: {
@@ -36,8 +39,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-background text-text min-h-screen antialiased">
-        {children}
+      <body className="bg-background text-text min-h-screen antialiased flex flex-col">
+        <Providers>
+          <Navbar />
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
