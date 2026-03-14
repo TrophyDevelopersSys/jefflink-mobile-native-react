@@ -1,10 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Proxy /api/v1/* to the backend so browser requests are same-origin (no CORS).
-  // BACKEND_URL can be overridden via env; defaults to the Render deployment.
+  // BACKEND_URL must point to the NestJS API service, never the web service itself.
   async rewrites() {
     const backend =
-      process.env["BACKEND_URL"] ?? "https://jefflink.onrender.com";
+      process.env["BACKEND_URL"] ?? "https://jefflink-api.onrender.com";
     return [
       {
         source: "/api/v1/:path*",
@@ -18,8 +18,8 @@ const nextConfig = {
   env: {
     INTERNAL_API_URL:
       process.env["INTERNAL_API_URL"] ??
-      process.env["BACKEND_URL"] ??
-      "https://jefflink.onrender.com/api/v1",
+      (process.env["BACKEND_URL"] ? `${process.env["BACKEND_URL"]}/api/v1` : undefined) ??
+      "https://jefflink-api.onrender.com/api/v1",
   },
 
   transpilePackages: [
