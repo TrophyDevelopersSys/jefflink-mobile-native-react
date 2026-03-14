@@ -17,8 +17,7 @@ export class QueueModule {
    * Services must use @Optional() on @InjectQueue and guard queue.add() calls.
    */
   static register(): DynamicModule {
-    const hasRedis =
-      !!process.env['REDIS_URL'] || process.env['NODE_ENV'] === 'production';
+    const hasRedis = !!process.env['REDIS_URL'];
 
     if (!hasRedis) {
       new Logger('QueueModule').warn(

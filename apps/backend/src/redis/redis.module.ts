@@ -12,26 +12,18 @@ const redisClientProvider = {
   provide: 'REDIS_CLIENT',
   useFactory: (config: ConfigService): Redis => {
     const url = config.get<string>('redis.url');
-    const isDev = config.get<string>('NODE_ENV') !== 'production';
 
-    if (!url && isDev) {
+    if (!url) {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const RedisMock = require('ioredis-mock') as typeof Redis;
       const mock = new RedisMock() as unknown as Redis;
       new Logger('RedisModule').warn(
-        'REDIS_URL not set — using in-memory ioredis-mock (dev only)',
+        'REDIS_URL not set — using in-memory ioredis-mock (Redis features disabled)',
       );
       return mock;
     }
 
-    return url
-      ? new Redis(url)
-      : new Redis({
-          host: config.get<string>('redis.host', 'localhost'),
-          port: config.get<number>('redis.port', 6379),
-          password: config.get<string>('redis.password'),
-          db: config.get<number>('redis.db', 0),
-        });
+    return new Redis(url);
   },
   inject: [ConfigService],
 };
