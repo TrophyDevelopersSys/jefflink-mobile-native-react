@@ -8,6 +8,13 @@
       "when": 1772793703800,
       "tag": "0000_fancy_raza",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1772793800000,
+      "tag": "0001_admin_infrastructure",
+      "breakpoints": true
     }
   ]
 }

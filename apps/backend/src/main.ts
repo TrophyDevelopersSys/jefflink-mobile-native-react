@@ -42,6 +42,7 @@ async function bootstrap() {
     'https://jefflinkcars.com',
     'https://www.jefflinkcars.com',
     'https://admin.jefflinkcars.com',
+    'https://jefflink.onrender.com',
     'http://localhost:3000',
     'http://localhost:5173',
     'http://localhost:8081',

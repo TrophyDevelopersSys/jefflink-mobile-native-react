@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_UG",
-    url: "https://jefflink.ug",
+    url: "https://jefflink.com",
     siteName: "JeffLink",
     images: [
       {

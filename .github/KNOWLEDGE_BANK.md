@@ -182,11 +182,39 @@ jefflink-mobile/
 /payments/{id}       GET   — Single payment
 /wallet              GET   — Wallet summary
 /wallet/transactions GET   — Transaction history
-/admin/users         GET   — User list (admin)
-/admin/contracts     GET   — Contract list (admin)
-/admin/payments      GET   — Payment approvals
-/admin/recovery      GET   — Recovery cases
-/admin/sync          POST  — Force data sync
+# Dashboard & Analytics
+/admin/dashboard                       GET    — Live stats (users, contracts, vehicles, revenue)
+/admin/analytics/revenue               GET    — Monthly revenue timeline
+/admin/analytics/activity              GET    — Recent audit-log activity
+# Users
+/admin/users                           GET    — Paginated user list (search param)
+/admin/users/:id/status                PATCH  — Update user status (ACTIVE|SUSPENDED|BANNED)
+# Vendors
+/admin/vendors                         GET    — Paginated vendor profiles
+/admin/vendors/:id/verify              PATCH  — Verify vendor (sets VERIFIED + verifiedAt)
+/admin/vendors/:id/suspend             PATCH  — Suspend vendor
+# Listings
+/admin/listings/pending                GET    — Pending vehicle listings
+/admin/listings/vehicles/:id/approve   PATCH  — Approve vehicle listing
+/admin/listings/vehicles/:id/reject    PATCH  — Reject vehicle listing
+/admin/listings/properties/pending     GET    — Pending property listings
+/admin/listings/properties/:id/approve PATCH  — Approve property listing
+/admin/listings/properties/:id/reject  PATCH  — Reject property listing
+# Reports
+/admin/reports                         GET    — Listing reports (paginated, filterable by status)
+/admin/reports/:id/resolve             PATCH  — Resolve/dismiss a report
+# Finance
+/admin/finance/summary                 GET    — Finance KPI summary (revenue, overdue, etc.)
+/admin/contracts                       GET    — Contract list (admin)
+/admin/payments                        GET    — Payment records
+/admin/installments                    GET    — Installment overview
+/admin/withdrawals                     GET    — Vendor withdrawal queue
+/admin/withdrawals/:id/approve         PATCH  — Approve withdrawal
+/admin/withdrawals/:id/reject          PATCH  — Reject withdrawal
+# Legacy / Sync
+/admin/recovery                        GET    — Recovery cases
+/admin/sync                            GET    — Sync/platform health status
+/admin/audit-logs                      GET    — Immutable admin action log
 /users/me            GET   — Profile
 /users/me/avatar     POST  — Avatar upload
 /media/upload        POST  — Media upload
@@ -240,10 +268,14 @@ RootNavigator
       │     ├── Analytics      → VendorAnalyticsScreen
       │     ├── Leads          → VendorLeadsScreen
       │     └── Boost          → BoostListingScreen
-      └── [ADMIN] → AdminNavigator
-            ├── Users          → Admin user management
-            ├── Contracts      → Contract oversight
-            └── Reports        → Financial reports
+      └── [ADMIN] → AdminNavigator (Stack)
+            ├── AdminTabs (BottomTab — tabBar hidden)
+            │     ├── Dashboard  → DashboardScreen   (live: stats + recent activity)
+            │     ├── Users      → UsersScreen        (live: FlatList + status management)
+            │     ├── Contracts  → ContractsScreen    (live: FlatList, UGX amounts)
+            │     ├── Payments   → PaymentsScreen     (live: FlatList, method + paidAt)
+            │     └── Recovery   → RecoveryScreen
+            └── MonitorSync → MonitorSyncScreen       (live: sync health + platform stats)
 ```
 
 ### 3.7 Feature Modules (`src/features/`)
@@ -341,7 +373,10 @@ backend/src/
     ├── properties/      ← PropertiesModule: property listings
     ├── transactions/    ← TransactionsModule: payment history + invoices
     ├── wallet/          ← WalletModule: vendor balance + withdrawals
-    ├── admin/           ← AdminModule: user mgmt, contracts, recovery
+    ├── admin/           ← AdminModule: full RBAC admin infrastructure
+    │     ├── services/  ← admin-analytics, admin-users, admin-listings,
+    │     │                 admin-vendors, admin-finance, audit-log services
+    │     └── dto/       ← typed DTOs for all admin actions
     ├── media/           ← MediaModule: S3 upload, image processing
     ├── search/          ← SearchModule: Meilisearch full-text
     ├── notifications/   ← NotificationsModule: push + in-app
@@ -465,6 +500,9 @@ penalty_policies, penalty_config
 | `contracts` | id, user_id, vehicle_id, branch_id, cash_price, hire_price, down_payment, interest_rate, term_months, status | Hire-purchase FSM |
 | `installments` | id, contract_id, due_date, amount_due, penalty_amount, amount_paid, status | PENDING/PAID/OVERDUE |
 | `payments` | id, contract_id, amount, payment_date, method, status | PENDING/COMPLETED/FAILED |
+| `vendor_profiles` | id, userId, businessName, businessType, verificationStatus (PENDING/VERIFIED/REJECTED/SUSPENDED), verifiedBy, verifiedAt, suspendedAt, suspensionReason | Drizzle-managed vendor KYC & verification — **NEW** |
+| `listing_reports` | id, listingId, listingType, reporterId, reason, description, status (OPEN/RESOLVED/DISMISSED), resolution, resolutionNote, resolvedBy, resolvedAt | User-submitted listing reports — **NEW** |
+| `admin_logs` | id, adminId, action, entityType, entityId, previousState, newState, ipAddress, userAgent, metadata, createdAt | Immutable admin audit trail — **NEW** |
 | `accounts` | id, account_type_id, code, name, balance | Chart of accounts |
 | `journal_entries` | id, reference_id, entry_date, description | Double-entry bookkeeping |
 | `journal_lines` | id, entry_id, account_id, debit_amount, credit_amount | Ledger lines |
@@ -1097,6 +1135,7 @@ Authorization: Bearer {accessToken}
 | 2026-03-14 | `apps/web/app/houses/page.tsx` + `apps/web/app/land/page.tsx` — switched from `revalidate=60` (ISR, causes 60s build timeout against cold Render API) to `force-dynamic` + `cache:'no-store'`; build now completes in ~22s | Copilot |
 | 2026-03-14 | § 7 Web App fully documented: all 21 routes with rendering strategy, full directory tree, updated Next.js version (15.5.12) | Copilot |
 | 2026-03-14 | § 11 Deployment — updated Render services table (names, URLs, build cmds), DNS CNAMEs, R2 storage note, pnpm+Render gotcha documented | Copilot |
+| 2026-03-15 | **Admin Infrastructure wired to Neon DB** — (1) Drizzle migration `0001_admin_infrastructure.sql` registered in journal + run against Neon (`npm run db:migrate:admin`); (2) 3 new DB tables: `vendor_profiles`, `listing_reports`, `admin_logs`; (3) 6 NestJS admin services fully wired to Neon: `AdminAnalyticsService`, `AdminUsersService`, `AdminListingsService`, `AdminVendorsService`, `AdminFinanceService`, `AuditLogService`; (4) Mobile `endpoints.ts` expanded to 34 admin routes; (5) `admin.api.ts` rewritten with 20 typed methods; (6) All 5 admin mobile screens wired to live Neon data: `DashboardScreen`, `UsersScreen`, `ContractsScreen`, `PaymentsScreen`, `MonitorSyncScreen` | Copilot |
 
 ---
 

@@ -431,3 +431,109 @@ export const vendorWalletsRelations = relations(vendorWallets, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Vendor Profiles (verification & business details)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const vendorProfiles = pgTable(
+  'vendor_profiles',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .unique()
+      .notNull(),
+    businessName: varchar('business_name', { length: 255 }),
+    businessType: varchar('business_type', { length: 100 }), // DEALERSHIP | INDIVIDUAL | AGENCY
+    location: varchar('location', { length: 255 }),
+    district: varchar('district', { length: 100 }),
+    tinNumber: varchar('tin_number', { length: 50 }),
+    licenseNumber: varchar('license_number', { length: 100 }),
+    verificationStatus: varchar('verification_status', { length: 50 })
+      .notNull()
+      .default('PENDING'), // PENDING | VERIFIED | REJECTED | SUSPENDED
+    verifiedBy: uuid('verified_by').references(() => users.id),
+    verifiedAt: timestamp('verified_at'),
+    rejectionReason: text('rejection_reason'),
+    notes: text('notes'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    userIdx: uniqueIndex('vendor_profiles_user_idx').on(t.userId),
+    statusIdx: index('vendor_profiles_status_idx').on(t.verificationStatus),
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Listing Reports (flagged vehicles / properties)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const listingReports = pgTable(
+  'listing_reports',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    reportedBy: uuid('reported_by')
+      .references(() => users.id)
+      .notNull(),
+    referenceId: uuid('reference_id').notNull(),         // vehicle_id or property_id
+    referenceType: varchar('reference_type', { length: 50 }).notNull(), // vehicle | property
+    reason: varchar('reason', { length: 100 }).notNull(), // FRAUD | DUPLICATE | INAPPROPRIATE | OTHER
+    description: text('description'),
+    status: varchar('status', { length: 50 }).notNull().default('OPEN'), // OPEN | RESOLVED | DISMISSED
+    resolvedBy: uuid('resolved_by').references(() => users.id),
+    resolutionNote: text('resolution_note'),
+    resolvedAt: timestamp('resolved_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    referenceIdx: index('listing_reports_ref_idx').on(t.referenceId, t.referenceType),
+    statusIdx: index('listing_reports_status_idx').on(t.status),
+    reportedByIdx: index('listing_reports_reporter_idx').on(t.reportedBy),
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin Audit Logs (immutable action trail)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const adminLogs = pgTable(
+  'admin_logs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    adminId: uuid('admin_id')
+      .references(() => users.id)
+      .notNull(),
+    action: varchar('action', { length: 100 }).notNull(),   // e.g. SUSPEND_USER, APPROVE_LISTING
+    entityType: varchar('entity_type', { length: 50 }),     // user | vendor | vehicle | contract
+    entityId: uuid('entity_id'),
+    metadata: jsonb('metadata'),                            // before/after snapshot, extra context
+    ipAddress: varchar('ip_address', { length: 45 }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    adminIdx: index('admin_logs_admin_idx').on(t.adminId),
+    entityIdx: index('admin_logs_entity_idx').on(t.entityId),
+    actionIdx: index('admin_logs_action_idx').on(t.action),
+    createdAtIdx: index('admin_logs_created_at_idx').on(t.createdAt),
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin Logs Relations
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const vendorProfilesRelations = relations(vendorProfiles, ({ one }) => ({
+  user: one(users, { fields: [vendorProfiles.userId], references: [users.id] }),
+  verifier: one(users, { fields: [vendorProfiles.verifiedBy], references: [users.id] }),
+}));
+
+export const listingReportsRelations = relations(listingReports, ({ one }) => ({
+  reporter: one(users, { fields: [listingReports.reportedBy], references: [users.id] }),
+  resolver: one(users, { fields: [listingReports.resolvedBy], references: [users.id] }),
+}));
+
+export const adminLogsRelations = relations(adminLogs, ({ one }) => ({
+  admin: one(users, { fields: [adminLogs.adminId], references: [users.id] }),
+}));
