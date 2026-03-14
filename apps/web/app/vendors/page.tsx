@@ -46,7 +46,7 @@ export default async function VendorsPage() {
             Verified Vendors
           </h1>
           <p className="text-text-muted text-lg">
-            Connect with trusted Verified Sellers, agents, and service providers
+            Connect with trusted Sellers, agents, and service providers
             verified by JeffLink.
           </p>
         </div>
