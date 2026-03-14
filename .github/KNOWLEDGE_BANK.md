@@ -1,5 +1,5 @@
 # JeffLink Platform — Knowledge Bank
-> **Last Updated:** March 14, 2026  
+> **Last Updated:** March 15, 2026  
 > **Purpose:** Living reference document. Update this file after every major change to architecture, modules, or data flows. No need to re-analyse the codebase from scratch — start here.
 
 ---
@@ -33,11 +33,12 @@
 | Database | Neon PostgreSQL (serverless) | Neon Cloud |
 | Cache | Redis (ioredis) | Render Redis |
 | Search | Meilisearch | Render |
-| File Storage | AWS S3 | AWS |
+| File Storage | Cloudflare R2 (`jefflink-storage` bucket) | Cloudflare |
+| Media CDN | Cloudflare CDN (`cdn.jefflinkcars.com`) | Cloudflare |
 | Job Queue | BullMQ | Render |
 | Error Monitoring | Sentry | Sentry Cloud |
 
-**API Base URL:** `https://jefflink.onrender.com/api/v1`
+**API Base URL:** `https://api.jefflinkcars.com/api/v1`
 
 **User Roles:** `CUSTOMER` | `VENDOR` | `ADMIN`
 
@@ -377,7 +378,8 @@ backend/src/
     │     ├── services/  ← admin-analytics, admin-users, admin-listings,
     │     │                 admin-vendors, admin-finance, audit-log services
     │     └── dto/       ← typed DTOs for all admin actions
-    ├── media/           ← MediaModule: S3 upload, image processing
+    ├── media/           ← MediaModule: R2 upload (memory), presigned URLs, image optimization
+    ├── cms/             ← CmsModule: hero sliders, banners, content blocks (NEW)
     ├── search/          ← SearchModule: Meilisearch full-text
     ├── notifications/   ← NotificationsModule: push + in-app
     └── health/          ← HealthModule: liveness probes
@@ -438,7 +440,9 @@ cache.profile: 600s TTL
 // database.config.ts
 pool.min: 2, pool.max: 10
 
-// storage.config.ts — AWS S3 bucket, region, credentials
+// storage.config.ts — Cloudflare R2 (jefflink-storage bucket)
+// Keys: accountId, accessKeyId, secretAccessKey, bucket, publicUrl
+// Env vars: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_PUBLIC_URL
 ```
 
 ### 4.7 Backend Scripts
@@ -503,6 +507,10 @@ penalty_policies, penalty_config
 | `vendor_profiles` | id, userId, businessName, businessType, verificationStatus (PENDING/VERIFIED/REJECTED/SUSPENDED), verifiedBy, verifiedAt, suspendedAt, suspensionReason | Drizzle-managed vendor KYC & verification — **NEW** |
 | `listing_reports` | id, listingId, listingType, reporterId, reason, description, status (OPEN/RESOLVED/DISMISSED), resolution, resolutionNote, resolvedBy, resolvedAt | User-submitted listing reports — **NEW** |
 | `admin_logs` | id, adminId, action, entityType, entityId, previousState, newState, ipAddress, userAgent, metadata, createdAt | Immutable admin audit trail — **NEW** |
+| `media_assets` | id, uploadedBy, bucket, key, url, thumbnailUrl, mimeType, sizeBytes, referenceId, referenceType, isCover, **status** (ACTIVE/DELETED), createdAt | R2 file metadata. `status` column added 2026-03-15 |
+| `cms_sliders` | id, title, subtitle, image_url (R2 CDN URL), button_label, button_link, sort_order, active, created_at, updated_at | Hero carousel slides. Images served from `cdn.jefflinkcars.com` — **NEW** |
+| `cms_banners` | id, placement, image_url, link_url, alt_text, active, starts_at, ends_at, created_at, updated_at | Promotional banners keyed by placement (e.g. `home_top`) — **NEW** |
+| `cms_content` | id, key (UNIQUE), value, type (text/html/json/url), description, updated_at | Key-value store for all CMS text, SEO meta tags, labels. Never stores media — **NEW** |
 | `accounts` | id, account_type_id, code, name, balance | Chart of accounts |
 | `journal_entries` | id, reference_id, entry_date, description | Double-entry bookkeeping |
 | `journal_lines` | id, entry_id, account_id, debit_amount, credit_amount | Ledger lines |
@@ -971,25 +979,80 @@ useListingStore.setSearchResults(data)
 ListingsScreen re-renders with filtered results
 ```
 
-### 9.6 Media Upload Flow
+### 9.6 Media Upload Flow (Direct-to-R2)
 
 ```
 User picks image from gallery/camera
         │ expo-image-picker
         ▼
-POST /api/v1/media/upload { file, type: "LISTING_IMAGE" }
+POST /api/v1/media/presign { path, contentType }
         │
         ▼
-┌─────────────────────────┐
-│  MediaService           │
-│  1. sharp resize/optimize│
-│  2. S3 presigned PUT URL │
-│  3. Upload to S3 bucket  │
-│  4. Return CDN URL       │
-└──────────┬──────────────┘
-           │ { url: "https://cdn.jefflink.com/..." }
+┌────────────────────────────┐
+│  MediaService              │
+│  getSignedUrl(PutObject)   │
+│  expiresIn: 300s           │
+└──────────┬─────────────────┘
+           │ { uploadUrl (signed), publicUrl (CDN), expiresIn }
            ▼
-Stored in listing.media[] or user.avatarUrl
+Client PUTs binary directly to R2
+  (zero bytes through API server)
+           │
+           ▼
+Public URL: https://cdn.jefflinkcars.com/<path>
+           │
+           ▼
+Stored in listing.imageUrl / media_assets.url / user.avatarUrl
+```
+
+**Fallback (multipart):** `POST /api/v1/media/upload` still supported for server-side uploads.
+- Uses `multer.memoryStorage()` (no disk writes)
+- sharp compresses to WebP (max 1920×1080, quality 82)
+- Streams buffer to R2 via `PutObjectCommand`
+- Inserts row in `media_assets` table
+
+**R2 Bucket Structure:**
+```
+jefflink-storage/
+├── cms/sliders/          ← hero carousel images
+├── cms/banners/          ← promo banners
+├── cms/pages/            ← static page images
+├── cars/<carId>/         ← car listing photos
+├── houses/<propertyId>/  ← house listing photos
+├── land/<propertyId>/    ← land listing photos
+├── vendors/<vendorId>/   ← vendor branding
+├── users/avatars/<userId>/
+└── documents/            ← contracts, KYC (keep private)
+```
+
+### 9.7 CMS Data Flow
+
+```
+Frontend (homepage load)
+        │
+        ▼
+GET /api/v1/cms/homepage   (no auth required)
+        │
+        ▼
+┌──────────────────────────────┐
+│  CmsService.getHomepage()    │
+│  3 parallel Neon DB queries: │
+│  1. cmsSliders (active, asc) │
+│  2. cmsBanners (placement=   │
+│     home_top, in-schedule)   │
+│  3. cmsContent (all keys)    │
+└──────────────┬───────────────┘
+               │
+               ▼
+{
+  heroSliders: [{ title, subtitle, imageUrl(R2), buttonLabel, buttonLink }],
+  heroBanners: [{ imageUrl(R2), linkUrl, altText }],
+  content: { "homepage_hero_title": "...", "seo_homepage_title": "..." }
+}
+               │
+               ▼
+Images load from cdn.jefflinkcars.com (Cloudflare edge)
+Text rendered directly — no extra fetches
 ```
 
 ---
@@ -1026,10 +1089,12 @@ JWT_REFRESH_SECRET=    # Refresh token signing key
 JWT_EXPIRES_IN=        # e.g. 15m
 JWT_REFRESH_EXPIRES_IN=# e.g. 7d
 REDIS_URL=             # Redis connection string
-AWS_S3_BUCKET=         # S3 bucket name
-AWS_S3_REGION=         # e.g. eu-west-1
-AWS_ACCESS_KEY_ID=     # AWS credentials
-AWS_SECRET_ACCESS_KEY= # AWS credentials
+# Cloudflare R2 (primary file storage)
+R2_ACCOUNT_ID=         # Cloudflare account ID
+R2_ACCESS_KEY_ID=      # R2 API token key ID
+R2_SECRET_ACCESS_KEY=  # R2 API token secret
+R2_BUCKET=jefflink-storage
+R2_PUBLIC_URL=https://cdn.jefflinkcars.com
 MEILISEARCH_HOST=      # Meilisearch URL
 MEILISEARCH_API_KEY=   # Meilisearch API key
 SENTRY_DSN=            # Sentry error tracking
@@ -1136,6 +1201,7 @@ Authorization: Bearer {accessToken}
 | 2026-03-14 | § 7 Web App fully documented: all 21 routes with rendering strategy, full directory tree, updated Next.js version (15.5.12) | Copilot |
 | 2026-03-14 | § 11 Deployment — updated Render services table (names, URLs, build cmds), DNS CNAMEs, R2 storage note, pnpm+Render gotcha documented | Copilot |
 | 2026-03-15 | **Admin Infrastructure wired to Neon DB** — (1) Drizzle migration `0001_admin_infrastructure.sql` registered in journal + run against Neon (`npm run db:migrate:admin`); (2) 3 new DB tables: `vendor_profiles`, `listing_reports`, `admin_logs`; (3) 6 NestJS admin services fully wired to Neon: `AdminAnalyticsService`, `AdminUsersService`, `AdminListingsService`, `AdminVendorsService`, `AdminFinanceService`, `AuditLogService`; (4) Mobile `endpoints.ts` expanded to 34 admin routes; (5) `admin.api.ts` rewritten with 20 typed methods; (6) All 5 admin mobile screens wired to live Neon data: `DashboardScreen`, `UsersScreen`, `ContractsScreen`, `PaymentsScreen`, `MonitorSyncScreen` | Copilot |
+| 2026-03-15 | **R2 Media & CMS Architecture** — (1) `storage.config.ts` fixed: key names unified to match `media.service.ts` (`accountId`, `bucket`, `publicUrl`); default bucket name set to `jefflink-storage`; AWS S3 config removed. (2) `media.service.ts` — added `presignUpload(path, contentType)`: generates 5-min presigned R2 PUT URL so clients upload directly to R2 (zero backend bandwidth). (3) `media.controller.ts` — added `POST /api/v1/media/presign` endpoint. (4) `media_assets` schema — added `status VARCHAR(20) DEFAULT 'ACTIVE'` column. (5) New CMS DB tables: `cms_sliders`, `cms_banners`, `cms_content` (§ 5.3). (6) New NestJS `CmsModule` (`apps/backend/src/modules/cms/`) with `CmsService` + `CmsController` + DTOs. (7) Public endpoint `GET /api/v1/cms/homepage` returns sliders + banners + content map in one call. (8) Admin CRUD endpoints for sliders and content blocks (ADMIN/SYSTEM_ADMIN roles). (9) Drizzle migration `0002_cms_media_architecture.sql` added with seed data. (10) `.env.example` updated with all 5 `R2_*` vars and bucket folder structure. (11) `apps/web/app/commercial/[id]/page.tsx` — `fallbackIcon` fixed: import `BriefcaseBusiness` from `lucide-react` and pass as component reference instead of string. | Copilot |
 
 ---
 
