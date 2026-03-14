@@ -17,10 +17,26 @@ const PORT = Number(process.env.PORT ?? 3000);
 app.use(helmet());
 app.use(
   cors({
-    origin: (process.env.CORS_ORIGINS ?? "")
-      .split(",")
-      .map((o) => o.trim())
-      .filter(Boolean),
+    origin: (origin, callback) => {
+      const configuredOrigins = (process.env.CORS_ORIGINS ?? "")
+        .split(",")
+        .map((o) => o.trim())
+        .filter(Boolean);
+      const allowed = new Set([
+        "https://jefflinkcars.com",
+        "https://www.jefflinkcars.com",
+        "https://admin.jefflinkcars.com",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:8081",
+        ...configuredOrigins,
+      ]);
+      if (!origin || allowed.has(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin '${origin}' not allowed`));
+      }
+    },
     credentials: true,
   })
 );
