@@ -1,5 +1,5 @@
 # JeffLink Platform — Knowledge Bank
-> **Last Updated:** March 13, 2026  
+> **Last Updated:** March 14, 2026  
 > **Purpose:** Living reference document. Update this file after every major change to architecture, modules, or data flows. No need to re-analyse the codebase from scratch — start here.
 
 ---
@@ -663,26 +663,46 @@ capitalize(str)                      // "Hello World"
 apps/web/
 ├── app/               ← Next.js 15 app directory (App Router)
 │   ├── layout.tsx     ← Root layout
-│   ├── page.tsx       ← Homepage
+│   ├── page.tsx       ← Homepage (ISR, revalidate 60s)
 │   ├── not-found.tsx  ← 404
-│   ├── cars/          ← Vehicle marketplace route
-│   ├── houses/        ← Residential listings
-│   ├── land/          ← Land parcels
-│   ├── commercial/    ← Commercial properties
-│   └── vendors/       ← Vendor directory
+│   ├── about/         ← Static about page
+│   ├── cars/          ← Vehicle marketplace (ISR) + [id] dynamic
+│   ├── commercial/    ← Commercial properties (ISR) + [id] dynamic
+│   ├── contact/       ← Static contact page
+│   ├── dashboard/     ← User dashboard + /profile sub-route
+│   ├── houses/        ← Residential listings (force-dynamic) + [id] dynamic
+│   ├── how-it-works/  ← Static explainer page
+│   ├── land/          ← Land parcels (force-dynamic) + [id] dynamic
+│   ├── login/         ← Auth: login
+│   ├── register/      ← Auth: register
+│   ├── robots.txt     ← Static robots.txt
+│   ├── search/        ← Search results page
+│   ├── sell/          ← Seller onboarding page
+│   ├── sitemap.xml    ← Static sitemap
+│   └── vendors/       ← Vendor directory + [id] dynamic
 └── src/
-    └── components/    ← React components
+    └── components/    ← React components (Navbar, etc.)
 ```
 
-**Stack:** Next.js 15.2.3 | React 19.2.0 | Tailwind CSS 3.4.19 | Zustand 5 | Recharts 2.15.1
+**Stack:** Next.js 15.5.12 | React 19 | Tailwind CSS 3.4.19 | Zustand 5 | Recharts 2.15.1
 
-**Routes:**
-- `/` — Homepage + hero + featured listings
-- `/cars` — Vehicle marketplace (search, filter, grid)
-- `/houses` — Residential listings
-- `/land` — Land parcels
-- `/commercial` — Commercial properties
-- `/vendors` — Vendor profiles directory
+**Route Rendering Strategy:**
+| Route | Strategy | Notes |
+|-------|----------|-------|
+| `/` | ISR (revalidate 60s) | Homepage with featured listings |
+| `/cars` | ISR (revalidate 60s) | Fetches API at build + revalidates |
+| `/commercial` | ISR (revalidate 60s) | Fetches API at build + revalidates |
+| `/vendors` | ISR (revalidate 60s) | Vendor directory |
+| `/houses` | `force-dynamic` | API called at request time (avoids cold-start timeout) |
+| `/land` | `force-dynamic` | API called at request time (avoids cold-start timeout) |
+| `/cars/[id]` | Dynamic (ƒ) | Server-rendered on demand |
+| `/houses/[id]` | Dynamic (ƒ) | Server-rendered on demand |
+| `/land/[id]` | Dynamic (ƒ) | Server-rendered on demand |
+| `/commercial/[id]` | Dynamic (ƒ) | Server-rendered on demand |
+| `/vendors/[id]` | Dynamic (ƒ) | Server-rendered on demand |
+| All others | Static (○) | No data fetching |
+
+> ⚠️ **Why `/houses` and `/land` are `force-dynamic`:** The backend API is on Render's free tier and cold-starts in 30–90s. Next.js enforces a 60s per-page build timeout. These pages use `force-dynamic` + `cache: 'no-store'` to skip build-time fetching entirely.
 
 ---
 
@@ -978,8 +998,28 @@ SENTRY_DSN=            # Sentry error tracking
 ```
 
 ### Render Services (`render.yaml`)
-- **API:** NestJS web service
-- **Worker:** BullMQ job processor
+
+Both services build from workspace root (`rootDir: .`) so Turbo cache spans all packages.
+
+| Service | Name | Build Command | Start Command | URL |
+|---------|------|---------------|---------------|-----|
+| Web (Next.js) | `jefflink-web` | `pnpm install --frozen-lockfile --prod=false && pnpm turbo run build --filter=@jefflink/web` | `pnpm --filter @jefflink/web start` | https://jefflinkcars.com |
+| API (NestJS) | `jefflink-api` | `pnpm install --frozen-lockfile --prod=false && pnpm turbo run build --filter=jefflink-backend` | `node apps/backend/dist/main.js` | https://api.jefflinkcars.com |
+
+**DNS (Cloudflare CNAMEs):**
+```
+www  → jefflink-web.onrender.com
+api  → jefflink-api.onrender.com
+cdn  → pub-ac2067b6a2264561b99c6c807174ff78.r2.dev  (Proxied)
+```
+
+**File Storage:** Cloudflare R2 (not AWS S3 — see `R2_*` env vars in render.yaml)
+
+> ⚠️ **pnpm + Render gotcha:** Render sets `NODE_ENV=production` before the build, which makes pnpm skip `devDependencies` (including `turbo`). Fixed by:
+> 1. `.npmrc` → `production=false` (applies globally, regardless of build command)
+> 2. Both build commands also pass `--prod=false` as belt-and-suspenders
+
+**Turbo Version on Render:** 2.8.14 (resolved from `^2.5.2` in root `package.json`)
 
 ### EAS Build Profiles
 ```
@@ -1052,6 +1092,11 @@ Authorization: Bearer {accessToken}
 | 2026-03-12 | Initial knowledge bank created | Copilot |
 | 2026-03-13 | `@jefflink/design-tokens` — added `shadows.ts` (CSS + RN elevation) and `breakpoints.ts` (JS numeric values); updated `index.ts` barrel | Copilot |
 | 2026-03-13 | `@jefflink/ui` — expanded from 4 to 20 components: Input, Select, SearchBar, Card, PriceTag, Avatar, ListingCard, VendorCard, ListingGrid, FilterPanel, ImageGallery, Modal, Tabs, Pagination, FavoriteButton, ActionBar, MapView, Toast; all dual `.native.tsx` + `.web.tsx`; barrel `index.ts` updated | Copilot |
+| 2026-03-14 | `.npmrc` — added `production=false` so pnpm installs devDependencies (including `turbo`) even when `NODE_ENV=production` on Render | Copilot |
+| 2026-03-14 | `render.yaml` — added `--prod=false` to both `pnpm install` build commands (belt-and-suspenders alongside `.npmrc` fix) | Copilot |
+| 2026-03-14 | `apps/web/app/houses/page.tsx` + `apps/web/app/land/page.tsx` — switched from `revalidate=60` (ISR, causes 60s build timeout against cold Render API) to `force-dynamic` + `cache:'no-store'`; build now completes in ~22s | Copilot |
+| 2026-03-14 | § 7 Web App fully documented: all 21 routes with rendering strategy, full directory tree, updated Next.js version (15.5.12) | Copilot |
+| 2026-03-14 | § 11 Deployment — updated Render services table (names, URLs, build cmds), DNS CNAMEs, R2 storage note, pnpm+Render gotcha documented | Copilot |
 
 ---
 
