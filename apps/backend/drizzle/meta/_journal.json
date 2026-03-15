@@ -29,6 +29,13 @@
       "when": 1772794100000,
       "tag": "0003_align_prod_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1742040000000,
+      "tag": "0004_add_password_hash",
+      "breakpoints": true
     }
   ]
 }
