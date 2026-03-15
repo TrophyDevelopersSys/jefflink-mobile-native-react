@@ -6,6 +6,7 @@ import Navbar from "../src/components/Navbar";
 import Footer from "../src/components/Footer";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://jefflinkcars.com"),
   title: {
     default: "JeffLink — Uganda's Marketplace",
     template: "%s | JeffLink",

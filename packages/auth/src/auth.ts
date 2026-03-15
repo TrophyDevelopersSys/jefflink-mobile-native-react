@@ -38,7 +38,9 @@ export async function login(
     throw new Error((error as { message?: string }).message ?? "Login failed");
   }
 
-  const data = (await response.json()) as { accessToken: string; refreshToken?: string };
+  // Backend wraps all responses: { success, data, timestamp }
+  const raw = (await response.json()) as { success: boolean; data: { accessToken: string; refreshToken?: string } };
+  const data = raw.data;
   const user = jwtDecode<TokenPayload>(data.accessToken);
 
   await adapter.setToken(data.accessToken);
@@ -80,9 +82,10 @@ export async function refreshToken(
 
     if (!response.ok) return null;
 
-    const data = (await response.json()) as { accessToken: string };
-    await adapter.setToken(data.accessToken);
-    return data.accessToken;
+    // Backend wraps all responses: { success, data, timestamp }
+    const raw = (await response.json()) as { success: boolean; data: { accessToken: string } };
+    await adapter.setToken(raw.data.accessToken);
+    return raw.data.accessToken;
   } catch {
     return null;
   }

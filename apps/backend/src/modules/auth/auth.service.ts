@@ -100,6 +100,10 @@ export class AuthService {
       throw new UnauthorizedException('Account is not active');
     }
 
+    if (!record.passwordHash) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     const passwordValid = await bcrypt.compare(dto.password, record.passwordHash);
     if (!passwordValid) {
       throw new UnauthorizedException('Invalid credentials');
@@ -225,10 +229,12 @@ export class AuthService {
   private async issueTokens(payload: AuthUser): Promise<AuthTokens> {
     const accessSecret =
       this.config.get<string>('jwt.secret') ??
-      this.config.get<string>('JWT_SECRET');
+      this.config.get<string>('JWT_SECRET') ??
+      'secret';
     const refreshSecret =
       this.config.get<string>('jwt.refreshSecret') ??
-      this.config.get<string>('JWT_REFRESH_SECRET');
+      this.config.get<string>('JWT_REFRESH_SECRET') ??
+      'secret-refresh';
     const accessExpiresIn =
       this.config.get<string>('jwt.expiresIn') ?? '15m';
     const refreshExpiresIn =
