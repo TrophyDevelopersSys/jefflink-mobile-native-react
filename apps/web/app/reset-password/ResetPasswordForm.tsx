@@ -3,19 +3,9 @@
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { resetPassword as requestResetPassword } from "@jefflink/auth";
 
 type FormStatus = "idle" | "loading" | "success" | "error";
-
-function getMessage(payload: unknown, fallback: string): string {
-  if (!payload || typeof payload !== "object") return fallback;
-  const record = payload as Record<string, unknown>;
-  if (typeof record["message"] === "string") return record["message"];
-  if (record["data"] && typeof record["data"] === "object") {
-    const data = record["data"] as Record<string, unknown>;
-    if (typeof data["message"] === "string") return data["message"];
-  }
-  return fallback;
-}
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
@@ -66,37 +56,25 @@ export default function ResetPasswordPage() {
     setMessage("");
 
     try {
-      const apiBase = process.env["NEXT_PUBLIC_API_BASE_URL"] ?? "/api/v1";
-      const res = await fetch(`${apiBase}/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: trimmedUserId,
-          token: trimmedToken,
-          newPassword,
-        }),
+      const data = await requestResetPassword({
+        userId: trimmedUserId,
+        token: trimmedToken,
+        newPassword,
       });
-
-      const payload = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        setStatus("error");
-        setMessage(getMessage(payload, "Unable to reset password. Please try again."));
-        return;
-      }
 
       setStatus("success");
       setMessage(
-        getMessage(
-          payload,
-          "Password reset successful. Please sign in with your new password.",
-        ),
+        data.message || "Password reset successful. Please sign in with your new password.",
       );
       setNewPassword("");
       setConfirmPassword("");
-    } catch {
+    } catch (error) {
       setStatus("error");
-      setMessage("Network error. Please try again.");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to reset password. Please try again.",
+      );
     }
   };
 

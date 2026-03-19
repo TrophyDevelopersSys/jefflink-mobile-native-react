@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { jwtDecode } from "jwt-decode";
+import { login as authLogin, register as authRegister, logout as authLogout } from "@jefflink/auth";
 import { authApi } from "../api/auth.api";
 import { useAuthStore } from "../store/auth.store";
 import { onboardingManager } from "../utils/onboardingManager";
@@ -32,6 +33,12 @@ const buildUserFromToken = (payload: TokenPayload): UserProfile | null => {
     role: payload.role,
     status: "active"
   };
+};
+
+const mobileAuthAdapter = {
+  getToken: () => tokenManager.getToken(),
+  setToken: (token: string) => tokenManager.setToken(token),
+  clearToken: () => tokenManager.clearToken(),
 };
 
 export const useAuth = () => {
@@ -82,10 +89,18 @@ export const useAuth = () => {
     setStatus("loading");
     setError(null);
     try {
-      const response = await authApi.login(email, password);
-      await tokenManager.setToken(response.token);
+      const response = await authLogin({ email, password }, mobileAuthAdapter);
+      const sessionUser = buildUserFromToken({
+        sub: response.user.sub,
+        email: response.user.email,
+        name: response.user.name,
+        role: response.user.role as TokenPayload["role"],
+      });
+      if (!sessionUser) {
+        throw new Error("Invalid token payload");
+      }
       await onboardingManager.markComplete();
-      setSession(response.token, response.user);
+      setSession(response.accessToken, sessionUser);
     } catch (e: unknown) {
       setError(resolveApiError(e, AuthMessages.general.unexpected));
       setStatus("error");
@@ -97,14 +112,22 @@ export const useAuth = () => {
       setStatus("loading");
       setError(null);
       try {
-        const response = await authApi.register({
-          fullName: payload.fullName,
+        const response = await authRegister({
+          name: payload.fullName,
           email: payload.email,
           password: payload.password,
+        }, mobileAuthAdapter);
+        const sessionUser = buildUserFromToken({
+          sub: response.user.sub,
+          email: response.user.email,
+          name: response.user.name,
+          role: response.user.role as TokenPayload["role"],
         });
-        await tokenManager.setToken(response.token);
+        if (!sessionUser) {
+          throw new Error("Invalid token payload");
+        }
         await onboardingManager.markComplete();
-        setSession(response.token, response.user);
+        setSession(response.accessToken, sessionUser);
       } catch (e: unknown) {
         setError(resolveApiError(e, AuthMessages.general.unexpected));
         setStatus("error");
@@ -115,7 +138,7 @@ export const useAuth = () => {
   );
 
   const signOut = useCallback(async () => {
-    await tokenManager.clearToken();
+    await authLogout(mobileAuthAdapter).catch(() => undefined);
     await onboardingManager.reset();
     clearSession();
   }, [clearSession]);

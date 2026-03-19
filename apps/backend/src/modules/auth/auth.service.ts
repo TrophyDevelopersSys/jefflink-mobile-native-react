@@ -45,6 +45,15 @@ interface RegisteredUser {
   name: string;
 }
 
+interface UsersColumnMeta {
+  columnName: string;
+  isNullable: boolean;
+  hasDefault: boolean;
+  dataType: string;
+  udtName: string;
+  isIdentity: boolean;
+}
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -55,6 +64,7 @@ export class AuthService {
         roles: Set<string>;
       }
     | undefined;
+  private usersColumnMetaCache: Map<string, UsersColumnMeta> | undefined;
 
   constructor(
     private readonly db: DatabaseService,
@@ -64,32 +74,49 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthTokens> {
-    // Check email uniqueness
-    const existing = await this.db.db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.email, dto.email.toLowerCase()))
-      .limit(1);
+    try {
+      // Check email uniqueness
+      const existing = await this.db.db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, dto.email.toLowerCase()))
+        .limit(1);
 
-    if (existing.length > 0) {
-      throw new ConflictException('Email already registered');
-    }
+      if (existing.length > 0) {
+        throw new ConflictException('Email already registered');
+      }
 
-    const passwordHash = await bcrypt.hash(dto.password, 12);
-    const user = await this.createUserAdaptive(dto, passwordHash);
+      const passwordHash = await bcrypt.hash(dto.password, 12);
+      const user = await this.createUserAdaptive(dto, passwordHash);
 
-    // Persist a default CUSTOMER role when schema supports it.
-    // This is intentionally best-effort to avoid auth hard-failures on
-    // partially migrated/legacy databases.
-    await this.assignDefaultRole(user.id).catch((error) => {
-      this.logger.warn(
-        `Role assignment fallback triggered during registration: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+      // Persist a default CUSTOMER role when schema supports it.
+      // This is intentionally best-effort to avoid auth hard-failures on
+      // partially migrated/legacy databases.
+      await this.assignDefaultRole(user.id).catch((error) => {
+        this.logger.warn(
+          `Role assignment fallback triggered during registration: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      });
+
+      return this.issueTokens({
+        sub: user.id,
+        email: user.email,
+        name: user.name,
+        role: 'CUSTOMER',
+      });
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+
+      this.logger.error(
+        `Register flow failed for ${dto.email.toLowerCase()}`,
+        error instanceof Error ? error.stack : String(error),
       );
-    });
-
-    return this.issueTokens({ sub: user.id, email: user.email, name: user.name, role: 'CUSTOMER' });
+      throw error;
+    }
   }
 
   async login(dto: LoginDto): Promise<AuthTokens> {
@@ -276,63 +303,72 @@ export class AuthService {
   ): Promise<RegisteredUser> {
     const cols = await this.getSchemaColumns();
     const usersCols = cols.users;
+    const rolesCols = cols.roles;
+    const usersMeta = await this.getUsersColumnMeta();
 
-    const columns: string[] = ['email'];
-    const values: unknown[] = [dto.email.toLowerCase()];
-    let param = 2;
+    const valuesByColumn = new Map<string, unknown>();
+    const setValue = (column: string, value: unknown) => {
+      if (!usersCols.has(column)) return;
+      if (!valuesByColumn.has(column)) {
+        valuesByColumn.set(column, value);
+      }
+    };
+
+    const normalizedEmail = dto.email.toLowerCase();
+    setValue('email', normalizedEmail);
 
     if (usersCols.has('password_hash')) {
-      columns.push('password_hash');
-      values.push(passwordHash);
-      param += 1;
-    } else if (usersCols.has('password')) {
-      columns.push('password');
-      values.push(passwordHash);
-      param += 1;
-    } else {
+      setValue('password_hash', passwordHash);
+    }
+    if (usersCols.has('password')) {
+      setValue('password', passwordHash);
+    }
+    if (!valuesByColumn.has('password_hash') && !valuesByColumn.has('password')) {
       throw new Error(
         "Users schema has neither 'password_hash' nor 'password' column",
       );
     }
 
-    if (usersCols.has('name')) {
-      columns.push('name');
-      values.push(dto.name);
-      param += 1;
+    setValue('name', dto.name);
+    setValue('first_name', dto.name);
+    setValue('last_name', '');
+    setValue('status', 'ACTIVE');
+    setValue('updated_at', new Date());
+
+    const phone = dto.phone?.trim();
+    if (phone) {
+      setValue('phone', phone);
     }
 
-    if (usersCols.has('first_name')) {
-      columns.push('first_name');
-      values.push(dto.name);
-      param += 1;
+    // Legacy schema compatibility: users.role_id references a lookup roles table.
+    if (usersCols.has('role_id')) {
+      const roleId = await this.ensureCustomerRoleId(rolesCols);
+      if (roleId) {
+        setValue('role_id', roleId);
+      }
     }
 
-    if (usersCols.has('last_name')) {
-      columns.push('last_name');
-      values.push('');
-      param += 1;
+    for (const [column, meta] of usersMeta.entries()) {
+      if (valuesByColumn.has(column)) continue;
+      if (meta.isNullable || meta.hasDefault || meta.isIdentity) continue;
+
+      const fallback = this.inferRequiredUserColumnValue(column, meta, dto);
+      if (fallback !== undefined) {
+        valuesByColumn.set(column, fallback);
+        continue;
+      }
+
+      throw new Error(
+        `Users schema requires non-null column '${column}' without default; no auth fallback available`,
+      );
     }
 
-    if (usersCols.has('phone')) {
-      columns.push('phone');
-      values.push(dto.phone ?? null);
-      param += 1;
-    }
-
-    if (usersCols.has('status')) {
-      columns.push('status');
-      values.push('ACTIVE');
-      param += 1;
-    }
-
-    if (usersCols.has('updated_at')) {
-      columns.push('updated_at');
-      values.push(new Date());
-      param += 1;
-    }
-
-    const placeholders = Array.from({ length: values.length }, (_, i) => `$${i + 1}`);
-
+    const columns = Array.from(valuesByColumn.keys());
+    const values = columns.map((column) => valuesByColumn.get(column));
+    const placeholders = Array.from(
+      { length: columns.length },
+      (_, i) => `$${i + 1}`,
+    );
     const nameExpr = this.buildNameExpression(usersCols);
 
     type Row = { id: string; email: string; name: string | null };
@@ -353,6 +389,108 @@ export class AuthService {
       email: user.email,
       name: user.name ?? dto.name ?? user.email.split('@')[0] ?? 'User',
     };
+  }
+
+  private inferRequiredUserColumnValue(
+    column: string,
+    meta: UsersColumnMeta,
+    dto: RegisterDto,
+  ): unknown | undefined {
+    const name = column.toLowerCase();
+
+    if (name === 'email') return dto.email.toLowerCase();
+    if (name === 'name') return dto.name;
+    if (name === 'first_name') return dto.name;
+    if (name === 'last_name') return '';
+    if (name === 'status') return 'ACTIVE';
+    if (name === 'role') return 'CUSTOMER';
+    if (name === 'user_role') return 'CUSTOMER';
+    if (name === 'user_type') return 'CUSTOMER';
+    if (name === 'account_type') return 'CUSTOMER';
+    if (name === 'phone') return dto.phone?.trim() ?? '';
+
+    if (name.endsWith('_at')) return new Date();
+    if (name.startsWith('is_') || name.startsWith('has_')) return false;
+
+    const lowerDataType = meta.dataType.toLowerCase();
+    const lowerUdt = meta.udtName.toLowerCase();
+
+    if (lowerDataType === 'boolean' || lowerUdt === 'bool') return false;
+    if (
+      lowerDataType === 'smallint' ||
+      lowerDataType === 'integer' ||
+      lowerDataType === 'bigint' ||
+      lowerDataType === 'numeric' ||
+      lowerDataType === 'real' ||
+      lowerDataType === 'double precision'
+    ) {
+      return 0;
+    }
+    if (
+      lowerDataType === 'character varying' ||
+      lowerDataType === 'character' ||
+      lowerDataType === 'text'
+    ) {
+      return '';
+    }
+    if (
+      lowerDataType.startsWith('timestamp') ||
+      lowerDataType === 'date' ||
+      lowerDataType === 'time'
+    ) {
+      return new Date();
+    }
+    if (lowerDataType === 'json' || lowerDataType === 'jsonb') {
+      return {};
+    }
+
+    return undefined;
+  }
+
+  private async ensureCustomerRoleId(rolesCols: Set<string>): Promise<string | null> {
+    if (!rolesCols.has('id')) return null;
+
+    const roleColumn = rolesCols.has('role')
+      ? 'role'
+      : rolesCols.has('name')
+        ? 'name'
+        : null;
+
+    if (!roleColumn) return null;
+
+    const existing = await this.db.executeRaw<{ id: string }>(
+      `SELECT id::text AS id
+         FROM roles
+        WHERE LOWER(${roleColumn}) = 'customer'
+        LIMIT 1`,
+    );
+    if (existing[0]?.id) {
+      return existing[0].id;
+    }
+
+    // If this roles schema is user-bound (roles.user_id required), we should
+    // not create a global role lookup record.
+    if (rolesCols.has('user_id')) {
+      return null;
+    }
+
+    const insertColumns = [roleColumn];
+    const insertValues: unknown[] = ['CUSTOMER'];
+
+    if (rolesCols.has('created_at')) {
+      insertColumns.push('created_at');
+      insertValues.push(new Date());
+    }
+
+    const placeholders = insertValues.map((_, i) => `$${i + 1}`).join(', ');
+    const created = await this.db.executeRaw<{ id: string }>(
+      `INSERT INTO roles (${insertColumns.join(', ')})
+       VALUES (${placeholders})
+       RETURNING id::text AS id`,
+      insertValues,
+    );
+
+    return created[0]?.id ?? null;
   }
 
   private async assignDefaultRole(userId: string): Promise<void> {
@@ -384,35 +522,13 @@ export class AuthService {
 
     // Legacy lookup schema: users.role_id -> roles.id (with roles.name/role)
     if (usersCols.has('role_id') && rolesCols.has('id')) {
-      const roleColumn = rolesCols.has('role')
-        ? 'role'
-        : rolesCols.has('name')
-          ? 'name'
-          : null;
-
-      if (roleColumn) {
-        const existing = await this.db.executeRaw<{ id: string }>(
-          `SELECT id::text AS id
-             FROM roles
-            WHERE LOWER(${roleColumn}) = 'customer'
-            LIMIT 1`,
+      const roleId = await this.ensureCustomerRoleId(rolesCols);
+      if (roleId) {
+        await this.db.executeRaw(
+          `UPDATE users SET role_id = $1 WHERE id = $2`,
+          [roleId, userId],
         );
-
-        let roleId = existing[0]?.id;
-        if (!roleId && rolesCols.has('name')) {
-          const created = await this.db.executeRaw<{ id: string }>(
-            `INSERT INTO roles (name) VALUES ('CUSTOMER') RETURNING id::text AS id`,
-          );
-          roleId = created[0]?.id;
-        }
-
-        if (roleId) {
-          await this.db.executeRaw(
-            `UPDATE users SET role_id = $1 WHERE id = $2`,
-            [roleId, userId],
-          );
-          return;
-        }
+        return;
       }
     }
 
@@ -519,6 +635,49 @@ export class AuthService {
 
     this.schemaColumnsCache = { users: usersCols, roles: rolesCols };
     return this.schemaColumnsCache;
+  }
+
+  private async getUsersColumnMeta(): Promise<Map<string, UsersColumnMeta>> {
+    if (this.usersColumnMetaCache) {
+      return this.usersColumnMetaCache;
+    }
+
+    type Row = {
+      column_name: string;
+      is_nullable: 'YES' | 'NO';
+      column_default: string | null;
+      data_type: string;
+      udt_name: string;
+      is_identity: 'YES' | 'NO';
+    };
+
+    const rows = await this.db.executeRaw<Row>(
+      `SELECT
+         column_name,
+         is_nullable,
+         column_default,
+         data_type,
+         udt_name,
+         is_identity
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = 'users'`,
+    );
+
+    const meta = new Map<string, UsersColumnMeta>();
+    for (const row of rows) {
+      meta.set(row.column_name, {
+        columnName: row.column_name,
+        isNullable: row.is_nullable === 'YES',
+        hasDefault: row.column_default !== null,
+        dataType: row.data_type,
+        udtName: row.udt_name,
+        isIdentity: row.is_identity === 'YES',
+      });
+    }
+
+    this.usersColumnMetaCache = meta;
+    return this.usersColumnMetaCache;
   }
 
   private async resolveAuthRecordByEmail(

@@ -3,12 +3,9 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { register as registerAccount } from "@jefflink/auth";
 import { useAuthContext } from "../../src/context/AuthContext";
-
-const API =
-  process.env["NEXT_PUBLIC_API_URL"] ??
-  process.env["NEXT_PUBLIC_API_BASE_URL"] ??
-  "https://api.jefflinkcars.com/api/v1";
+import { webAuthAdapter, webRefreshAdapter } from "../../src/lib/authAdapter";
 
 // ─── 3-step flow mirrors mobile RegisterScreen ───────────────────────────────
 
@@ -17,32 +14,6 @@ const STEPS = [
   { label: "Contact" },
   { label: "Security" },
 ];
-
-interface RegisterPayload {
-  fullName: string;
-  email: string;
-  phone: string;
-  password: string;
-  isDealer: boolean;
-}
-
-async function registerUser(payload: RegisterPayload): Promise<{ accessToken: string; refreshToken?: string }> {
-  const res = await fetch(`${API}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name: payload.fullName,
-      email: payload.email,
-      password: payload.password,
-      phone: payload.phone || undefined,
-    }),
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error((data as { message?: string }).message ?? "Registration failed");
-  }
-  return res.json();
-}
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -104,7 +75,19 @@ export default function RegisterForm() {
     if (!validateStep()) return;
     setApiError(null);
     try {
-      await registerUser({ fullName, email, phone, password, isDealer });
+      const result = await registerAccount(
+        {
+          name: fullName.trim(),
+          email: email.trim(),
+          password,
+          phone: phone.trim() || undefined,
+        },
+        webAuthAdapter,
+      );
+      if (result.refreshToken) {
+        webRefreshAdapter.setRefreshToken(result.refreshToken);
+      }
+
       // Auto sign-in after registration
       await signIn(email.trim(), password);
       router.push("/dashboard");

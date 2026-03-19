@@ -2,15 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-
-function unwrapData(payload: unknown): Record<string, unknown> {
-  if (!payload || typeof payload !== "object") return {};
-  const record = payload as Record<string, unknown>;
-  if (record["data"] && typeof record["data"] === "object") {
-    return record["data"] as Record<string, unknown>;
-  }
-  return record;
-}
+import { forgotPassword as requestForgotPassword } from "@jefflink/auth";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -31,41 +23,27 @@ export default function ForgotPasswordPage() {
     setResetToken("");
 
     try {
-      const apiBase =
-        process.env["NEXT_PUBLIC_API_BASE_URL"] ?? "/api/v1";
-      const res = await fetch(`${apiBase}/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
-      });
-      const payload = await res.json().catch(() => ({}));
-      const data = unwrapData(payload);
-
-      if (res.ok) {
-        setStatus("success");
-        setMessage(
-          (typeof data["message"] === "string" && data["message"]) ||
-            "If that email is registered, you'll receive a reset link shortly.",
-        );
-        if (typeof data["resetUrl"] === "string") {
-          setResetUrl(data["resetUrl"]);
-        }
-        if (typeof data["userId"] === "string") {
-          setResetUserId(data["userId"]);
-        }
-        if (typeof data["token"] === "string") {
-          setResetToken(data["token"]);
-        }
-      } else {
-        setStatus("error");
-        setMessage(
-          (typeof data["message"] === "string" && data["message"]) ||
-            "Something went wrong. Please try again.",
-        );
+      const data = await requestForgotPassword(email.trim());
+      setStatus("success");
+      setMessage(
+        data.message || "If that email is registered, you'll receive a reset link shortly.",
+      );
+      if (data.resetUrl) {
+        setResetUrl(data.resetUrl);
       }
-    } catch {
+      if (data.userId) {
+        setResetUserId(data.userId);
+      }
+      if (data.token) {
+        setResetToken(data.token);
+      }
+    } catch (error) {
       setStatus("error");
-      setMessage("Network error. Please check your connection and try again.");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Network error. Please check your connection and try again.",
+      );
     }
   };
 
