@@ -158,6 +158,16 @@ export default function LoginForm() {
           ) : (
             /* ── Step 1 ── */
             <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+              <input
+                type="email"
+                name="username"
+                autoComplete="username"
+                value={email}
+                readOnly
+                tabIndex={-1}
+                aria-hidden="true"
+                className="sr-only"
+              />
               {/* Display email readout */}
               <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 flex items-center justify-between">
                 <span className="text-white/80 text-sm truncate">{email}</span>

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Building2 } from "lucide-react";
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 const API =
-  process.env["INTERNAL_API_URL"] ?? "https://jefflink.onrender.com/api/v1";
+  process.env["INTERNAL_API_URL"] ?? "https://api.jefflinkcars.com/api/v1";
 
 async function getCommercialListings(): Promise<ListingSummary[]> {
   try {
@@ -93,3 +93,4 @@ export default async function CommercialPage() {
     </main>
   );
 }
+

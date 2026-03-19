@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Store, MapPin, Phone, Mail } from "lucide-react";
 import type { VendorProfile } from "@jefflink/types";
 
-const API = process.env["INTERNAL_API_URL"] ?? "https://jefflink.onrender.com/api/v1";
+const API = process.env["INTERNAL_API_URL"] ?? "https://api.jefflinkcars.com/api/v1";
 
 async function getVendor(id: string): Promise<VendorProfile | null> {
   try {

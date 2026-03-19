@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Car } from "lucide-react";
@@ -17,7 +17,7 @@ export const revalidate = 60;
 async function getCars(): Promise<ListingSummary[]> {
   try {
     const res = await fetch(
-      `${process.env["INTERNAL_API_URL"] ?? "https://jefflink.onrender.com/api/v1"}/listings?type=vehicle&limit=20`,
+      `${process.env["INTERNAL_API_URL"] ?? "https://api.jefflinkcars.com/api/v1"}/listings?type=vehicle&limit=20`,
       { next: { revalidate: 60 } }
     );
     if (!res.ok) return [];
@@ -95,3 +95,4 @@ function EmptyListings({ type }: { type: string }) {
     </div>
   );
 }
+

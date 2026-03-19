@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthContext } from "../../../src/context/AuthContext";
 
-const API = process.env["NEXT_PUBLIC_API_BASE_URL"] ?? "https://jefflink.onrender.com/api/v1";
+const API = process.env["NEXT_PUBLIC_API_BASE_URL"] ?? "https://api.jefflinkcars.com/api/v1";
 
 interface ProfileForm {
   name: string;
@@ -180,3 +180,4 @@ export default function ProfilePage() {
     </main>
   );
 }
+

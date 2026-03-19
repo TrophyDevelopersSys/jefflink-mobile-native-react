@@ -1,11 +1,14 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "../../src/context/AuthContext";
 
-const API = process.env["NEXT_PUBLIC_API_BASE_URL"] ?? "https://jefflink.onrender.com/api/v1";
+const API =
+  process.env["NEXT_PUBLIC_API_URL"] ??
+  process.env["NEXT_PUBLIC_API_BASE_URL"] ??
+  "https://api.jefflinkcars.com/api/v1";
 
 // ─── 3-step flow mirrors mobile RegisterScreen ───────────────────────────────
 
@@ -32,7 +35,6 @@ async function registerUser(payload: RegisterPayload): Promise<{ accessToken: st
       email: payload.email,
       password: payload.password,
       phone: payload.phone || undefined,
-      role: payload.isDealer ? "DEALER" : "CUSTOMER",
     }),
   });
   if (!res.ok) {
@@ -80,7 +82,7 @@ export default function RegisterForm() {
 
     if (step === 2) {
       if (!password) newErrors["password"] = "Password is required.";
-      else if (password.length < 6) newErrors["password"] = "Password must be at least 6 characters.";
+      else if (password.length < 8) newErrors["password"] = "Password must be at least 8 characters.";
       if (password !== confirmPassword) newErrors["confirmPassword"] = "Passwords do not match.";
     }
 
@@ -152,6 +154,16 @@ export default function RegisterForm() {
           </div>
 
           <form onSubmit={handleSubmit} noValidate>
+            <input
+              type="email"
+              name="username"
+              autoComplete="username"
+              value={email}
+              readOnly
+              tabIndex={-1}
+              aria-hidden="true"
+              className="sr-only"
+            />
 
             {/* ── Step 0: Full Name + Dealer toggle ── */}
             {step === 0 && (
@@ -251,7 +263,7 @@ export default function RegisterForm() {
                       autoComplete="new-password"
                       value={password}
                       onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: "" })); }}
-                      placeholder="Min. 6 characters"
+                      placeholder="Min. 8 characters"
                       className="w-full bg-white/10 border border-white/20 rounded-input px-4 py-3 pr-12 text-white placeholder-white/40 text-sm focus:outline-none focus:border-brand-accent/60"
                     />
                     <button
@@ -350,3 +362,4 @@ export default function RegisterForm() {
     </main>
   );
 }
+

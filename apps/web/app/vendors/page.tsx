@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { Metadata } from "next";
 import { MapPin } from "lucide-react";
 
@@ -23,7 +23,7 @@ interface VendorSummary {
 async function fetchVendors(): Promise<VendorSummary[]> {
   try {
     const res = await fetch(
-      `${process.env["INTERNAL_API_URL"] ?? "https://jefflink.onrender.com/api/v1"}/vendors?limit=24`,
+      `${process.env["INTERNAL_API_URL"] ?? "https://api.jefflinkcars.com/api/v1"}/vendors?limit=24`,
       { next: { revalidate: 60 } }
     );
     if (!res.ok) return [];
@@ -110,3 +110,4 @@ export default async function VendorsPage() {
     </main>
   );
 }
+

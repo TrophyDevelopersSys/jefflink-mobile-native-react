@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Search, Store, Car, LandPlot } from "lucide-react";
 import type { ListingSummary } from "@jefflink/types";
 
-const API = process.env["NEXT_PUBLIC_API_BASE_URL"] ?? "https://jefflink.onrender.com/api/v1";
+const API = process.env["NEXT_PUBLIC_API_BASE_URL"] ?? "https://api.jefflinkcars.com/api/v1";
 
 type SortOption = "newest" | "price_asc" | "price_desc";
 
@@ -258,3 +258,4 @@ export default function SearchResults() {
     </main>
   );
 }
+

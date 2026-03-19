@@ -5,7 +5,6 @@ import { useAuthStore } from "../store/auth.store";
 import { onboardingManager } from "../utils/onboardingManager";
 import { tokenManager } from "../utils/tokenManager";
 import type { TokenPayload, UserProfile } from "../types/user.types";
-import { Roles } from "../constants/roles";
 import { AuthMessages } from "../constants/authMessages";
 
 type ApiError = { response?: { data?: { message?: string }; status?: number }; message?: string; code?: string };
@@ -98,12 +97,10 @@ export const useAuth = () => {
       setStatus("loading");
       setError(null);
       try {
-        const role = payload.isDealer ? Roles.Agent : Roles.Customer;
         const response = await authApi.register({
           fullName: payload.fullName,
           email: payload.email,
           password: payload.password,
-          role,
         });
         await tokenManager.setToken(response.token);
         await onboardingManager.markComplete();

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import Link from "next/link";
 
 const MARKETPLACE_LINKS = [
@@ -40,7 +40,7 @@ export default function Footer() {
               vehicles, properties, and financial products.
             </p>
             <p className="text-brand-muted text-xs mt-4">
-              API Base: <span className="text-brand-accent">jefflink.onrender.com</span>
+              API Base: <span className="text-brand-accent">api.jefflinkcars.com</span>
             </p>
           </div>
 
@@ -121,3 +121,4 @@ export default function Footer() {
     </footer>
   );
 }
+

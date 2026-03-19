@@ -5,7 +5,7 @@ import { Home } from "lucide-react";
 import type { ListingDetail, ListingSummary, VendorProfile } from "@jefflink/types";
 import ListingDetailLayout from "../../../src/components/listing/ListingDetailLayout";
 
-const API = process.env["INTERNAL_API_URL"] ?? "https://jefflink.onrender.com/api/v1";
+const API = process.env["INTERNAL_API_URL"] ?? "https://api.jefflinkcars.com/api/v1";
 
 async function getHouse(id: string): Promise<ListingDetail | null> {
   try {

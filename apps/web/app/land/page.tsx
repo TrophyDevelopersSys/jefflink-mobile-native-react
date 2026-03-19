@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LandPlot } from "lucide-react";
@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 async function getLandListings(): Promise<ListingSummary[]> {
   try {
     const res = await fetch(
-      `${process.env["INTERNAL_API_URL"] ?? "https://jefflink.onrender.com/api/v1"}/listings?type=property&limit=20`,
+      `${process.env["INTERNAL_API_URL"] ?? "https://api.jefflinkcars.com/api/v1"}/listings?type=property&limit=20`,
       { cache: "no-store" }
     );
     if (!res.ok) return [];
@@ -83,3 +83,4 @@ export default async function LandPage() {
     </main>
   );
 }
+
