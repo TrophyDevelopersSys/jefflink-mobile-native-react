@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { register as registerAccount } from "@jefflink/auth";
+import { register as registerAccount } from "../../src/lib/authClient";
 import { useAuthContext } from "../../src/context/AuthContext";
 import { webAuthAdapter, webRefreshAdapter } from "../../src/lib/authAdapter";
 

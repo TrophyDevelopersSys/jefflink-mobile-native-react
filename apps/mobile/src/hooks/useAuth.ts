@@ -1,16 +1,16 @@
 import { useCallback } from "react";
-import { jwtDecode } from "jwt-decode";
+import type { AuthenticatedUser } from "@jefflink/types";
 import {
   login as authLogin,
   register as authRegister,
   logout as authLogout,
   refreshToken as authRefreshToken,
-} from "@jefflink/auth";
-import { authApi } from "../api/auth.api";
+  getCurrentUser,
+} from "../api/authClient";
 import { useAuthStore } from "../store/auth.store";
 import { onboardingManager } from "../utils/onboardingManager";
 import { tokenManager } from "../utils/tokenManager";
-import type { TokenPayload, UserProfile } from "../types/user.types";
+import type { UserProfile } from "../types/user.types";
 import { AuthMessages } from "../constants/authMessages";
 
 type ApiError = {
@@ -55,16 +55,14 @@ function resolveApiError(e: unknown, fallback: string): string {
   return fallback;
 }
 
-const buildUserFromToken = (payload: TokenPayload): UserProfile | null => {
-  if (!payload.sub || !payload.role || !payload.email) return null;
-  return {
-    id: payload.sub,
-    email: payload.email,
-    fullName: payload.name ?? payload.email,
-    role: payload.role,
-    status: "active"
-  };
-};
+const mapAuthenticatedUser = (user: AuthenticatedUser): UserProfile => ({
+  id: user.id,
+  email: user.email,
+  fullName: user.name,
+  role: user.role,
+  status: "active",
+  avatarUrl: user.avatarUrl,
+});
 
 const mobileAuthAdapter = {
   getToken: () => tokenManager.getToken(),
@@ -76,19 +74,9 @@ export const useAuth = () => {
   const { setSession, clearSession, setStatus, setError, setInitialized, status, error, user, token } =
     useAuthStore();
 
-  const resolveSessionUser = useCallback(async (accessToken: string): Promise<UserProfile | null> => {
+  const resolveSessionUser = useCallback(async (): Promise<UserProfile | null> => {
     try {
-      const payload = jwtDecode<TokenPayload>(accessToken);
-      if (payload.exp && payload.exp * 1000 < Date.now()) {
-        return null;
-      }
-
-      const localSessionUser = buildUserFromToken(payload);
-      if (localSessionUser) {
-        return localSessionUser;
-      }
-
-      return await authApi.me();
+      return mapAuthenticatedUser(await getCurrentUser(mobileAuthAdapter));
     } catch {
       return null;
     }
@@ -102,7 +90,7 @@ export const useAuth = () => {
     try {
       const hydrateSession = async (accessToken: string | null): Promise<boolean> => {
         if (!accessToken) return false;
-        const sessionUser = await resolveSessionUser(accessToken);
+        const sessionUser = await resolveSessionUser();
         if (!sessionUser) return false;
         setSession(accessToken, sessionUser);
         return true;
@@ -145,17 +133,8 @@ export const useAuth = () => {
       } else {
         await tokenManager.clearRefreshToken();
       }
-      const sessionUser = buildUserFromToken({
-        sub: response.user.sub,
-        email: response.user.email,
-        name: response.user.name,
-        role: response.user.role as TokenPayload["role"],
-      });
-      if (!sessionUser) {
-        throw new Error("Invalid token payload");
-      }
       await onboardingManager.markComplete();
-      setSession(response.accessToken, sessionUser);
+      setSession(response.accessToken, mapAuthenticatedUser(response.user));
     } catch (e: unknown) {
       setError(resolveApiError(e, AuthMessages.general.unexpected));
       setStatus("error");
@@ -179,17 +158,8 @@ export const useAuth = () => {
         } else {
           await tokenManager.clearRefreshToken();
         }
-        const sessionUser = buildUserFromToken({
-          sub: response.user.sub,
-          email: response.user.email,
-          name: response.user.name,
-          role: response.user.role as TokenPayload["role"],
-        });
-        if (!sessionUser) {
-          throw new Error("Invalid token payload");
-        }
         await onboardingManager.markComplete();
-        setSession(response.accessToken, sessionUser);
+        setSession(response.accessToken, mapAuthenticatedUser(response.user));
       } catch (e: unknown) {
         setError(resolveApiError(e, AuthMessages.general.unexpected));
         setStatus("error");

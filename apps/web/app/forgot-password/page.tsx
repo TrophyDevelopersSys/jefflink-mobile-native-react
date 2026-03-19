@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { forgotPassword as requestForgotPassword } from "@jefflink/auth";
+import { forgotPassword as requestForgotPassword } from "../../src/lib/authClient";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

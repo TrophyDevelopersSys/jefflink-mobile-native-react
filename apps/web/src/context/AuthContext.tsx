@@ -8,8 +8,8 @@ import React, {
   useCallback,
   type ReactNode,
 } from "react";
-import { login, logout, getSession, refreshToken } from "@jefflink/auth";
-import type { TokenPayload } from "@jefflink/types";
+import type { AuthenticatedUser } from "@jefflink/types";
+import { login, logout, getCurrentUser, refreshToken } from "../lib/authClient";
 import { webAuthAdapter, webRefreshAdapter } from "../lib/authAdapter";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -17,7 +17,7 @@ import { webAuthAdapter, webRefreshAdapter } from "../lib/authAdapter";
 type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
 
 interface AuthContextValue {
-  user: TokenPayload | null;
+  user: AuthenticatedUser | null;
   status: AuthStatus;
   error: string | null;
   isAuthenticated: boolean;
@@ -32,7 +32,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 // ─── Provider ────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<TokenPayload | null>(null);
+  const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [status, setStatus] = useState<AuthStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -42,11 +42,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const restoreSession = async () => {
       setStatus("loading");
       try {
-        const payload = await getSession(webAuthAdapter);
+        const storedToken = await webAuthAdapter.getToken();
         if (cancelled) return;
 
-        if (payload) {
-          setUser(payload);
+        if (storedToken) {
+          const currentUser = await getCurrentUser(webAuthAdapter);
+          if (cancelled) return;
+          setUser(currentUser);
           setStatus("authenticated");
           return;
         }
@@ -66,11 +68,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             webRefreshAdapter.setRefreshToken(refreshedTokens.refreshToken);
           }
 
-          const refreshedPayload = await getSession(webAuthAdapter);
+          const refreshedToken = await webAuthAdapter.getToken();
           if (cancelled) return;
 
-          if (refreshedPayload) {
-            setUser(refreshedPayload);
+          if (refreshedToken) {
+            const currentUser = await getCurrentUser(webAuthAdapter);
+            if (cancelled) return;
+            setUser(currentUser);
             setStatus("authenticated");
             return;
           }

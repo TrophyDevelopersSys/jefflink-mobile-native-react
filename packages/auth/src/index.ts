@@ -1,18 +1,11 @@
 export type { AuthAdapter } from "./adapter";
-export {
-  login,
-  register,
-  forgotPassword,
-  resetPassword,
-  logout,
-  refreshToken,
-  getSession,
-} from "./auth";
 export type {
+  AuthenticatedUser,
   LoginCredentials,
   RegisterInput,
   ResetPasswordInput,
   ForgotPasswordResult,
-  AuthResult,
-  RefreshResult,
-} from "./auth";
+  AuthTokensResponse,
+  RefreshTokensResponse,
+  CurrentUserResponse,
+} from "@jefflink/types";

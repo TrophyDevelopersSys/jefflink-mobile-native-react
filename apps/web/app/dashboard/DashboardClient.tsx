@@ -158,7 +158,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <dt className="text-brand-muted text-xs uppercase tracking-wide mb-1">User ID</dt>
-              <dd className="text-brand-muted text-xs font-mono">{user.sub}</dd>
+              <dd className="text-brand-muted text-xs font-mono">{user.id}</dd>
             </div>
           </dl>
           <div className="mt-5 pt-4 border-t border-border">

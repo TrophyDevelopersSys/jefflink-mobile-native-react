@@ -2,7 +2,7 @@
  * Web auth adapter — stores the JWT access token in localStorage.
  * httpOnly cookies require a server relay; for client-only SPAs / RSC pages
  * that do not yet have a dedicated /api/auth/* route we use localStorage.
- * The adapter shape matches @jefflink/auth's AuthAdapter interface exactly.
+ * The adapter shape matches the shared AuthAdapter interface exactly.
  */
 
 const TOKEN_KEY = "jl_access_token";

@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { resetPassword as requestResetPassword } from "@jefflink/auth";
+import { resetPassword as requestResetPassword } from "../../src/lib/authClient";
 
 type FormStatus = "idle" | "loading" | "success" | "error";
 
