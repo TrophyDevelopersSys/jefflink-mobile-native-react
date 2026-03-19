@@ -3,10 +3,22 @@
 import React, { useState } from "react";
 import Link from "next/link";
 
+function unwrapData(payload: unknown): Record<string, unknown> {
+  if (!payload || typeof payload !== "object") return {};
+  const record = payload as Record<string, unknown>;
+  if (record["data"] && typeof record["data"] === "object") {
+    return record["data"] as Record<string, unknown>;
+  }
+  return record;
+}
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [resetUrl, setResetUrl] = useState("");
+  const [resetUserId, setResetUserId] = useState("");
+  const [resetToken, setResetToken] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -14,6 +26,9 @@ export default function ForgotPasswordPage() {
 
     setStatus("loading");
     setMessage("");
+    setResetUrl("");
+    setResetUserId("");
+    setResetToken("");
 
     try {
       const apiBase =
@@ -23,14 +38,30 @@ export default function ForgotPasswordPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim() }),
       });
+      const payload = await res.json().catch(() => ({}));
+      const data = unwrapData(payload);
 
       if (res.ok) {
         setStatus("success");
-        setMessage("If that email is registered, you'll receive a reset link shortly.");
+        setMessage(
+          (typeof data["message"] === "string" && data["message"]) ||
+            "If that email is registered, you'll receive a reset link shortly.",
+        );
+        if (typeof data["resetUrl"] === "string") {
+          setResetUrl(data["resetUrl"]);
+        }
+        if (typeof data["userId"] === "string") {
+          setResetUserId(data["userId"]);
+        }
+        if (typeof data["token"] === "string") {
+          setResetToken(data["token"]);
+        }
       } else {
-        const data = await res.json().catch(() => ({}));
         setStatus("error");
-        setMessage((data as { message?: string }).message ?? "Something went wrong. Please try again.");
+        setMessage(
+          (typeof data["message"] === "string" && data["message"]) ||
+            "Something went wrong. Please try again.",
+        );
       }
     } catch {
       setStatus("error");
@@ -52,6 +83,22 @@ export default function ForgotPasswordPage() {
               <p className="text-green-300 text-sm bg-green-900/30 rounded-xl px-4 py-3">
                 {message}
               </p>
+              {resetUrl && (
+                <a
+                  href={resetUrl}
+                  className="inline-block text-sm font-medium text-white bg-white/20 hover:bg-white/30 rounded-xl px-4 py-2 transition-colors"
+                >
+                  Continue to password reset
+                </a>
+              )}
+              {!resetUrl && resetUserId && resetToken && (
+                <Link
+                  href={`/reset-password?uid=${encodeURIComponent(resetUserId)}&token=${encodeURIComponent(resetToken)}`}
+                  className="inline-block text-sm font-medium text-white bg-white/20 hover:bg-white/30 rounded-xl px-4 py-2 transition-colors"
+                >
+                  Continue to password reset
+                </Link>
+              )}
               <Link
                 href="/login"
                 className="block text-white/70 hover:text-white text-sm transition-colors"
@@ -88,6 +135,12 @@ export default function ForgotPasswordPage() {
               >
                 {status === "loading" ? "Sending…" : "Send Reset Link"}
               </button>
+
+              <p className="text-center text-white/60 text-sm">
+                <Link href="/reset-password" className="hover:text-white transition-colors">
+                  Already have a token? Reset now
+                </Link>
+              </p>
 
               <p className="text-center text-white/60 text-sm">
                 <Link href="/login" className="hover:text-white transition-colors">

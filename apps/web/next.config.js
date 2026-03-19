@@ -4,7 +4,7 @@ const nextConfig = {
   // BACKEND_URL must point to the NestJS API service, never the web service itself.
   async rewrites() {
     const backend =
-      process.env["BACKEND_URL"] ?? "https://jefflink-api.onrender.com";
+      process.env["BACKEND_URL"] ?? "https://api.jefflinkcars.com";
     return [
       {
         source: "/api/v1/:path*",
@@ -19,7 +19,7 @@ const nextConfig = {
     INTERNAL_API_URL:
       process.env["INTERNAL_API_URL"] ??
       (process.env["BACKEND_URL"] ? `${process.env["BACKEND_URL"]}/api/v1` : undefined) ??
-      "https://jefflink-api.onrender.com/api/v1",
+      "https://api.jefflinkcars.com/api/v1",
   },
 
   transpilePackages: [

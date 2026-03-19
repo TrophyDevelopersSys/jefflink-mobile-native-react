@@ -64,9 +64,9 @@ services:
       - key: NEXT_PUBLIC_API_BASE_URL
         value: https://api.jefflinkcars.com/api/v1
       - key: BACKEND_URL
-        value: https://jefflink-api.onrender.com
+        value: https://api.jefflinkcars.com
       - key: INTERNAL_API_URL
-        value: https://jefflink-api.onrender.com/api/v1
+        value: https://api.jefflinkcars.com/api/v1
       - key: NEXT_PUBLIC_SITE_URL
         value: https://jefflinkcars.com
       - key: NEXT_PUBLIC_CDN_URL

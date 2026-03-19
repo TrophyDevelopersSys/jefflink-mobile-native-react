@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
@@ -47,6 +48,7 @@ interface RegisteredUser {
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private readonly resetTokenTtlSeconds = 3600;
   private schemaColumnsCache:
     | {
         users: Set<string>;
@@ -170,7 +172,13 @@ export class AuthService {
    * enumeration).  Actual email dispatch should be wired up here once a
    * mailer service is available.
    */
-  async forgotPassword(email: string): Promise<{ message: string }> {
+  async forgotPassword(email: string): Promise<{
+    message: string;
+    userId?: string;
+    token?: string;
+    resetUrl?: string;
+    expiresInSeconds?: number;
+  }> {
     const normalised = email.toLowerCase();
 
     const result = await this.db.db
@@ -183,13 +191,66 @@ export class AuthService {
       const token = crypto.randomBytes(32).toString('hex');
       // Store hashed token: reset:<userId> → token hash, TTL = 1 hour
       const tokenHash = await bcrypt.hash(token, 10);
-      await this.redis.set(`reset:${result[0].id}`, tokenHash, 3600);
+      await this.redis.set(
+        `reset:${result[0].id}`,
+        tokenHash,
+        this.resetTokenTtlSeconds,
+      );
       this.logger.log(`Password reset token generated for user ${result[0].id}`);
+
+      const exposeResetToken =
+        this.config.get<string>('AUTH_EXPOSE_RESET_TOKEN') === 'true' ||
+        this.config.get<string>('NODE_ENV') !== 'production';
+
+      if (exposeResetToken) {
+        const webBase =
+          this.config.get<string>('WEB_APP_URL') ??
+          this.config.get<string>('NEXT_PUBLIC_SITE_URL') ??
+          'https://jefflinkcars.com';
+        const sanitizedWebBase = webBase.replace(/\/+$/, '');
+        const resetUrl = `${sanitizedWebBase}/reset-password?uid=${encodeURIComponent(
+          result[0].id,
+        )}&token=${encodeURIComponent(token)}`;
+
+        return {
+          message:
+            'If that email is registered you will receive a reset link shortly.',
+          userId: result[0].id,
+          token,
+          resetUrl,
+          expiresInSeconds: this.resetTokenTtlSeconds,
+        };
+      }
+
       // TODO: dispatch email with reset link once MailerService is integrated
     }
 
     // Always return the same message to prevent email enumeration
     return { message: 'If that email is registered you will receive a reset link shortly.' };
+  }
+
+  async resetPassword(
+    userId: string,
+    token: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    const resetKey = `reset:${userId}`;
+    const storedHash = await this.redis.get<string>(resetKey);
+    if (!storedHash) {
+      throw new BadRequestException('Reset token is invalid or expired');
+    }
+
+    const tokenValid = await this.verifyPassword(token, storedHash);
+    if (!tokenValid) {
+      throw new BadRequestException('Reset token is invalid or expired');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await this.updateUserPasswordAdaptive(userId, passwordHash);
+
+    await this.redis.del(resetKey, `refresh:${userId}`);
+
+    return { message: 'Password reset successful. Please log in with your new password.' };
   }
 
   async getMe(userId: string): Promise<Omit<AuthUser, 'sub'> & { id: string }> {
@@ -375,6 +436,51 @@ export class AuthService {
 
     // Legacy fallback: plain-text records are treated as-is.
     return plainPassword === storedPassword;
+  }
+
+  private async updateUserPasswordAdaptive(
+    userId: string,
+    passwordHash: string,
+  ): Promise<void> {
+    const cols = await this.getSchemaColumns();
+    const usersCols = cols.users;
+
+    const setFragments: string[] = [];
+    const values: unknown[] = [];
+    let param = 1;
+
+    if (usersCols.has('password_hash')) {
+      setFragments.push(`password_hash = $${param}`);
+      values.push(passwordHash);
+      param += 1;
+    }
+    if (usersCols.has('password')) {
+      setFragments.push(`password = $${param}`);
+      values.push(passwordHash);
+      param += 1;
+    }
+    if (usersCols.has('updated_at')) {
+      setFragments.push(`updated_at = NOW()`);
+    }
+
+    if (setFragments.length === 0) {
+      throw new Error(
+        "Users schema has neither 'password_hash' nor 'password' column",
+      );
+    }
+
+    type Row = { id: string };
+    const rows = await this.db.executeRaw<Row>(
+      `UPDATE users
+          SET ${setFragments.join(', ')}
+        WHERE id = $${param}
+      RETURNING id::text AS id`,
+      [...values, userId],
+    );
+
+    if (rows.length === 0) {
+      throw new BadRequestException('Reset token is invalid or expired');
+    }
   }
 
   private normalizeRole(role: string | null | undefined): AppRole {
