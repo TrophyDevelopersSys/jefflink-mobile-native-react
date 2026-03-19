@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: "/land", label: "Land" },
   { href: "/houses", label: "Houses" },
   { href: "/commercial", label: "Commercial" },
+  { href: "/hire-purchase", label: "Hire Purchase" },
   { href: "/vendors", label: "Vendors" },
   { href: "/search", label: "Search" },
 ];

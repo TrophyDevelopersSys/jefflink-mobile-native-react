@@ -214,6 +214,12 @@ export default async function HomePage() {
           >
             Post a Free Listing
           </Link>
+          <Link
+            href="/hire-purchase"
+            className="ml-3 inline-block bg-brand-accent text-black font-bold px-8 py-3 rounded-button hover:bg-brand-accent/90 transition-colors"
+          >
+            Start Hire Purchase
+          </Link>
         </div>
       </section>
 

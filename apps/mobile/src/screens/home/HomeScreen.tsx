@@ -1,5 +1,6 @@
 import React from "react";
-import { ScrollView } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 import HeroCarousel from "../../components/hero/HeroCarousel";
 import AppChrome from "../../components/layout/AppChrome";
@@ -44,6 +45,17 @@ const FeedHeader = React.memo(function FeedHeader() {
 });
 
 export default function HomeScreen() {
+  const navigation = useNavigation<any>();
+
+  const goToHirePurchase = () => {
+    const parent = navigation.getParent?.();
+    if (parent?.navigate) {
+      parent.navigate("HirePurchaseApplication");
+      return;
+    }
+    navigation.navigate("HirePurchaseApplication");
+  };
+
   return (
     <AppChrome
       title="Home"
@@ -57,6 +69,18 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: 32 }}
       >
         <FeedHeader />
+        <View className="mx-6 mt-6 rounded-2xl border border-brand-slate bg-brand-night p-5">
+          <Text className="text-lg font-semibold text-white">Need Hire Purchase Financing?</Text>
+          <Text className="mt-1 text-sm text-brand-muted">
+            Start your JeffLink application form and review the full agreement terms.
+          </Text>
+          <Pressable
+            onPress={goToHirePurchase}
+            className="mt-4 self-start rounded-full bg-brand-accent px-5 py-2.5"
+          >
+            <Text className="text-sm font-semibold text-black">Open Application</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </AppChrome>
   );

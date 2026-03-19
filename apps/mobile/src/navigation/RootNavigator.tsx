@@ -24,6 +24,7 @@ import RegisterScreen from "../screens/auth/RegisterScreen";
 import LoadingScreen from "../screens/shared/LoadingScreen";
 import ListingDetailsScreen from "../screens/customer/ListingDetailsScreen";
 import MyVehiclesScreen from "../screens/customer/MyVehiclesScreen";
+import HirePurchaseApplicationScreen from "../screens/customer/HirePurchaseApplicationScreen";
 import VendorAnalyticsScreen from "../screens/vendor/VendorAnalyticsScreen";
 import VendorLeadsScreen from "../screens/vendor/VendorLeadsScreen";
 
@@ -33,6 +34,7 @@ export type CustomerRootStackParamList = {
   Register: undefined;
   ListingDetails: undefined;
   MyVehicles: undefined;
+  HirePurchaseApplication: undefined;
   VendorAnalytics: undefined;
   VendorLeads: undefined;
 };
@@ -47,6 +49,7 @@ function CustomerRootNavigator() {
       <CustomerRootStack.Screen name="Register" component={RegisterScreen} />
       <CustomerRootStack.Screen name="ListingDetails" component={ListingDetailsScreen} />
       <CustomerRootStack.Screen name="MyVehicles" component={MyVehiclesScreen} />
+      <CustomerRootStack.Screen name="HirePurchaseApplication" component={HirePurchaseApplicationScreen} />
       <CustomerRootStack.Screen name="VendorAnalytics" component={VendorAnalyticsScreen} />
       <CustomerRootStack.Screen name="VendorLeads" component={VendorLeadsScreen} />
     </CustomerRootStack.Navigator>

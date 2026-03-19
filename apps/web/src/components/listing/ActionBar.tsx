@@ -36,6 +36,13 @@ export default function ActionBar({ listingId, contactLabel, vendorPhone }: Acti
         {contactLabel}
       </Link>
 
+      <Link
+        href={`/hire-purchase?listingId=${listingId}`}
+        className="w-full bg-brand-accent text-black font-bold px-6 py-3.5 rounded-button text-center hover:bg-brand-accent/90 transition-colors text-sm"
+      >
+        Apply for Hire Purchase
+      </Link>
+
       {vendorPhone && (
         <a
           href={`tel:${vendorPhone}`}

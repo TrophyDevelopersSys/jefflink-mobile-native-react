@@ -15,6 +15,23 @@ interface ApiEnvelope<T> {
   message?: string | string[];
 }
 
+export class ApiRequestError extends Error {
+  status?: number;
+  code?: string;
+  payload?: unknown;
+
+  constructor(
+    message: string,
+    options?: { status?: number; code?: string; payload?: unknown },
+  ) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = options?.status;
+    this.code = options?.code;
+    this.payload = options?.payload;
+  }
+}
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -79,6 +96,19 @@ function extractErrorMessage(payload: unknown, fallback: string): string {
   return fallback;
 }
 
+function extractErrorCode(payload: unknown): string | undefined {
+  if (!payload || typeof payload !== "object") return undefined;
+
+  const record = payload as Record<string, unknown>;
+  const code = record["code"];
+  if (typeof code === "string" && code.trim()) return code;
+
+  const error = record["error"];
+  if (typeof error === "string" && error.trim()) return error;
+
+  return undefined;
+}
+
 function unwrapData<T>(payload: unknown): T {
   if (!payload || typeof payload !== "object") {
     throw new Error("Unexpected API response");
@@ -101,7 +131,11 @@ async function requestJson<T>(
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(extractErrorMessage(payload, fallbackError));
+    throw new ApiRequestError(extractErrorMessage(payload, fallbackError), {
+      status: response.status,
+      code: extractErrorCode(payload),
+      payload,
+    });
   }
 
   return unwrapData<T>(payload);

@@ -1,5 +1,6 @@
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { useEffect } from "react";
+import { useNavigation } from "@react-navigation/native";
 import AppChrome from "../../components/layout/AppChrome";
 import Header from "../../components/layout/Header";
 import PaymentItem from "../../components/finance/PaymentItem";
@@ -12,6 +13,7 @@ import { useFinancePayments } from "../../features/finance";
 import { useWalletOverview, useWalletTransactions } from "../../features/wallet";
 
 export default function PaymentsScreen() {
+  const navigation = useNavigation<any>();
   const { payments, loadPayments, loading, error } = useFinancePayments();
   const {
     overview,
@@ -32,6 +34,15 @@ export default function PaymentsScreen() {
     loadTransactions();
   }, [loadPayments, loadOverview, loadTransactions]);
 
+  const goToHirePurchase = () => {
+    const parent = navigation.getParent?.();
+    if (parent?.navigate) {
+      parent.navigate("HirePurchaseApplication");
+      return;
+    }
+    navigation.navigate("HirePurchaseApplication");
+  };
+
   return (
     <AppChrome
       title="Payments"
@@ -41,6 +52,20 @@ export default function PaymentsScreen() {
     >
       <ScrollView contentContainerClassName="gap-4 px-6 pt-6 pb-6">
         <Header title="Payments" subtitle="Neon-backed records" />
+        <View className="rounded-2xl border border-brand-slate bg-brand-night p-4">
+          <Text className="text-base font-semibold text-white">
+            New Hire Purchase Application
+          </Text>
+          <Text className="mt-1 text-sm text-brand-muted">
+            Complete the latest JeffLink application and agreement directly from mobile.
+          </Text>
+          <Pressable
+            onPress={goToHirePurchase}
+            className="mt-3 self-start rounded-full bg-brand-accent px-4 py-2"
+          >
+            <Text className="text-sm font-semibold text-black">Start Application</Text>
+          </Pressable>
+        </View>
         {walletLoading ? (
           <Spinner size="large" />
         ) : walletError ? (
