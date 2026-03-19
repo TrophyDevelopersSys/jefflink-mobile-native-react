@@ -1,4 +1,10 @@
-import { Injectable, BadRequestException, NotFoundException, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  Optional,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   S3Client,
@@ -22,6 +28,7 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 @Injectable()
 export class MediaService {
+  private readonly logger = new Logger(MediaService.name);
   private readonly s3: S3Client;
   private readonly bucket: string;
   private readonly publicUrl: string;
@@ -133,7 +140,7 @@ export class MediaService {
 
     // Queue thumbnail generation (no-op when Redis is unavailable)
     if (isImage) {
-      await this.mediaQueue?.add('thumbnail', {
+      await this.enqueueJob('thumbnail', {
         type: 'thumbnail',
         payload: { assetId: asset.id, key, bucket: this.bucket },
       });
@@ -169,7 +176,7 @@ export class MediaService {
 
     if (!asset) throw new NotFoundException('Asset not found');
 
-    await this.mediaQueue?.add('delete', {
+    await this.enqueueJob('delete', {
       type: 'delete',
       payload: { key: asset.key, bucket: this.bucket },
     });
@@ -178,5 +185,19 @@ export class MediaService {
       .update(mediaAssets)
       .set({ status: 'DELETED' } as any)
       .where(eq(mediaAssets.id, assetId));
+  }
+
+  private async enqueueJob(name: string, payload: unknown): Promise<void> {
+    if (!this.mediaQueue) return;
+
+    try {
+      await this.mediaQueue.add(name, payload);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to enqueue media job "${name}" (continuing without queue): ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 }

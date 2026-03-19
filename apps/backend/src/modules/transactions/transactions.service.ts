@@ -1,4 +1,12 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException, ConflictException, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  ConflictException,
+  Optional,
+  Logger,
+} from '@nestjs/common';
 import { eq, and, desc } from 'drizzle-orm';
 import * as bcrypt from 'bcryptjs';
 import { DatabaseService } from '../../database/database.service';
@@ -36,6 +44,8 @@ const FSM_TRANSITIONS: Record<ContractStatus, ContractStatus[]> = {
 
 @Injectable()
 export class TransactionsService {
+  private readonly logger = new Logger(TransactionsService.name);
+
   constructor(
     private readonly db: DatabaseService,
     @Optional() @InjectQueue(QUEUE_PAYMENTS) private readonly paymentQueue: Queue | null,
@@ -185,7 +195,7 @@ export class TransactionsService {
     });
 
     // Queue background analytics aggregation (no-op when Redis is unavailable)
-    await this.paymentQueue?.add('analytics', {
+    await this.enqueuePaymentJob('analytics', {
       type: 'analytics',
       payload: { paymentId, amount: payment.amount },
     });
@@ -225,7 +235,7 @@ export class TransactionsService {
       // SP not available; skip silently
     });
 
-    await this.paymentQueue?.add('penalty-sweep', {
+    await this.enqueuePaymentJob('penalty-sweep', {
       type: 'penalty-sweep',
       payload: { graceDays, defaultDays },
     });
@@ -494,6 +504,20 @@ export class TransactionsService {
     // Insert in batches of 50 to avoid overly large queries
     for (let i = 0; i < rows.length; i += 50) {
       await this.db.db.insert(installments).values(rows.slice(i, i + 50));
+    }
+  }
+
+  private async enqueuePaymentJob(name: string, payload: unknown): Promise<void> {
+    if (!this.paymentQueue) return;
+
+    try {
+      await this.paymentQueue.add(name, payload);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to enqueue payment job "${name}" (continuing without queue): ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, Optional } from '@nestjs/common';
+import { Injectable, Optional, Logger } from '@nestjs/common';
 import { eq, desc } from 'drizzle-orm';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -16,6 +16,8 @@ export interface SendNotificationPayload {
 
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
+
   constructor(
     private readonly db: DatabaseService,
     @Optional() @InjectQueue(QUEUE_NOTIFICATIONS) private readonly notifQueue: Queue | null,
@@ -57,9 +59,19 @@ export class NotificationsService {
     });
 
     // Dispatch push notification via BullMQ (no-op when Redis is unavailable)
-    await this.notifQueue?.add('push', {
-      type: 'push',
-      payload,
-    });
+    if (!this.notifQueue) return;
+
+    try {
+      await this.notifQueue.add('push', {
+        type: 'push',
+        payload,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Failed to enqueue notification job (continuing without queue): ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 }
