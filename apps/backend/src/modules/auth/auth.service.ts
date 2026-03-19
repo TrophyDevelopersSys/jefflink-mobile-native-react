@@ -38,6 +38,12 @@ interface AuthLookupRecord {
   branchId?: string;
 }
 
+interface RegisteredUser {
+  id: string;
+  email: string;
+  name: string;
+}
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -68,22 +74,17 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
+    const user = await this.createUserAdaptive(dto, passwordHash);
 
-    const [user] = await this.db.db
-      .insert(users)
-      .values({
-        email: dto.email.toLowerCase(),
-        passwordHash,
-        name: dto.name,
-        phone: dto.phone,
-        status: 'ACTIVE',
-      })
-      .returning({ id: users.id, email: users.email, name: users.name });
-
-    // Assign default CUSTOMER role
-    await this.db.db.insert(roles).values({
-      userId: user.id,
-      role: 'CUSTOMER',
+    // Persist a default CUSTOMER role when schema supports it.
+    // This is intentionally best-effort to avoid auth hard-failures on
+    // partially migrated/legacy databases.
+    await this.assignDefaultRole(user.id).catch((error) => {
+      this.logger.warn(
+        `Role assignment fallback triggered during registration: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     });
 
     return this.issueTokens({ sub: user.id, email: user.email, name: user.name, role: 'CUSTOMER' });
@@ -195,6 +196,167 @@ export class AuthService {
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────
+
+  private async createUserAdaptive(
+    dto: RegisterDto,
+    passwordHash: string,
+  ): Promise<RegisteredUser> {
+    const cols = await this.getSchemaColumns();
+    const usersCols = cols.users;
+
+    const columns: string[] = ['email'];
+    const values: unknown[] = [dto.email.toLowerCase()];
+    let param = 2;
+
+    if (usersCols.has('password_hash')) {
+      columns.push('password_hash');
+      values.push(passwordHash);
+      param += 1;
+    } else if (usersCols.has('password')) {
+      columns.push('password');
+      values.push(passwordHash);
+      param += 1;
+    } else {
+      throw new Error(
+        "Users schema has neither 'password_hash' nor 'password' column",
+      );
+    }
+
+    if (usersCols.has('name')) {
+      columns.push('name');
+      values.push(dto.name);
+      param += 1;
+    }
+
+    if (usersCols.has('first_name')) {
+      columns.push('first_name');
+      values.push(dto.name);
+      param += 1;
+    }
+
+    if (usersCols.has('last_name')) {
+      columns.push('last_name');
+      values.push('');
+      param += 1;
+    }
+
+    if (usersCols.has('phone')) {
+      columns.push('phone');
+      values.push(dto.phone ?? null);
+      param += 1;
+    }
+
+    if (usersCols.has('status')) {
+      columns.push('status');
+      values.push('ACTIVE');
+      param += 1;
+    }
+
+    if (usersCols.has('updated_at')) {
+      columns.push('updated_at');
+      values.push(new Date());
+      param += 1;
+    }
+
+    const placeholders = Array.from({ length: values.length }, (_, i) => `$${i + 1}`);
+
+    const nameCandidates: string[] = [];
+    if (usersCols.has('name')) {
+      nameCandidates.push(`NULLIF(name, '')`);
+    }
+    if (usersCols.has('first_name') || usersCols.has('last_name')) {
+      nameCandidates.push(
+        `NULLIF(TRIM(COALESCE(first_name, '') || ' ' || COALESCE(last_name, '')), '')`,
+      );
+    }
+    nameCandidates.push(`SPLIT_PART(email, '@', 1)`);
+    const nameExpr = `COALESCE(${nameCandidates.join(', ')})`;
+
+    type Row = { id: string; email: string; name: string | null };
+    const rows = await this.db.executeRaw<Row>(
+      `INSERT INTO users (${columns.join(', ')})
+       VALUES (${placeholders.join(', ')})
+       RETURNING id::text AS id, email, ${nameExpr} AS name`,
+      values,
+    );
+
+    const user = rows[0];
+    if (!user) {
+      throw new Error('User insert failed: no row returned');
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name ?? dto.name ?? user.email.split('@')[0] ?? 'User',
+    };
+  }
+
+  private async assignDefaultRole(userId: string): Promise<void> {
+    const cols = await this.getSchemaColumns();
+    const usersCols = cols.users;
+    const rolesCols = cols.roles;
+
+    // Modern schema: roles(user_id, role, ...)
+    if (rolesCols.has('user_id') && rolesCols.has('role')) {
+      const withCreatedAt = rolesCols.has('created_at');
+      await this.db.executeRaw(
+        `INSERT INTO roles (user_id, role${withCreatedAt ? ', created_at' : ''})
+         VALUES ($1, 'CUSTOMER'${withCreatedAt ? ', NOW()' : ''})`,
+        [userId],
+      );
+      return;
+    }
+
+    // Transitional schema: roles(user_id, name, ...)
+    if (rolesCols.has('user_id') && rolesCols.has('name')) {
+      const withCreatedAt = rolesCols.has('created_at');
+      await this.db.executeRaw(
+        `INSERT INTO roles (user_id, name${withCreatedAt ? ', created_at' : ''})
+         VALUES ($1, 'CUSTOMER'${withCreatedAt ? ', NOW()' : ''})`,
+        [userId],
+      );
+      return;
+    }
+
+    // Legacy lookup schema: users.role_id -> roles.id (with roles.name/role)
+    if (usersCols.has('role_id') && rolesCols.has('id')) {
+      const roleColumn = rolesCols.has('role')
+        ? 'role'
+        : rolesCols.has('name')
+          ? 'name'
+          : null;
+
+      if (roleColumn) {
+        const existing = await this.db.executeRaw<{ id: string }>(
+          `SELECT id::text AS id
+             FROM roles
+            WHERE LOWER(${roleColumn}) = 'customer'
+            LIMIT 1`,
+        );
+
+        let roleId = existing[0]?.id;
+        if (!roleId && rolesCols.has('name')) {
+          const created = await this.db.executeRaw<{ id: string }>(
+            `INSERT INTO roles (name) VALUES ('CUSTOMER') RETURNING id::text AS id`,
+          );
+          roleId = created[0]?.id;
+        }
+
+        if (roleId) {
+          await this.db.executeRaw(
+            `UPDATE users SET role_id = $1 WHERE id = $2`,
+            [roleId, userId],
+          );
+          return;
+        }
+      }
+    }
+
+    this.logger.warn(
+      'Skipping default role persistence: no compatible users/roles schema mapping found',
+    );
+  }
 
   private async verifyPassword(
     plainPassword: string,
