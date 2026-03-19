@@ -65,6 +65,25 @@ interface UsersForeignKeyMeta {
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly resetTokenTtlSeconds = 3600;
+  private readonly knownRoles = new Set<AppRole>([
+    'SUPER_ADMIN',
+    'ADMIN',
+    'SYSTEM_ADMIN',
+    'DIRECTOR',
+    'MANAGER',
+    'FINANCE_ADMIN',
+    'FINANCE_OFFICER',
+    'AUDITOR',
+    'MODERATOR',
+    'SUPPORT',
+    'LEGAL',
+    'BRANCH_OFFICER',
+    'FIELD_OFFICER',
+    'RECOVERY_AGENT',
+    'VENDOR',
+    'AGENT',
+    'CUSTOMER',
+  ]);
   private schemaColumnsCache:
     | {
         users: Set<string>;
@@ -126,7 +145,10 @@ export class AuthService {
         `Register flow failed for ${dto.email.toLowerCase()}`,
         error instanceof Error ? error.stack : String(error),
       );
-      throw error;
+      throw this.mapDatabaseErrorToHttp(
+        error,
+        'Unable to create account. Please review your details and try again.',
+      );
     }
   }
 
@@ -217,50 +239,57 @@ export class AuthService {
     resetUrl?: string;
     expiresInSeconds?: number;
   }> {
-    const normalised = email.toLowerCase();
+    try {
+      const normalised = email.toLowerCase();
 
-    const result = await this.db.db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.email, normalised))
-      .limit(1);
+      const result = await this.db.db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, normalised))
+        .limit(1);
 
-    if (result.length > 0) {
-      const token = crypto.randomBytes(32).toString('hex');
-      // Store hashed token: reset:<userId> → token hash, TTL = 1 hour
-      const tokenHash = await bcrypt.hash(token, 10);
-      await this.redis.set(
-        `reset:${result[0].id}`,
-        tokenHash,
-        this.resetTokenTtlSeconds,
-      );
-      this.logger.log(`Password reset token generated for user ${result[0].id}`);
+      if (result.length > 0) {
+        const token = crypto.randomBytes(32).toString('hex');
+        // Store hashed token: reset:<userId> → token hash, TTL = 1 hour
+        const tokenHash = await bcrypt.hash(token, 10);
+        await this.redis.set(
+          `reset:${result[0].id}`,
+          tokenHash,
+          this.resetTokenTtlSeconds,
+        );
+        this.logger.log(`Password reset token generated for user ${result[0].id}`);
 
-      const exposeResetToken =
-        this.config.get<string>('AUTH_EXPOSE_RESET_TOKEN') === 'true' ||
-        this.config.get<string>('NODE_ENV') !== 'production';
+        const exposeResetToken =
+          this.config.get<string>('AUTH_EXPOSE_RESET_TOKEN') === 'true' ||
+          this.config.get<string>('NODE_ENV') !== 'production';
 
-      if (exposeResetToken) {
-        const webBase =
-          this.config.get<string>('WEB_APP_URL') ??
-          this.config.get<string>('NEXT_PUBLIC_SITE_URL') ??
-          'https://jefflinkcars.com';
-        const sanitizedWebBase = webBase.replace(/\/+$/, '');
-        const resetUrl = `${sanitizedWebBase}/reset-password?uid=${encodeURIComponent(
-          result[0].id,
-        )}&token=${encodeURIComponent(token)}`;
+        if (exposeResetToken) {
+          const webBase =
+            this.config.get<string>('WEB_APP_URL') ??
+            this.config.get<string>('NEXT_PUBLIC_SITE_URL') ??
+            'https://jefflinkcars.com';
+          const sanitizedWebBase = webBase.replace(/\/+$/, '');
+          const resetUrl = `${sanitizedWebBase}/reset-password?uid=${encodeURIComponent(
+            result[0].id,
+          )}&token=${encodeURIComponent(token)}`;
 
-        return {
-          message:
-            'If that email is registered you will receive a reset link shortly.',
-          userId: result[0].id,
-          token,
-          resetUrl,
-          expiresInSeconds: this.resetTokenTtlSeconds,
-        };
+          return {
+            message:
+              'If that email is registered you will receive a reset link shortly.',
+            userId: result[0].id,
+            token,
+            resetUrl,
+            expiresInSeconds: this.resetTokenTtlSeconds,
+          };
+        }
+
+        // TODO: dispatch email with reset link once MailerService is integrated
       }
-
-      // TODO: dispatch email with reset link once MailerService is integrated
+    } catch (error) {
+      this.logger.error(
+        `Forgot-password flow failed for ${email.toLowerCase()}`,
+        error instanceof Error ? error.stack : String(error),
+      );
     }
 
     // Always return the same message to prevent email enumeration
@@ -272,23 +301,38 @@ export class AuthService {
     token: string,
     newPassword: string,
   ): Promise<{ message: string }> {
-    const resetKey = `reset:${userId}`;
-    const storedHash = await this.redis.get<string>(resetKey);
-    if (!storedHash) {
-      throw new BadRequestException('Reset token is invalid or expired');
+    try {
+      const resetKey = `reset:${userId}`;
+      const storedHash = await this.redis.get<string>(resetKey);
+      if (!storedHash) {
+        throw new BadRequestException('Reset token is invalid or expired');
+      }
+
+      const tokenValid = await this.verifyPassword(token, storedHash);
+      if (!tokenValid) {
+        throw new BadRequestException('Reset token is invalid or expired');
+      }
+
+      const passwordHash = await bcrypt.hash(newPassword, 12);
+      await this.updateUserPasswordAdaptive(userId, passwordHash);
+
+      await this.redis.del(resetKey, `refresh:${userId}`);
+
+      return { message: 'Password reset successful. Please log in with your new password.' };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      this.logger.error(
+        `Reset-password flow failed for user ${userId}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+      throw this.mapDatabaseErrorToHttp(
+        error,
+        'Unable to reset password. Please request a new reset link and try again.',
+      );
     }
-
-    const tokenValid = await this.verifyPassword(token, storedHash);
-    if (!tokenValid) {
-      throw new BadRequestException('Reset token is invalid or expired');
-    }
-
-    const passwordHash = await bcrypt.hash(newPassword, 12);
-    await this.updateUserPasswordAdaptive(userId, passwordHash);
-
-    await this.redis.del(resetKey, `refresh:${userId}`);
-
-    return { message: 'Password reset successful. Please log in with your new password.' };
   }
 
   async getMe(userId: string): Promise<Omit<AuthUser, 'sub'> & { id: string }> {
@@ -674,11 +718,56 @@ export class AuthService {
   }
 
   private normalizeRole(role: string | null | undefined): AppRole {
-    const value = (role ?? '').toUpperCase();
-    if (value === 'ADMIN' || value === 'VENDOR' || value === 'CUSTOMER') {
+    const value = (role ?? '').toUpperCase() as AppRole;
+    if (this.knownRoles.has(value)) {
       return value;
     }
     return 'CUSTOMER';
+  }
+
+  private mapDatabaseErrorToHttp(
+    error: unknown,
+    fallbackMessage: string,
+  ): BadRequestException | ConflictException {
+    if (error instanceof ConflictException || error instanceof BadRequestException) {
+      return error;
+    }
+
+    if (!error || typeof error !== 'object') {
+      return new BadRequestException(fallbackMessage);
+    }
+
+    const pgError = error as {
+      code?: string;
+      detail?: string;
+      column?: string;
+      constraint?: string;
+      message?: string;
+    };
+
+    switch (pgError.code) {
+      case '23505': {
+        const detail = pgError.detail ?? '';
+        const keyMatch = detail.match(/Key \(([^)]+)\)=/i);
+        const key = keyMatch?.[1]?.toLowerCase();
+        if (key?.includes('email')) {
+          return new ConflictException('Email already registered');
+        }
+        return new ConflictException('Duplicate value violates uniqueness constraints');
+      }
+      case '23502': {
+        const col = pgError.column ?? 'required field';
+        return new BadRequestException(`Missing required field: ${col}`);
+      }
+      case '23503': {
+        const col = pgError.column ?? 'related field';
+        return new BadRequestException(`Invalid related value for: ${col}`);
+      }
+      case '22P02':
+        return new BadRequestException('Invalid field format in submitted data');
+      default:
+        return new BadRequestException(fallbackMessage);
+    }
   }
 
   private async getSchemaColumns(): Promise<{

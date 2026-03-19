@@ -17,7 +17,7 @@ services:
     plan: starter
     rootDir: .
     buildCommand: "pnpm install --frozen-lockfile --prod=false && pnpm turbo run build --filter=jefflink-backend"
-    startCommand: node apps/backend/dist/main.js
+    startCommand: sh -c "node apps/backend/scripts/seed-admin.cjs || true; node apps/backend/dist/main.js"
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
@@ -34,6 +34,12 @@ services:
         value: 7d
       - key: REDIS_URL
         sync: false
+      - key: ADMIN_SEED_EMAIL
+        value: trophy.vas@gmail.com
+      - key: ADMIN_SEED_PASSWORD
+        sync: false
+      - key: ADMIN_SEED_ROLE
+        value: SUPER_ADMIN
       - key: CORS_ORIGINS
         value: https://jefflinkcars.com,https://www.jefflinkcars.com,https://jefflink.onrender.com,https://jefflink-web.onrender.com
       - key: R2_ACCOUNT_ID
