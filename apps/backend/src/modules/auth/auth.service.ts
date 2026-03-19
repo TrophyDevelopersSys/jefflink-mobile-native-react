@@ -91,36 +91,48 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthTokens> {
-    const record = await this.resolveAuthRecordByEmail(dto.email.toLowerCase());
-    if (!record) {
+    try {
+      const record = await this.resolveAuthRecordByEmail(dto.email.toLowerCase());
+      if (!record) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      if ((record.status ?? 'ACTIVE').toUpperCase() !== 'ACTIVE') {
+        throw new UnauthorizedException('Account is not active');
+      }
+
+      if (!record.passwordHash) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const passwordValid = await this.verifyPassword(
+        dto.password,
+        record.passwordHash,
+      );
+      if (!passwordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const payload: AuthUser = {
+        sub: record.id,
+        email: record.email,
+        name: record.name,
+        role: record.role,
+        branchId: record.branchId,
+      };
+
+      return this.issueTokens(payload);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+
+      this.logger.error(
+        `Login flow failed for ${dto.email.toLowerCase()}`,
+        error instanceof Error ? error.stack : String(error),
+      );
       throw new UnauthorizedException('Invalid credentials');
     }
-
-    if ((record.status ?? 'ACTIVE').toUpperCase() !== 'ACTIVE') {
-      throw new UnauthorizedException('Account is not active');
-    }
-
-    if (!record.passwordHash) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const passwordValid = await this.verifyPassword(
-      dto.password,
-      record.passwordHash,
-    );
-    if (!passwordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const payload: AuthUser = {
-      sub: record.id,
-      email: record.email,
-      name: record.name,
-      role: record.role,
-      branchId: record.branchId,
-    };
-
-    return this.issueTokens(payload);
   }
 
   async refreshTokens(userId: string, rawRefreshToken: string): Promise<AuthTokens> {
