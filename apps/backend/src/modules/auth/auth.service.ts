@@ -52,6 +52,13 @@ interface UsersColumnMeta {
   dataType: string;
   udtName: string;
   isIdentity: boolean;
+  isUnique: boolean;
+}
+
+interface UsersForeignKeyMeta {
+  columnName: string;
+  foreignTableName: string;
+  foreignColumnName: string;
 }
 
 @Injectable()
@@ -65,6 +72,10 @@ export class AuthService {
       }
     | undefined;
   private usersColumnMetaCache: Map<string, UsersColumnMeta> | undefined;
+  private usersForeignKeysCache:
+    | Map<string, UsersForeignKeyMeta>
+    | undefined;
+  private enumLabelsCache = new Map<string, string[]>();
 
   constructor(
     private readonly db: DatabaseService,
@@ -305,6 +316,7 @@ export class AuthService {
     const usersCols = cols.users;
     const rolesCols = cols.roles;
     const usersMeta = await this.getUsersColumnMeta();
+    const usersForeignKeys = await this.getUsersForeignKeys();
 
     const valuesByColumn = new Map<string, unknown>();
     const setValue = (column: string, value: unknown) => {
@@ -352,7 +364,13 @@ export class AuthService {
       if (valuesByColumn.has(column)) continue;
       if (meta.isNullable || meta.hasDefault || meta.isIdentity) continue;
 
-      const fallback = this.inferRequiredUserColumnValue(column, meta, dto);
+      const fallback = await this.inferRequiredUserColumnValue(
+        column,
+        meta,
+        dto,
+        usersForeignKeys,
+        rolesCols,
+      );
       if (fallback !== undefined) {
         valuesByColumn.set(column, fallback);
         continue;
@@ -391,12 +409,15 @@ export class AuthService {
     };
   }
 
-  private inferRequiredUserColumnValue(
+  private async inferRequiredUserColumnValue(
     column: string,
     meta: UsersColumnMeta,
     dto: RegisterDto,
-  ): unknown | undefined {
+    usersForeignKeys: Map<string, UsersForeignKeyMeta>,
+    rolesCols: Set<string>,
+  ): Promise<unknown | undefined> {
     const name = column.toLowerCase();
+    const emailLocalPart = dto.email.toLowerCase().split('@')[0] ?? 'user';
 
     if (name === 'email') return dto.email.toLowerCase();
     if (name === 'name') return dto.name;
@@ -407,13 +428,60 @@ export class AuthService {
     if (name === 'user_role') return 'CUSTOMER';
     if (name === 'user_type') return 'CUSTOMER';
     if (name === 'account_type') return 'CUSTOMER';
+    if (name === 'username' || name === 'user_name') {
+      return meta.isUnique ? `${emailLocalPart}_${crypto.randomBytes(3).toString('hex')}` : emailLocalPart;
+    }
+    if (name === 'display_name') return dto.name;
+    if (name === 'full_name') return dto.name;
     if (name === 'phone') return dto.phone?.trim() ?? '';
 
     if (name.endsWith('_at')) return new Date();
     if (name.startsWith('is_') || name.startsWith('has_')) return false;
 
+    const foreignKey = usersForeignKeys.get(column);
+    if (foreignKey) {
+      if (foreignKey.foreignTableName === 'roles') {
+        const roleId = await this.ensureCustomerRoleId(rolesCols);
+        if (roleId) {
+          return roleId;
+        }
+      }
+
+      const refRows = await this.db.executeRaw<{ value: string }>(
+        `SELECT ${foreignKey.foreignColumnName}::text AS value
+           FROM ${foreignKey.foreignTableName}
+          LIMIT 1`,
+      );
+      if (refRows[0]?.value) {
+        return refRows[0].value;
+      }
+    }
+
     const lowerDataType = meta.dataType.toLowerCase();
     const lowerUdt = meta.udtName.toLowerCase();
+
+    if (lowerDataType === 'user-defined') {
+      const labels = await this.getEnumLabels(meta.udtName);
+      if (labels.length > 0) {
+        const normalizedLabels = new Map(
+          labels.map((label) => [label.toUpperCase(), label]),
+        );
+
+        if (name.includes('status') && normalizedLabels.has('ACTIVE')) {
+          return normalizedLabels.get('ACTIVE');
+        }
+        if (
+          (name.includes('role') ||
+            name.includes('type') ||
+            name.includes('account')) &&
+          normalizedLabels.has('CUSTOMER')
+        ) {
+          return normalizedLabels.get('CUSTOMER');
+        }
+
+        return labels[0];
+      }
+    }
 
     if (lowerDataType === 'boolean' || lowerUdt === 'bool') return false;
     if (
@@ -431,7 +499,13 @@ export class AuthService {
       lowerDataType === 'character' ||
       lowerDataType === 'text'
     ) {
+      if (meta.isUnique) {
+        return `${emailLocalPart}_${crypto.randomBytes(4).toString('hex')}`;
+      }
       return '';
+    }
+    if (lowerDataType === 'uuid' || lowerUdt === 'uuid') {
+      return crypto.randomUUID();
     }
     if (
       lowerDataType.startsWith('timestamp') ||
@@ -664,6 +738,19 @@ export class AuthService {
          AND table_name = 'users'`,
     );
 
+    type UniqueRow = { column_name: string };
+    const uniqueRows = await this.db.executeRaw<UniqueRow>(
+      `SELECT DISTINCT kcu.column_name
+         FROM information_schema.table_constraints tc
+         JOIN information_schema.key_column_usage kcu
+           ON tc.constraint_name = kcu.constraint_name
+          AND tc.table_schema = kcu.table_schema
+        WHERE tc.table_schema = 'public'
+          AND tc.table_name = 'users'
+          AND tc.constraint_type IN ('PRIMARY KEY', 'UNIQUE')`,
+    );
+    const uniqueColumns = new Set(uniqueRows.map((row) => row.column_name));
+
     const meta = new Map<string, UsersColumnMeta>();
     for (const row of rows) {
       meta.set(row.column_name, {
@@ -673,11 +760,74 @@ export class AuthService {
         dataType: row.data_type,
         udtName: row.udt_name,
         isIdentity: row.is_identity === 'YES',
+        isUnique: uniqueColumns.has(row.column_name),
       });
     }
 
     this.usersColumnMetaCache = meta;
     return this.usersColumnMetaCache;
+  }
+
+  private async getUsersForeignKeys(): Promise<Map<string, UsersForeignKeyMeta>> {
+    if (this.usersForeignKeysCache) {
+      return this.usersForeignKeysCache;
+    }
+
+    type Row = {
+      column_name: string;
+      foreign_table_name: string;
+      foreign_column_name: string;
+    };
+
+    const rows = await this.db.executeRaw<Row>(
+      `SELECT
+         kcu.column_name,
+         ccu.table_name AS foreign_table_name,
+         ccu.column_name AS foreign_column_name
+       FROM information_schema.table_constraints tc
+       JOIN information_schema.key_column_usage kcu
+         ON tc.constraint_name = kcu.constraint_name
+        AND tc.table_schema = kcu.table_schema
+       JOIN information_schema.constraint_column_usage ccu
+         ON ccu.constraint_name = tc.constraint_name
+        AND ccu.table_schema = tc.table_schema
+       WHERE tc.table_schema = 'public'
+         AND tc.table_name = 'users'
+         AND tc.constraint_type = 'FOREIGN KEY'`,
+    );
+
+    const map = new Map<string, UsersForeignKeyMeta>();
+    for (const row of rows) {
+      map.set(row.column_name, {
+        columnName: row.column_name,
+        foreignTableName: row.foreign_table_name,
+        foreignColumnName: row.foreign_column_name,
+      });
+    }
+
+    this.usersForeignKeysCache = map;
+    return this.usersForeignKeysCache;
+  }
+
+  private async getEnumLabels(enumTypeName: string): Promise<string[]> {
+    const cached = this.enumLabelsCache.get(enumTypeName);
+    if (cached) {
+      return cached;
+    }
+
+    type Row = { enumlabel: string };
+    const rows = await this.db.executeRaw<Row>(
+      `SELECT e.enumlabel
+         FROM pg_type t
+         JOIN pg_enum e ON e.enumtypid = t.oid
+        WHERE t.typname = $1
+        ORDER BY e.enumsortorder`,
+      [enumTypeName],
+    );
+
+    const labels = rows.map((row) => row.enumlabel);
+    this.enumLabelsCache.set(enumTypeName, labels);
+    return labels;
   }
 
   private async resolveAuthRecordByEmail(
