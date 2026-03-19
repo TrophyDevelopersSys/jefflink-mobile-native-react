@@ -260,17 +260,7 @@ export class AuthService {
 
     const placeholders = Array.from({ length: values.length }, (_, i) => `$${i + 1}`);
 
-    const nameCandidates: string[] = [];
-    if (usersCols.has('name')) {
-      nameCandidates.push(`NULLIF(name, '')`);
-    }
-    if (usersCols.has('first_name') || usersCols.has('last_name')) {
-      nameCandidates.push(
-        `NULLIF(TRIM(COALESCE(first_name, '') || ' ' || COALESCE(last_name, '')), '')`,
-      );
-    }
-    nameCandidates.push(`SPLIT_PART(email, '@', 1)`);
-    const nameExpr = `COALESCE(${nameCandidates.join(', ')})`;
+    const nameExpr = this.buildNameExpression(usersCols);
 
     type Row = { id: string; email: string; name: string | null };
     const rows = await this.db.executeRaw<Row>(
@@ -433,17 +423,7 @@ export class AuthService {
     const usersCols = cols.users;
     const rolesCols = cols.roles;
 
-    const nameCandidates: string[] = [];
-    if (usersCols.has('name')) {
-      nameCandidates.push(`NULLIF(u.name, '')`);
-    }
-    if (usersCols.has('first_name') || usersCols.has('last_name')) {
-      nameCandidates.push(
-        `NULLIF(TRIM(COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')), '')`,
-      );
-    }
-    nameCandidates.push(`SPLIT_PART(u.email, '@', 1)`);
-    const nameExpr = `COALESCE(${nameCandidates.join(', ')})`;
+    const nameExpr = this.buildNameExpression(usersCols, 'u');
 
     const statusExpr = usersCols.has('status')
       ? `COALESCE(NULLIF(u.status, ''), 'ACTIVE')`
@@ -535,6 +515,26 @@ export class AuthService {
       role: this.normalizeRole(row.role),
       branchId: row.branch_id ?? undefined,
     };
+  }
+
+  private buildNameExpression(usersCols: Set<string>, alias?: string): string {
+    const col = (name: string) => (alias ? `${alias}.${name}` : name);
+    const candidates: string[] = [];
+
+    if (usersCols.has('name')) {
+      candidates.push(`NULLIF(${col('name')}, '')`);
+    }
+
+    const hasFirst = usersCols.has('first_name');
+    const hasLast = usersCols.has('last_name');
+    if (hasFirst || hasLast) {
+      const firstExpr = hasFirst ? `COALESCE(${col('first_name')}, '')` : `''`;
+      const lastExpr = hasLast ? `COALESCE(${col('last_name')}, '')` : `''`;
+      candidates.push(`NULLIF(TRIM(${firstExpr} || ' ' || ${lastExpr}), '')`);
+    }
+
+    candidates.push(`SPLIT_PART(${col('email')}, '@', 1)`);
+    return `COALESCE(${candidates.join(', ')})`;
   }
 
   private async issueTokens(payload: AuthUser): Promise<AuthTokens> {
