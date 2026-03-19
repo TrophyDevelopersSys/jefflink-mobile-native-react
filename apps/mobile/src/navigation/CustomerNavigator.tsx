@@ -18,8 +18,8 @@ import BoostListingScreen from "../screens/vendor/BoostListingScreen";
 import VendorDashboardScreen from "../screens/vendor/VendorDashboardScreen";
 import { useTheme } from "../theme/useTheme";
 import { useAuth } from "../hooks/useAuth";
-import { useAuthStore } from "../store/auth.store";
 import { Roles } from "../constants/roles";
+import { isDealerRole } from "../utils/roleHelpers";
 
 export type CustomerTabParamList = {
   Home: undefined;
@@ -37,9 +37,8 @@ const Tab = createBottomTabNavigator<CustomerTabParamList>();
 export default function CustomerNavigator() {
   const { theme } = useTheme();
   const { user } = useAuth();
-  const isGuest = useAuthStore((s) => s.isGuest);
 
-  const role = user?.role ?? (isGuest ? "GUEST" : "GUEST");
+  const userRole = user?.role;
 
   const screenOptions = {
     headerShown: false,
@@ -52,7 +51,7 @@ export default function CustomerNavigator() {
   };
 
   // ── Vendor / Dealer (AGENT): Dashboard | Boost | Sell | Profile ──────
-  if (role === Roles.Agent) {
+  if (isDealerRole(userRole)) {
     return (
       <Tab.Navigator screenOptions={screenOptions}>
         <Tab.Screen
@@ -86,7 +85,7 @@ export default function CustomerNavigator() {
   }
 
   // ── Buyer (CUSTOMER): Home | Listings | Finance | Profile ───────────────
-  if (role === Roles.Customer) {
+  if (userRole === Roles.Customer) {
     return (
       <Tab.Navigator screenOptions={screenOptions}>
         <Tab.Screen

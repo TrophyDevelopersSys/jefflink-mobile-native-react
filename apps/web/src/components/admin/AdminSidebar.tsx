@@ -53,8 +53,8 @@ export function AdminSidebar() {
   const router   = useRouter();
   const { user, signOut } = useAuth();
 
-  const role     = user?.role ?? "ADMIN";
-  const allowed  = ROLE_MENUS[role] ?? ROLE_MENUS["ADMIN"];
+  const role     = user?.role ?? "CUSTOMER";
+  const allowed  = ROLE_MENUS[role] ?? [];
   const visibleItems = NAV_ITEMS.filter((item) => allowed.includes(item.key));
 
   const handleSignOut = async () => {

@@ -42,6 +42,10 @@ services:
         value: SUPER_ADMIN
       - key: CORS_ORIGINS
         value: https://jefflinkcars.com,https://www.jefflinkcars.com,https://jefflink.onrender.com,https://jefflink-web.onrender.com
+      - key: WEB_APP_URL
+        value: https://jefflinkcars.com
+      - key: AUTH_EXPOSE_RESET_TOKEN
+        value: false
       - key: R2_ACCOUNT_ID
         sync: false
       - key: R2_ACCESS_KEY_ID

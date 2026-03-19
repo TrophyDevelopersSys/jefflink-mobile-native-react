@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthContext } from "../context/AuthContext";
+import { canManageListings } from "../lib/roles";
 
 const NAV_LINKS = [
   { href: "/cars", label: "Cars" },
@@ -103,7 +104,7 @@ export default function Navbar() {
                       >
                         Profile
                       </Link>
-                      {(user?.role === "DEALER" || user?.role === "ADMIN") && (
+                      {canManageListings(user?.role) && (
                         <Link
                           href="/dashboard/listings"
                           className="block px-4 py-2 text-sm text-white hover:bg-brand-slate transition-colors"

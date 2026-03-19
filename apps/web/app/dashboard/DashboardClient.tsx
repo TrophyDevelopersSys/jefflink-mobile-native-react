@@ -6,6 +6,7 @@ import { useAuthContext } from "../../src/context/AuthContext";
 import Link from "next/link";
 import { Search, Car, LandPlot, Store, Plus } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { isAdminRole, isDealerRole, roleLabel } from "../../src/lib/roles";
 
 export default function DashboardPage() {
   const { user, isAuthenticated, status } = useAuthContext();
@@ -30,8 +31,8 @@ export default function DashboardPage() {
 
   if (!isAuthenticated || !user) return null;
 
-  const isDealer = user.role === "DEALER";
-  const isAdmin = user.role === "ADMIN";
+  const isDealer = isDealerRole(user.role);
+  const isAdmin = isAdminRole(user.role);
   const displayName = user.name ?? user.email ?? "User";
   const initials = displayName.slice(0, 2).toUpperCase();
 
@@ -153,7 +154,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <dt className="text-brand-muted text-xs uppercase tracking-wide mb-1">Role</dt>
-              <dd className="text-white text-sm capitalize">{user.role?.toLowerCase() ?? "Customer"}</dd>
+              <dd className="text-white text-sm">{roleLabel(user.role)}</dd>
             </div>
             <div>
               <dt className="text-brand-muted text-xs uppercase tracking-wide mb-1">User ID</dt>

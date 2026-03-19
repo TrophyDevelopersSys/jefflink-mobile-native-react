@@ -14,4 +14,5 @@ export type {
   ResetPasswordInput,
   ForgotPasswordResult,
   AuthResult,
+  RefreshResult,
 } from "./auth";

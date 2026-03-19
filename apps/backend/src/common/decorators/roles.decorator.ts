@@ -34,6 +34,7 @@ export type AppRole =
   | 'RECOVERY_AGENT'
   // ── Market participants ───────────────────────────────────────────────────
   | 'VENDOR'
+  | 'DEALER'          // Backward-compatible alias for vendor/dealer accounts
   | 'AGENT'
   | 'CUSTOMER';
 

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthContext } from "../../../src/context/AuthContext";
+import { roleLabel } from "../../../src/lib/roles";
 
 const API = process.env["NEXT_PUBLIC_API_BASE_URL"] ?? "https://api.jefflinkcars.com/api/v1";
 
@@ -98,7 +99,7 @@ export default function ProfilePage() {
             <p className="text-white font-semibold">{user.name ?? "Name not set"}</p>
             <p className="text-brand-muted text-sm">{user.email}</p>
             <span className="inline-block mt-1.5 text-xs bg-brand-primary/20 text-brand-accent px-2 py-0.5 rounded-full capitalize">
-              {user.role?.toLowerCase() ?? "customer"}
+              {roleLabel(user.role)}
             </span>
           </div>
         </div>

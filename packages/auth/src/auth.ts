@@ -21,10 +21,13 @@ export interface LoginCredentials {
 }
 
 export interface RegisterInput {
-  name: string;
+  name?: string;
+  fullName?: string;
   email: string;
   password: string;
   phone?: string;
+  role?: string;
+  isDealer?: boolean;
 }
 
 export interface ResetPasswordInput {
@@ -45,6 +48,11 @@ export interface AuthResult {
   accessToken: string;
   refreshToken?: string;
   user: TokenPayload;
+}
+
+export interface RefreshResult {
+  accessToken: string;
+  refreshToken?: string;
 }
 
 function extractErrorMessage(payload: unknown, fallback: string): string {
@@ -107,12 +115,17 @@ export async function login(
   credentials: LoginCredentials,
   adapter: AuthAdapter,
 ): Promise<AuthResult> {
+  const normalizedCredentials: LoginCredentials = {
+    email: credentials.email.trim().toLowerCase(),
+    password: credentials.password,
+  };
+
   const data = await requestJson<{ accessToken: string; refreshToken?: string }>(
     "/auth/login",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(credentials),
+      body: JSON.stringify(normalizedCredentials),
     },
     "Login failed",
   );
@@ -130,12 +143,27 @@ export async function register(
   payload: RegisterInput,
   adapter: AuthAdapter,
 ): Promise<AuthResult> {
+  const normalizedName =
+    payload.name?.trim() ||
+    payload.fullName?.trim() ||
+    "";
+
+  const registerBody: Record<string, unknown> = {
+    email: payload.email.trim().toLowerCase(),
+    password: payload.password,
+    name: normalizedName || undefined,
+    fullName: payload.fullName?.trim() || undefined,
+    phone: payload.phone?.trim() || undefined,
+    role: payload.role?.trim() || undefined,
+    isDealer: payload.isDealer,
+  };
+
   const data = await requestJson<{ accessToken: string; refreshToken?: string }>(
     "/auth/register",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(registerBody),
     },
     "Registration failed",
   );
@@ -200,9 +228,9 @@ export async function logout(adapter: AuthAdapter): Promise<void> {
 export async function refreshToken(
   refreshTokenValue: string,
   adapter: AuthAdapter,
-): Promise<string | null> {
+): Promise<RefreshResult | null> {
   try {
-    const data = await requestJson<{ accessToken: string }>(
+    const data = await requestJson<RefreshResult>(
       "/auth/refresh",
       {
         method: "POST",
@@ -213,7 +241,7 @@ export async function refreshToken(
     );
 
     await adapter.setToken(data.accessToken);
-    return data.accessToken;
+    return data;
   } catch {
     return null;
   }

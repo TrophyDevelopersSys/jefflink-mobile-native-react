@@ -36,4 +36,9 @@ export const webRefreshAdapter = {
     if (typeof window === "undefined") return;
     localStorage.setItem(REFRESH_KEY, token);
   },
+
+  clearRefreshToken(): void {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem(REFRESH_KEY);
+  },
 };

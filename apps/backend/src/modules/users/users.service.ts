@@ -4,6 +4,7 @@ import { DatabaseService } from '../../database/database.service';
 import { RedisService } from '../../redis/redis.service';
 import { users, roles } from '../../database/schema';
 import { ConfigService } from '@nestjs/config';
+import { UpdateMeDto } from './dto/update-me.dto';
 
 @Injectable()
 export class UsersService {
@@ -46,6 +47,33 @@ export class UsersService {
       .where(eq(users.id, userId));
 
     await this.redis.del(`user:${userId}`);
+  }
+
+  async updateMe(userId: string, dto: UpdateMeDto) {
+    const nextName = dto.name?.trim();
+    const nextPhone = dto.phone?.trim();
+
+    const updates: {
+      name?: string;
+      phone?: string | null;
+      updatedAt: Date;
+    } = { updatedAt: new Date() };
+
+    if (nextName !== undefined && nextName.length > 0) {
+      updates.name = nextName;
+    }
+
+    if (dto.phone !== undefined) {
+      updates.phone = nextPhone && nextPhone.length > 0 ? nextPhone : null;
+    }
+
+    await this.db.db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, userId));
+
+    await this.redis.del(`user:${userId}`);
+    return this.findById(userId);
   }
 
   async listAll(limit = 50, offset = 0) {

@@ -1,6 +1,11 @@
 import { useCallback } from "react";
 import { jwtDecode } from "jwt-decode";
-import { login as authLogin, register as authRegister, logout as authLogout } from "@jefflink/auth";
+import {
+  login as authLogin,
+  register as authRegister,
+  logout as authLogout,
+  refreshToken as authRefreshToken,
+} from "@jefflink/auth";
 import { authApi } from "../api/auth.api";
 import { useAuthStore } from "../store/auth.store";
 import { onboardingManager } from "../utils/onboardingManager";
@@ -45,51 +50,75 @@ export const useAuth = () => {
   const { setSession, clearSession, setStatus, setError, setInitialized, status, error, user, token } =
     useAuthStore();
 
+  const resolveSessionUser = useCallback(async (accessToken: string): Promise<UserProfile | null> => {
+    try {
+      const payload = jwtDecode<TokenPayload>(accessToken);
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        return null;
+      }
+
+      const localSessionUser = buildUserFromToken(payload);
+      if (localSessionUser) {
+        return localSessionUser;
+      }
+
+      return await authApi.me();
+    } catch {
+      return null;
+    }
+  }, []);
+
   const initialize = useCallback(async () => {
     setStatus("loading");
     const storedToken = await tokenManager.getToken();
+    const storedRefreshToken = await tokenManager.getRefreshToken();
 
     try {
-      if (!storedToken) {
-        clearSession();
+      const hydrateSession = async (accessToken: string | null): Promise<boolean> => {
+        if (!accessToken) return false;
+        const sessionUser = await resolveSessionUser(accessToken);
+        if (!sessionUser) return false;
+        setSession(accessToken, sessionUser);
+        return true;
+      };
+
+      if (await hydrateSession(storedToken)) {
         return;
       }
 
-      const payload = jwtDecode<TokenPayload>(storedToken);
-
-      // Reject expired tokens (exp is in seconds)
-      if (payload.exp && payload.exp * 1000 < Date.now()) {
-        await tokenManager.clearToken();
-        clearSession();
-        return;
-      }
-
-      const sessionUser = buildUserFromToken(payload);
-      if (sessionUser) {
-        setSession(storedToken, sessionUser);
-      } else {
-        // JWT lacks local claims (email/role) – verify identity with server
-        try {
-          const me = await authApi.me();
-          setSession(storedToken, me);
-        } catch {
-          await tokenManager.clearToken();
-          clearSession();
+      if (storedRefreshToken) {
+        const refreshedTokens = await authRefreshToken(
+          storedRefreshToken,
+          mobileAuthAdapter,
+        );
+        if (refreshedTokens?.refreshToken) {
+          await tokenManager.setRefreshToken(refreshedTokens.refreshToken);
+        }
+        if (await hydrateSession(refreshedTokens?.accessToken ?? null)) {
+          return;
         }
       }
+
+      await tokenManager.clearToken();
+      clearSession();
     } catch {
       await tokenManager.clearToken();
       clearSession();
     } finally {
       setInitialized();
     }
-  }, [clearSession, setSession, setStatus, setInitialized]);
+  }, [clearSession, resolveSessionUser, setSession, setStatus, setInitialized]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     setStatus("loading");
     setError(null);
     try {
       const response = await authLogin({ email, password }, mobileAuthAdapter);
+      if (response.refreshToken) {
+        await tokenManager.setRefreshToken(response.refreshToken);
+      } else {
+        await tokenManager.clearRefreshToken();
+      }
       const sessionUser = buildUserFromToken({
         sub: response.user.sub,
         email: response.user.email,
@@ -116,7 +145,14 @@ export const useAuth = () => {
           name: payload.fullName,
           email: payload.email,
           password: payload.password,
+          isDealer: payload.isDealer,
+          role: payload.isDealer ? "VENDOR" : "CUSTOMER",
         }, mobileAuthAdapter);
+        if (response.refreshToken) {
+          await tokenManager.setRefreshToken(response.refreshToken);
+        } else {
+          await tokenManager.clearRefreshToken();
+        }
         const sessionUser = buildUserFromToken({
           sub: response.user.sub,
           email: response.user.email,

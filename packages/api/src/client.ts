@@ -18,7 +18,7 @@ export function createApiClient(options: ApiClientOptions): AxiosInstance {
     (typeof process !== "undefined" &&
       (process.env["EXPO_PUBLIC_API_BASE_URL"] ??
        process.env["NEXT_PUBLIC_API_BASE_URL"])) ||
-    "https://jefflink.onrender.com/api/v1";
+    "https://api.jefflinkcars.com/api/v1";
 
   const client = axios.create({
     baseURL,

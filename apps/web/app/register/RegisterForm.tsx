@@ -81,6 +81,8 @@ export default function RegisterForm() {
           email: email.trim(),
           password,
           phone: phone.trim() || undefined,
+          isDealer,
+          role: isDealer ? "VENDOR" : "CUSTOMER",
         },
         webAuthAdapter,
       );

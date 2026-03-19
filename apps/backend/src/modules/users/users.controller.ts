@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthUser } from '../../common/types/auth-user.type';
+import { UpdateMeDto } from './dto/update-me.dto';
 
 @ApiTags('users')
 @ApiBearerAuth('access-token')
@@ -14,6 +15,13 @@ export class UsersController {
   @ApiOperation({ summary: 'Get own profile' })
   getMe(@CurrentUser() user: AuthUser) {
     return this.usersService.findById(user.sub);
+  }
+
+  @Patch('me')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update own profile details' })
+  updateMe(@CurrentUser() user: AuthUser, @Body() dto: UpdateMeDto) {
+    return this.usersService.updateMe(user.sub, dto);
   }
 
   @Patch('me/avatar')

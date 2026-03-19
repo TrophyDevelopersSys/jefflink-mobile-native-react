@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthContext } from "../../src/context/AuthContext";
 
 // ─── Step indicators (mirrors mobile LoginScreen STEPS) ────────────────────
@@ -11,6 +11,7 @@ const STEPS = [{ label: "Identify" }, { label: "Verify" }];
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signIn, status } = useAuthContext();
 
   const [step, setStep] = useState(0);
@@ -47,7 +48,12 @@ export default function LoginForm() {
     }
     try {
       await signIn(email.trim(), password);
-      router.push(isDealer ? "/dashboard" : "/dashboard");
+      const nextPath = searchParams.get("next");
+      if (nextPath && nextPath.startsWith("/")) {
+        router.push(nextPath);
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Login failed. Please try again.";
       setFormError(msg);

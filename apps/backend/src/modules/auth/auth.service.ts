@@ -45,6 +45,13 @@ interface RegisteredUser {
   name: string;
 }
 
+interface NormalizedRegistrationInput {
+  email: string;
+  name: string;
+  phone?: string;
+  role: AppRole;
+}
+
 interface UsersColumnMeta {
   columnName: string;
   isNullable: boolean;
@@ -81,6 +88,7 @@ export class AuthService {
     'FIELD_OFFICER',
     'RECOVERY_AGENT',
     'VENDOR',
+    'DEALER',
     'AGENT',
     'CUSTOMER',
   ]);
@@ -105,11 +113,13 @@ export class AuthService {
 
   async register(dto: RegisterDto): Promise<AuthTokens> {
     try {
+      const registration = this.normalizeRegistrationInput(dto);
+
       // Check email uniqueness
       const existing = await this.db.db
         .select({ id: users.id })
         .from(users)
-        .where(eq(users.email, dto.email.toLowerCase()))
+        .where(eq(users.email, registration.email))
         .limit(1);
 
       if (existing.length > 0) {
@@ -117,12 +127,12 @@ export class AuthService {
       }
 
       const passwordHash = await bcrypt.hash(dto.password, 12);
-      const user = await this.createUserAdaptive(dto, passwordHash);
+      const user = await this.createUserAdaptive(registration, passwordHash);
 
-      // Persist a default CUSTOMER role when schema supports it.
+      // Persist the registration role when schema supports it.
       // This is intentionally best-effort to avoid auth hard-failures on
       // partially migrated/legacy databases.
-      await this.assignDefaultRole(user.id).catch((error) => {
+      await this.assignDefaultRole(user.id, registration.role).catch((error) => {
         this.logger.warn(
           `Role assignment fallback triggered during registration: ${
             error instanceof Error ? error.message : String(error)
@@ -134,7 +144,7 @@ export class AuthService {
         sub: user.id,
         email: user.email,
         name: user.name,
-        role: 'CUSTOMER',
+        role: registration.role,
       });
     } catch (error) {
       if (error instanceof ConflictException) {
@@ -352,8 +362,48 @@ export class AuthService {
 
   // ── Private helpers ────────────────────────────────────────────────────────
 
+  private normalizeRegistrationInput(dto: RegisterDto): NormalizedRegistrationInput {
+    const email = dto.email.toLowerCase().trim();
+    const preferredName = (dto.name ?? dto.fullName ?? '').trim();
+    if (!preferredName || preferredName.length < 2) {
+      throw new BadRequestException('Name must be at least 2 characters');
+    }
+
+    return {
+      email,
+      name: preferredName,
+      phone: dto.phone?.trim() || undefined,
+      role: this.resolveRegistrationRole(dto.role, dto.isDealer),
+    };
+  }
+
+  private resolveRegistrationRole(
+    requestedRole?: string,
+    isDealer?: boolean,
+  ): AppRole {
+    if (isDealer === true) {
+      return 'VENDOR';
+    }
+
+    const normalized = requestedRole?.trim().toUpperCase();
+    if (!normalized) {
+      return 'CUSTOMER';
+    }
+
+    // Public self-registration is restricted to market participant roles.
+    if (
+      normalized === 'VENDOR' ||
+      normalized === 'DEALER' ||
+      normalized === 'AGENT'
+    ) {
+      return normalized === 'DEALER' ? 'VENDOR' : (normalized as AppRole);
+    }
+
+    return 'CUSTOMER';
+  }
+
   private async createUserAdaptive(
-    dto: RegisterDto,
+    input: NormalizedRegistrationInput,
     passwordHash: string,
   ): Promise<RegisteredUser> {
     const cols = await this.getSchemaColumns();
@@ -370,8 +420,7 @@ export class AuthService {
       }
     };
 
-    const normalizedEmail = dto.email.toLowerCase();
-    setValue('email', normalizedEmail);
+    setValue('email', input.email);
 
     if (usersCols.has('password_hash')) {
       setValue('password_hash', passwordHash);
@@ -385,20 +434,23 @@ export class AuthService {
       );
     }
 
-    setValue('name', dto.name);
-    setValue('first_name', dto.name);
+    setValue('name', input.name);
+    setValue('first_name', input.name);
     setValue('last_name', '');
     setValue('status', 'ACTIVE');
+    setValue('role', input.role);
+    setValue('user_role', input.role);
+    setValue('user_type', input.role);
+    setValue('account_type', input.role);
     setValue('updated_at', new Date());
 
-    const phone = dto.phone?.trim();
-    if (phone) {
-      setValue('phone', phone);
+    if (input.phone) {
+      setValue('phone', input.phone);
     }
 
     // Legacy schema compatibility: users.role_id references a lookup roles table.
     if (usersCols.has('role_id')) {
-      const roleId = await this.ensureCustomerRoleId(rolesCols);
+      const roleId = await this.ensureRoleId(input.role, rolesCols);
       if (roleId) {
         setValue('role_id', roleId);
       }
@@ -411,7 +463,7 @@ export class AuthService {
       const fallback = await this.inferRequiredUserColumnValue(
         column,
         meta,
-        dto,
+        input,
         usersForeignKeys,
         rolesCols,
       );
@@ -435,9 +487,9 @@ export class AuthService {
 
     type Row = { id: string; email: string; name: string | null };
     const rows = await this.db.executeRaw<Row>(
-      `INSERT INTO users (${columns.join(', ')})
+      `INSERT INTO ${this.quoteIdentifier('users')} (${columns.map((column) => this.quoteIdentifier(column)).join(', ')})
        VALUES (${placeholders.join(', ')})
-       RETURNING id::text AS id, email, ${nameExpr} AS name`,
+       RETURNING id::text AS id, ${this.quoteIdentifier('email')} AS email, ${nameExpr} AS name`,
       values,
     );
 
@@ -449,35 +501,35 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
-      name: user.name ?? dto.name ?? user.email.split('@')[0] ?? 'User',
+      name: user.name ?? input.name ?? user.email.split('@')[0] ?? 'User',
     };
   }
 
   private async inferRequiredUserColumnValue(
     column: string,
     meta: UsersColumnMeta,
-    dto: RegisterDto,
+    input: NormalizedRegistrationInput,
     usersForeignKeys: Map<string, UsersForeignKeyMeta>,
     rolesCols: Set<string>,
   ): Promise<unknown | undefined> {
     const name = column.toLowerCase();
-    const emailLocalPart = dto.email.toLowerCase().split('@')[0] ?? 'user';
+    const emailLocalPart = input.email.split('@')[0] ?? 'user';
 
-    if (name === 'email') return dto.email.toLowerCase();
-    if (name === 'name') return dto.name;
-    if (name === 'first_name') return dto.name;
+    if (name === 'email') return input.email;
+    if (name === 'name') return input.name;
+    if (name === 'first_name') return input.name;
     if (name === 'last_name') return '';
     if (name === 'status') return 'ACTIVE';
-    if (name === 'role') return 'CUSTOMER';
-    if (name === 'user_role') return 'CUSTOMER';
-    if (name === 'user_type') return 'CUSTOMER';
-    if (name === 'account_type') return 'CUSTOMER';
+    if (name === 'role') return input.role;
+    if (name === 'user_role') return input.role;
+    if (name === 'user_type') return input.role;
+    if (name === 'account_type') return input.role;
     if (name === 'username' || name === 'user_name') {
       return meta.isUnique ? `${emailLocalPart}_${crypto.randomBytes(3).toString('hex')}` : emailLocalPart;
     }
-    if (name === 'display_name') return dto.name;
-    if (name === 'full_name') return dto.name;
-    if (name === 'phone') return dto.phone?.trim() ?? '';
+    if (name === 'display_name') return input.name;
+    if (name === 'full_name') return input.name;
+    if (name === 'phone') return input.phone ?? '';
 
     if (name.endsWith('_at')) return new Date();
     if (name.startsWith('is_') || name.startsWith('has_')) return false;
@@ -485,15 +537,15 @@ export class AuthService {
     const foreignKey = usersForeignKeys.get(column);
     if (foreignKey) {
       if (foreignKey.foreignTableName === 'roles') {
-        const roleId = await this.ensureCustomerRoleId(rolesCols);
+        const roleId = await this.ensureRoleId(input.role, rolesCols);
         if (roleId) {
           return roleId;
         }
       }
 
       const refRows = await this.db.executeRaw<{ value: string }>(
-        `SELECT ${foreignKey.foreignColumnName}::text AS value
-           FROM ${foreignKey.foreignTableName}
+        `SELECT ${this.quoteIdentifier(foreignKey.foreignColumnName)}::text AS value
+           FROM ${this.quoteIdentifier(foreignKey.foreignTableName)}
           LIMIT 1`,
       );
       if (refRows[0]?.value) {
@@ -513,6 +565,14 @@ export class AuthService {
 
         if (name.includes('status') && normalizedLabels.has('ACTIVE')) {
           return normalizedLabels.get('ACTIVE');
+        }
+        if (
+          (name.includes('role') ||
+            name.includes('type') ||
+            name.includes('account')) &&
+          normalizedLabels.has(input.role)
+        ) {
+          return normalizedLabels.get(input.role);
         }
         if (
           (name.includes('role') ||
@@ -565,7 +625,10 @@ export class AuthService {
     return undefined;
   }
 
-  private async ensureCustomerRoleId(rolesCols: Set<string>): Promise<string | null> {
+  private async ensureRoleId(
+    role: AppRole,
+    rolesCols: Set<string>,
+  ): Promise<string | null> {
     if (!rolesCols.has('id')) return null;
 
     const roleColumn = rolesCols.has('role')
@@ -575,12 +638,14 @@ export class AuthService {
         : null;
 
     if (!roleColumn) return null;
+    const roleIdentifier = this.quoteIdentifier(roleColumn);
 
     const existing = await this.db.executeRaw<{ id: string }>(
       `SELECT id::text AS id
-         FROM roles
-        WHERE LOWER(${roleColumn}) = 'customer'
+         FROM ${this.quoteIdentifier('roles')}
+        WHERE UPPER(${roleIdentifier}) = UPPER($1)
         LIMIT 1`,
+      [role],
     );
     if (existing[0]?.id) {
       return existing[0].id;
@@ -593,7 +658,7 @@ export class AuthService {
     }
 
     const insertColumns = [roleColumn];
-    const insertValues: unknown[] = ['CUSTOMER'];
+    const insertValues: unknown[] = [role];
 
     if (rolesCols.has('created_at')) {
       insertColumns.push('created_at');
@@ -602,7 +667,7 @@ export class AuthService {
 
     const placeholders = insertValues.map((_, i) => `$${i + 1}`).join(', ');
     const created = await this.db.executeRaw<{ id: string }>(
-      `INSERT INTO roles (${insertColumns.join(', ')})
+      `INSERT INTO ${this.quoteIdentifier('roles')} (${insertColumns.map((column) => this.quoteIdentifier(column)).join(', ')})
        VALUES (${placeholders})
        RETURNING id::text AS id`,
       insertValues,
@@ -611,7 +676,7 @@ export class AuthService {
     return created[0]?.id ?? null;
   }
 
-  private async assignDefaultRole(userId: string): Promise<void> {
+  private async assignDefaultRole(userId: string, role: AppRole): Promise<void> {
     const cols = await this.getSchemaColumns();
     const usersCols = cols.users;
     const rolesCols = cols.roles;
@@ -620,9 +685,9 @@ export class AuthService {
     if (rolesCols.has('user_id') && rolesCols.has('role')) {
       const withCreatedAt = rolesCols.has('created_at');
       await this.db.executeRaw(
-        `INSERT INTO roles (user_id, role${withCreatedAt ? ', created_at' : ''})
-         VALUES ($1, 'CUSTOMER'${withCreatedAt ? ', NOW()' : ''})`,
-        [userId],
+        `INSERT INTO ${this.quoteIdentifier('roles')} (user_id, role${withCreatedAt ? ', created_at' : ''})
+         VALUES ($1, $2${withCreatedAt ? ', NOW()' : ''})`,
+        [userId, role],
       );
       return;
     }
@@ -631,19 +696,19 @@ export class AuthService {
     if (rolesCols.has('user_id') && rolesCols.has('name')) {
       const withCreatedAt = rolesCols.has('created_at');
       await this.db.executeRaw(
-        `INSERT INTO roles (user_id, name${withCreatedAt ? ', created_at' : ''})
-         VALUES ($1, 'CUSTOMER'${withCreatedAt ? ', NOW()' : ''})`,
-        [userId],
+        `INSERT INTO ${this.quoteIdentifier('roles')} (user_id, name${withCreatedAt ? ', created_at' : ''})
+         VALUES ($1, $2${withCreatedAt ? ', NOW()' : ''})`,
+        [userId, role],
       );
       return;
     }
 
     // Legacy lookup schema: users.role_id -> roles.id (with roles.name/role)
     if (usersCols.has('role_id') && rolesCols.has('id')) {
-      const roleId = await this.ensureCustomerRoleId(rolesCols);
+      const roleId = await this.ensureRoleId(role, rolesCols);
       if (roleId) {
         await this.db.executeRaw(
-          `UPDATE users SET role_id = $1 WHERE id = $2`,
+          `UPDATE ${this.quoteIdentifier('users')} SET ${this.quoteIdentifier('role_id')} = $1 WHERE ${this.quoteIdentifier('id')} = $2`,
           [roleId, userId],
         );
         return;
@@ -651,7 +716,7 @@ export class AuthService {
     }
 
     this.logger.warn(
-      'Skipping default role persistence: no compatible users/roles schema mapping found',
+      `Skipping default role persistence (${role}): no compatible users/roles schema mapping found`,
     );
   }
 
@@ -684,17 +749,17 @@ export class AuthService {
     let param = 1;
 
     if (usersCols.has('password_hash')) {
-      setFragments.push(`password_hash = $${param}`);
+      setFragments.push(`${this.quoteIdentifier('password_hash')} = $${param}`);
       values.push(passwordHash);
       param += 1;
     }
     if (usersCols.has('password')) {
-      setFragments.push(`password = $${param}`);
+      setFragments.push(`${this.quoteIdentifier('password')} = $${param}`);
       values.push(passwordHash);
       param += 1;
     }
     if (usersCols.has('updated_at')) {
-      setFragments.push(`updated_at = NOW()`);
+      setFragments.push(`${this.quoteIdentifier('updated_at')} = NOW()`);
     }
 
     if (setFragments.length === 0) {
@@ -705,9 +770,9 @@ export class AuthService {
 
     type Row = { id: string };
     const rows = await this.db.executeRaw<Row>(
-      `UPDATE users
+      `UPDATE ${this.quoteIdentifier('users')}
           SET ${setFragments.join(', ')}
-        WHERE id = $${param}
+        WHERE ${this.quoteIdentifier('id')} = $${param}
       RETURNING id::text AS id`,
       [...values, userId],
     );
@@ -723,6 +788,10 @@ export class AuthService {
       return value;
     }
     return 'CUSTOMER';
+  }
+
+  private quoteIdentifier(identifier: string): string {
+    return `"${identifier.replace(/"/g, '""')}"`;
   }
 
   private mapDatabaseErrorToHttp(
@@ -765,6 +834,10 @@ export class AuthService {
       }
       case '22P02':
         return new BadRequestException('Invalid field format in submitted data');
+      case '23514':
+        return new BadRequestException(
+          pgError.message ?? 'Submitted data violates a database constraint',
+        );
       default:
         return new BadRequestException(fallbackMessage);
     }
@@ -938,35 +1011,37 @@ export class AuthService {
     const cols = await this.getSchemaColumns();
     const usersCols = cols.users;
     const rolesCols = cols.roles;
+    const uCol = (name: string) => `u.${this.quoteIdentifier(name)}`;
+    const rCol = (name: string) => `r.${this.quoteIdentifier(name)}`;
 
     const nameExpr = this.buildNameExpression(usersCols, 'u');
 
     const statusExpr = usersCols.has('status')
-      ? `COALESCE(NULLIF(u.status, ''), 'ACTIVE')`
+      ? `COALESCE(NULLIF(${uCol('status')}, ''), 'ACTIVE')`
       : `'ACTIVE'`;
 
     let passwordExpr = `NULL`;
     if (usersCols.has('password_hash') && usersCols.has('password')) {
-      passwordExpr = `COALESCE(NULLIF(u.password_hash, ''), NULLIF(u.password, ''))`;
+      passwordExpr = `COALESCE(NULLIF(${uCol('password_hash')}, ''), NULLIF(${uCol('password')}, ''))`;
     } else if (usersCols.has('password_hash')) {
-      passwordExpr = `NULLIF(u.password_hash, '')`;
+      passwordExpr = `NULLIF(${uCol('password_hash')}, '')`;
     } else if (usersCols.has('password')) {
-      passwordExpr = `NULLIF(u.password, '')`;
+      passwordExpr = `NULLIF(${uCol('password')}, '')`;
     }
 
     const joinClauses: string[] = [];
-    if (rolesCols.has('user_id')) joinClauses.push(`r.user_id = u.id`);
+    if (rolesCols.has('user_id')) joinClauses.push(`${rCol('user_id')} = ${uCol('id')}`);
     if (rolesCols.has('id') && usersCols.has('role_id')) {
-      joinClauses.push(`r.id = u.role_id`);
+      joinClauses.push(`${rCol('id')} = ${uCol('role_id')}`);
     }
     const shouldJoinRoles = joinClauses.length > 0;
 
     const roleCandidates: string[] = [];
     if (shouldJoinRoles && rolesCols.has('role')) {
-      roleCandidates.push(`NULLIF(r.role, '')`);
+      roleCandidates.push(`NULLIF(${rCol('role')}, '')`);
     }
     if (shouldJoinRoles && rolesCols.has('name')) {
-      roleCandidates.push(`NULLIF(r.name, '')`);
+      roleCandidates.push(`NULLIF(${rCol('name')}, '')`);
     }
     const roleExpr =
       roleCandidates.length > 0
@@ -975,10 +1050,10 @@ export class AuthService {
 
     const branchCandidates: string[] = [];
     if (shouldJoinRoles && rolesCols.has('branch_id')) {
-      branchCandidates.push(`r.branch_id::text`);
+      branchCandidates.push(`${rCol('branch_id')}::text`);
     }
     if (usersCols.has('branch_id')) {
-      branchCandidates.push(`u.branch_id::text`);
+      branchCandidates.push(`${uCol('branch_id')}::text`);
     }
     const branchExpr =
       branchCandidates.length > 0
@@ -987,24 +1062,24 @@ export class AuthService {
 
     let query = `
       SELECT
-        u.id::text                 AS id,
-        u.email                    AS email,
+        ${uCol('id')}::text        AS id,
+        ${uCol('email')}           AS email,
         ${nameExpr}                AS name,
         ${statusExpr}              AS status,
         ${passwordExpr}            AS password_hash,
         ${roleExpr}                AS role,
         ${branchExpr}              AS branch_id
-      FROM users u
+      FROM ${this.quoteIdentifier('users')} u
     `;
 
     if (shouldJoinRoles) {
-      query += ` LEFT JOIN roles r ON (${joinClauses.join(' OR ')}) `;
+      query += ` LEFT JOIN ${this.quoteIdentifier('roles')} r ON (${joinClauses.join(' OR ')}) `;
     }
 
     query +=
       by === 'email'
-        ? ` WHERE LOWER(u.email) = LOWER($1) `
-        : ` WHERE u.id = $1 `;
+        ? ` WHERE LOWER(${uCol('email')}) = LOWER($1) `
+        : ` WHERE ${uCol('id')} = $1 `;
 
     query += ` LIMIT 1`;
 
@@ -1034,7 +1109,8 @@ export class AuthService {
   }
 
   private buildNameExpression(usersCols: Set<string>, alias?: string): string {
-    const col = (name: string) => (alias ? `${alias}.${name}` : name);
+    const col = (name: string) =>
+      alias ? `${alias}.${this.quoteIdentifier(name)}` : this.quoteIdentifier(name);
     const candidates: string[] = [];
 
     if (usersCols.has('name')) {

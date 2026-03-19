@@ -1,4 +1,22 @@
-export type UserRole = "CUSTOMER" | "DEALER" | "ADMIN";
+export type UserRole =
+  | "SUPER_ADMIN"
+  | "ADMIN"
+  | "SYSTEM_ADMIN"
+  | "DIRECTOR"
+  | "MANAGER"
+  | "FINANCE_ADMIN"
+  | "FINANCE_OFFICER"
+  | "AUDITOR"
+  | "MODERATOR"
+  | "SUPPORT"
+  | "LEGAL"
+  | "BRANCH_OFFICER"
+  | "FIELD_OFFICER"
+  | "RECOVERY_AGENT"
+  | "VENDOR"
+  | "DEALER"
+  | "AGENT"
+  | "CUSTOMER";
 export type UserStatus = "active" | "suspended" | "pending";
 
 export interface UserProfile {

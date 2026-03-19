@@ -8,7 +8,7 @@ import React, {
   useCallback,
   type ReactNode,
 } from "react";
-import { login, logout, getSession } from "@jefflink/auth";
+import { login, logout, getSession, refreshToken } from "@jefflink/auth";
 import type { TokenPayload } from "@jefflink/types";
 import { webAuthAdapter, webRefreshAdapter } from "../lib/authAdapter";
 
@@ -39,20 +39,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Restore session from localStorage on mount
   useEffect(() => {
     let cancelled = false;
-    setStatus("loading");
-    getSession(webAuthAdapter)
-      .then((payload) => {
+    const restoreSession = async () => {
+      setStatus("loading");
+      try {
+        const payload = await getSession(webAuthAdapter);
         if (cancelled) return;
+
         if (payload) {
           setUser(payload);
           setStatus("authenticated");
-        } else {
+          return;
+        }
+
+        const storedRefreshToken = webRefreshAdapter.getRefreshToken();
+        if (storedRefreshToken) {
+          const refreshedTokens = await refreshToken(storedRefreshToken, webAuthAdapter);
+          if (cancelled) return;
+
+          if (!refreshedTokens) {
+            webRefreshAdapter.clearRefreshToken();
+            setStatus("unauthenticated");
+            return;
+          }
+
+          if (refreshedTokens.refreshToken) {
+            webRefreshAdapter.setRefreshToken(refreshedTokens.refreshToken);
+          }
+
+          const refreshedPayload = await getSession(webAuthAdapter);
+          if (cancelled) return;
+
+          if (refreshedPayload) {
+            setUser(refreshedPayload);
+            setStatus("authenticated");
+            return;
+          }
+        }
+
+        setStatus("unauthenticated");
+      } catch {
+        if (!cancelled) {
           setStatus("unauthenticated");
         }
-      })
-      .catch(() => {
-        if (!cancelled) setStatus("unauthenticated");
-      });
+      }
+    };
+
+    void restoreSession();
     return () => { cancelled = true; };
   }, []);
 
@@ -64,6 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // also persist refresh token if returned
       if (result.refreshToken) {
         webRefreshAdapter.setRefreshToken(result.refreshToken);
+      } else {
+        webRefreshAdapter.clearRefreshToken();
       }
       setUser(result.user);
       setStatus("authenticated");
