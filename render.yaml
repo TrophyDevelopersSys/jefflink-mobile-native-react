@@ -18,7 +18,7 @@ services:
     rootDir: .
     buildCommand: "pnpm install --frozen-lockfile --prod=false && pnpm turbo run build --filter=jefflink-backend"
     startCommand: node apps/backend/dist/main.js
-    healthCheckPath: /health
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
@@ -42,7 +42,7 @@ services:
         sync: false
       - key: R2_SECRET_ACCESS_KEY
         sync: false
-      - key: R2_BUCKET_NAME
+      - key: R2_BUCKET
         sync: false
       - key: R2_PUBLIC_URL
         value: https://cdn.jefflinkcars.com
