@@ -28,9 +28,25 @@ export interface AuthTokens {
   };
 }
 
+interface AuthLookupRecord {
+  id: string;
+  email: string;
+  name: string;
+  status: string;
+  passwordHash: string | null;
+  role: AppRole;
+  branchId?: string;
+}
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private schemaColumnsCache:
+    | {
+        users: Set<string>;
+        roles: Set<string>;
+      }
+    | undefined;
 
   constructor(
     private readonly db: DatabaseService,
@@ -74,29 +90,12 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthTokens> {
-    // Fetch user with associated role
-    const result = await this.db.db
-      .select({
-        id: users.id,
-        email: users.email,
-        name: users.name,
-        passwordHash: users.passwordHash,
-        status: users.status,
-        role: roles.role,
-        branchId: roles.branchId,
-      })
-      .from(users)
-      .leftJoin(roles, eq(roles.userId, users.id))
-      .where(eq(users.email, dto.email.toLowerCase()))
-      .limit(1);
-
-    if (result.length === 0) {
+    const record = await this.resolveAuthRecordByEmail(dto.email.toLowerCase());
+    if (!record) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const record = result[0];
-
-    if (record.status !== 'ACTIVE') {
+    if ((record.status ?? 'ACTIVE').toUpperCase() !== 'ACTIVE') {
       throw new UnauthorizedException('Account is not active');
     }
 
@@ -104,7 +103,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const passwordValid = await bcrypt.compare(dto.password, record.passwordHash);
+    const passwordValid = await this.verifyPassword(
+      dto.password,
+      record.passwordHash,
+    );
     if (!passwordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -113,8 +115,8 @@ export class AuthService {
       sub: record.id,
       email: record.email,
       name: record.name,
-      role: (record.role ?? 'CUSTOMER') as AppRole,
-      branchId: record.branchId ?? undefined,
+      role: record.role,
+      branchId: record.branchId,
     };
 
     return this.issueTokens(payload);
@@ -131,32 +133,17 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    // Re-fetch user to get latest role
-    const result = await this.db.db
-      .select({
-        id: users.id,
-        email: users.email,
-        name: users.name,
-        status: users.status,
-        role: roles.role,
-        branchId: roles.branchId,
-      })
-      .from(users)
-      .leftJoin(roles, eq(roles.userId, users.id))
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    if (!result[0] || result[0].status !== 'ACTIVE') {
+    const record = await this.resolveAuthRecordById(userId);
+    if (!record || (record.status ?? 'ACTIVE').toUpperCase() !== 'ACTIVE') {
       throw new UnauthorizedException('Account is no longer active');
     }
 
-    const r = result[0];
     return this.issueTokens({
-      sub: r.id,
-      email: r.email,
-      name: r.name,
-      role: (r.role ?? 'CUSTOMER') as AppRole,
-      branchId: r.branchId ?? undefined,
+      sub: record.id,
+      email: record.email,
+      name: record.name,
+      role: record.role,
+      branchId: record.branchId,
     });
   }
 
@@ -193,38 +180,200 @@ export class AuthService {
   }
 
   async getMe(userId: string): Promise<Omit<AuthUser, 'sub'> & { id: string }> {
-    const result = await this.db.db
-      .select({
-        id: users.id,
-        email: users.email,
-        name: users.name,
-        phone: users.phone,
-        avatarUrl: users.avatarUrl,
-        status: users.status,
-        role: roles.role,
-        branchId: roles.branchId,
-        createdAt: users.createdAt,
-      })
-      .from(users)
-      .leftJoin(roles, eq(roles.userId, users.id))
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    if (!result[0]) {
+    const record = await this.resolveAuthRecordById(userId);
+    if (!record) {
       throw new UnauthorizedException('User not found');
     }
 
-    const u = result[0];
     return {
-      id: u.id,
-      email: u.email,
-      name: u.name,
-      role: (u.role ?? 'CUSTOMER') as AppRole,
-      branchId: u.branchId ?? undefined,
+      id: record.id,
+      email: record.email,
+      name: record.name,
+      role: record.role,
+      branchId: record.branchId,
     };
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────
+
+  private async verifyPassword(
+    plainPassword: string,
+    storedPassword: string,
+  ): Promise<boolean> {
+    const bcryptLike = /^\$2[aby]\$\d{2}\$/.test(storedPassword);
+    if (bcryptLike) {
+      try {
+        return await bcrypt.compare(plainPassword, storedPassword);
+      } catch {
+        return false;
+      }
+    }
+
+    // Legacy fallback: plain-text records are treated as-is.
+    return plainPassword === storedPassword;
+  }
+
+  private normalizeRole(role: string | null | undefined): AppRole {
+    const value = (role ?? '').toUpperCase();
+    if (value === 'ADMIN' || value === 'VENDOR' || value === 'CUSTOMER') {
+      return value;
+    }
+    return 'CUSTOMER';
+  }
+
+  private async getSchemaColumns(): Promise<{
+    users: Set<string>;
+    roles: Set<string>;
+  }> {
+    if (this.schemaColumnsCache) {
+      return this.schemaColumnsCache;
+    }
+
+    const rows = await this.db.executeRaw<{
+      table_name: string;
+      column_name: string;
+    }>(
+      `SELECT table_name, column_name
+         FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name IN ('users', 'roles')`,
+    );
+
+    const usersCols = new Set<string>();
+    const rolesCols = new Set<string>();
+
+    for (const row of rows) {
+      if (row.table_name === 'users') usersCols.add(row.column_name);
+      if (row.table_name === 'roles') rolesCols.add(row.column_name);
+    }
+
+    this.schemaColumnsCache = { users: usersCols, roles: rolesCols };
+    return this.schemaColumnsCache;
+  }
+
+  private async resolveAuthRecordByEmail(
+    email: string,
+  ): Promise<AuthLookupRecord | null> {
+    return this.resolveAuthRecord('email', email);
+  }
+
+  private async resolveAuthRecordById(
+    userId: string,
+  ): Promise<AuthLookupRecord | null> {
+    return this.resolveAuthRecord('id', userId);
+  }
+
+  private async resolveAuthRecord(
+    by: 'email' | 'id',
+    value: string,
+  ): Promise<AuthLookupRecord | null> {
+    const cols = await this.getSchemaColumns();
+    const usersCols = cols.users;
+    const rolesCols = cols.roles;
+
+    const nameCandidates: string[] = [];
+    if (usersCols.has('name')) {
+      nameCandidates.push(`NULLIF(u.name, '')`);
+    }
+    if (usersCols.has('first_name') || usersCols.has('last_name')) {
+      nameCandidates.push(
+        `NULLIF(TRIM(COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')), '')`,
+      );
+    }
+    nameCandidates.push(`SPLIT_PART(u.email, '@', 1)`);
+    const nameExpr = `COALESCE(${nameCandidates.join(', ')})`;
+
+    const statusExpr = usersCols.has('status')
+      ? `COALESCE(NULLIF(u.status, ''), 'ACTIVE')`
+      : `'ACTIVE'`;
+
+    let passwordExpr = `NULL`;
+    if (usersCols.has('password_hash') && usersCols.has('password')) {
+      passwordExpr = `COALESCE(NULLIF(u.password_hash, ''), NULLIF(u.password, ''))`;
+    } else if (usersCols.has('password_hash')) {
+      passwordExpr = `NULLIF(u.password_hash, '')`;
+    } else if (usersCols.has('password')) {
+      passwordExpr = `NULLIF(u.password, '')`;
+    }
+
+    const joinClauses: string[] = [];
+    if (rolesCols.has('user_id')) joinClauses.push(`r.user_id = u.id`);
+    if (rolesCols.has('id') && usersCols.has('role_id')) {
+      joinClauses.push(`r.id = u.role_id`);
+    }
+    const shouldJoinRoles = joinClauses.length > 0;
+
+    const roleCandidates: string[] = [];
+    if (shouldJoinRoles && rolesCols.has('role')) {
+      roleCandidates.push(`NULLIF(r.role, '')`);
+    }
+    if (shouldJoinRoles && rolesCols.has('name')) {
+      roleCandidates.push(`NULLIF(r.name, '')`);
+    }
+    const roleExpr =
+      roleCandidates.length > 0
+        ? `COALESCE(${roleCandidates.join(', ')}, 'CUSTOMER')`
+        : `'CUSTOMER'`;
+
+    const branchCandidates: string[] = [];
+    if (shouldJoinRoles && rolesCols.has('branch_id')) {
+      branchCandidates.push(`r.branch_id::text`);
+    }
+    if (usersCols.has('branch_id')) {
+      branchCandidates.push(`u.branch_id::text`);
+    }
+    const branchExpr =
+      branchCandidates.length > 0
+        ? `COALESCE(${branchCandidates.join(', ')})`
+        : `NULL`;
+
+    let query = `
+      SELECT
+        u.id::text                 AS id,
+        u.email                    AS email,
+        ${nameExpr}                AS name,
+        ${statusExpr}              AS status,
+        ${passwordExpr}            AS password_hash,
+        ${roleExpr}                AS role,
+        ${branchExpr}              AS branch_id
+      FROM users u
+    `;
+
+    if (shouldJoinRoles) {
+      query += ` LEFT JOIN roles r ON (${joinClauses.join(' OR ')}) `;
+    }
+
+    query +=
+      by === 'email'
+        ? ` WHERE LOWER(u.email) = LOWER($1) `
+        : ` WHERE u.id = $1 `;
+
+    query += ` LIMIT 1`;
+
+    type RawRow = {
+      id: string;
+      email: string;
+      name: string | null;
+      status: string | null;
+      password_hash: string | null;
+      role: string | null;
+      branch_id: string | null;
+    };
+
+    const rows = await this.db.executeRaw<RawRow>(query, [value]);
+    const row = rows[0];
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      email: row.email,
+      name: row.name ?? row.email.split('@')[0] ?? 'User',
+      status: row.status ?? 'ACTIVE',
+      passwordHash: row.password_hash,
+      role: this.normalizeRole(row.role),
+      branchId: row.branch_id ?? undefined,
+    };
+  }
 
   private async issueTokens(payload: AuthUser): Promise<AuthTokens> {
     const accessSecret =
