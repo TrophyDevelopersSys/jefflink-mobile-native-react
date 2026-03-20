@@ -1,12 +1,13 @@
 import React, { useRef, useState } from "react";
+import { brand } from "@jefflink/design-tokens";
 import {
-  Image,
   Text,
   TouchableOpacity,
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Menu, UserCircle } from "lucide-react-native";
+import { SvgUri } from "react-native-svg";
 
 import DrawerMenu, { type DrawerItemKey } from "./DrawerMenu";
 import { useTheme } from "../../theme/useTheme";
@@ -48,10 +49,10 @@ export default function TopBar({
             onPress={onLogoPress}
             disabled={!onLogoPress}
           >
-            <Image
-              source={require("../../assets/images/logo.png")}
-              style={{ width: 100, height: 36 }}
-              resizeMode="contain"
+            <SvgUri
+              uri={brand.assets.logo.primary}
+              width={112}
+              height={36}
             />
           </TouchableOpacity>
 

@@ -1,4 +1,5 @@
 import React, { memo, useCallback, useEffect, useRef } from "react";
+import { brand } from "@jefflink/design-tokens";
 import {
   Animated,
   Dimensions,
@@ -20,6 +21,7 @@ import {
   X,
   type LucideProps
 } from "lucide-react-native";
+import { SvgUri } from "react-native-svg";
 
 export type DrawerItemKey =
   | "about"
@@ -124,7 +126,7 @@ export default function DrawerMenu({ visible, onClose, onItemPress }: DrawerMenu
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>JeffLink</Text>
+            <SvgUri uri={brand.assets.logo.primary} width={116} height={34} />
             <TouchableOpacity activeOpacity={0.75} onPress={onClose} style={styles.closeBtn}>
               <X size={18} color="#9AA3AF" />
             </TouchableOpacity>
@@ -176,12 +178,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#1A1D23"
-  },
-  headerTitle: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "700",
-    letterSpacing: 0.3
   },
   closeBtn: {
     backgroundColor: "#1A1D23",

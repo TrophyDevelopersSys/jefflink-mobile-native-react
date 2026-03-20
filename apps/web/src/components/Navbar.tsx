@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { brand } from "@jefflink/design-tokens";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthContext } from "../context/AuthContext";
@@ -35,10 +36,13 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-brand-accent font-black text-xl tracking-tight">
-              Jeff<span className="text-white">Link</span>
-            </span>
+          <Link href="/" className="flex items-center gap-3 flex-shrink-0">
+            <img
+              src={brand.assets.logo.primary}
+              alt={brand.name}
+              className="h-9 w-auto sm:h-10"
+              draggable={false}
+            />
             <span className="hidden sm:block text-xs font-medium bg-brand-primary/20 text-brand-accent px-2 py-0.5 rounded-badge">
               Marketplace
             </span>

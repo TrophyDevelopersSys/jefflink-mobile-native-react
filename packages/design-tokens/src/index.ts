@@ -7,6 +7,9 @@ export type { SpacingKey } from "./spacing";
 export { radius } from "./radius";
 export type { RadiusKey } from "./radius";
 
+export { brand } from "./brand";
+export type { BrandAssetKey } from "./brand";
+
 export { fonts } from "./fonts";
 export type { FontKey } from "./fonts";
 

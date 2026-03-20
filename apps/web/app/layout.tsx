@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import React from "react";
-import { fonts } from "@jefflink/design-tokens";
+import { brand, fonts } from "@jefflink/design-tokens";
 import "../src/globals.css";
 import { Providers } from "../src/components/Providers";
 import Navbar from "../src/components/Navbar";
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: "JeffLink",
     images: [
       {
-        url: "/og-image.png",
+        url: brand.assets.logo.primary,
         width: 1200,
         height: 630,
         alt: "JeffLink Marketplace",
@@ -31,6 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    images: [brand.assets.logo.primary],
   },
 };
 

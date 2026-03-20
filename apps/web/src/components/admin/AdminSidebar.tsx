@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { brand } from "@jefflink/design-tokens";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -65,10 +66,13 @@ export function AdminSidebar() {
   return (
     <aside className="flex flex-col w-60 min-h-screen bg-[var(--color-surface)] border-r border-[var(--color-border)] shrink-0">
       {/* Brand */}
-      <div className="flex items-center gap-2 px-5 py-5 border-b border-[var(--color-border)]">
-        <span className="text-[var(--color-primary)] font-extrabold text-xl tracking-tight">
-          JeffLink
-        </span>
+      <div className="flex items-center gap-3 px-5 py-5 border-b border-[var(--color-border)]">
+        <img
+          src={brand.assets.logo.primary}
+          alt={brand.name}
+          className="h-9 w-auto"
+          draggable={false}
+        />
         <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--color-primary)] text-white font-semibold ml-1">
           Admin
         </span>
