@@ -20,6 +20,7 @@ import { HealthModule } from './health/health.module';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
+import mailConfig from './config/mail.config';
 import redisConfig from './config/redis.config';
 import storageConfig from './config/storage.config';
 
@@ -29,7 +30,7 @@ import storageConfig from './config/storage.config';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
-      load: [appConfig, databaseConfig, jwtConfig, redisConfig, storageConfig],
+      load: [appConfig, databaseConfig, jwtConfig, mailConfig, redisConfig, storageConfig],
       cache: true,
     }),
 

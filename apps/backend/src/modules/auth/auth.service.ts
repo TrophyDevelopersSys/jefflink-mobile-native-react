@@ -17,6 +17,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { AppRole } from '../../common/decorators/roles.decorator';
+import { MailService } from '../mail/mail.service';
 
 export interface AuthTokens {
   accessToken: string;
@@ -109,6 +110,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly redis: RedisService,
+    private readonly mail: MailService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthTokens> {
@@ -238,9 +240,8 @@ export class AuthService {
 
   /**
    * Generates a password-reset token for the given email, stores it in Redis
-   * with a 1-hour TTL, and returns a generic response (to prevent email
-   * enumeration).  Actual email dispatch should be wired up here once a
-   * mailer service is available.
+   * with a 1-hour TTL, dispatches the reset link via SMTP when configured,
+   * and returns a generic response to prevent email enumeration.
    */
   async forgotPassword(email: string): Promise<{
     message: string;
@@ -253,7 +254,7 @@ export class AuthService {
       const normalised = email.toLowerCase();
 
       const result = await this.db.db
-        .select({ id: users.id })
+        .select({ id: users.id, email: users.email, name: users.name })
         .from(users)
         .where(eq(users.email, normalised))
         .limit(1);
@@ -272,17 +273,9 @@ export class AuthService {
         const exposeResetToken =
           this.config.get<string>('AUTH_EXPOSE_RESET_TOKEN') === 'true' ||
           this.config.get<string>('NODE_ENV') !== 'production';
+        const resetUrl = this.buildPasswordResetUrl(result[0].id, token);
 
         if (exposeResetToken) {
-          const webBase =
-            this.config.get<string>('WEB_APP_URL') ??
-            this.config.get<string>('NEXT_PUBLIC_SITE_URL') ??
-            'https://jefflinkcars.com';
-          const sanitizedWebBase = webBase.replace(/\/+$/, '');
-          const resetUrl = `${sanitizedWebBase}/reset-password?uid=${encodeURIComponent(
-            result[0].id,
-          )}&token=${encodeURIComponent(token)}`;
-
           return {
             message:
               'If that email is registered you will receive a reset link shortly.',
@@ -293,7 +286,18 @@ export class AuthService {
           };
         }
 
-        // TODO: dispatch email with reset link once MailerService is integrated
+        const emailSent = await this.mail.sendPasswordResetEmail({
+          to: result[0].email,
+          name: result[0].name,
+          resetUrl,
+          expiresInMinutes: Math.floor(this.resetTokenTtlSeconds / 60),
+        });
+
+        if (!emailSent) {
+          this.logger.warn(
+            `Password reset token created for ${result[0].id}, but email delivery was not completed.`,
+          );
+        }
       }
     } catch (error) {
       this.logger.error(
@@ -996,6 +1000,18 @@ export class AuthService {
     email: string,
   ): Promise<AuthLookupRecord | null> {
     return this.resolveAuthRecord('email', email);
+  }
+
+  private buildPasswordResetUrl(userId: string, token: string): string {
+    const webBase =
+      this.config.get<string>('WEB_APP_URL') ??
+      this.config.get<string>('NEXT_PUBLIC_SITE_URL') ??
+      'https://jefflinkcars.com';
+    const sanitizedWebBase = webBase.replace(/\/+$/, '');
+
+    return `${sanitizedWebBase}/reset-password?uid=${encodeURIComponent(
+      userId,
+    )}&token=${encodeURIComponent(token)}`;
   }
 
   private async resolveAuthRecordById(

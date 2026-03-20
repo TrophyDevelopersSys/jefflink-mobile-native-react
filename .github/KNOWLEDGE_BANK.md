@@ -1089,6 +1089,18 @@ JWT_REFRESH_SECRET=    # Refresh token signing key
 JWT_EXPIRES_IN=        # e.g. 15m
 JWT_REFRESH_EXPIRES_IN=# e.g. 7d
 REDIS_URL=             # Redis connection string
+WEB_APP_URL=           # Frontend base URL used in password reset links
+SMTP_URL=              # Optional full SMTP connection string
+SMTP_HOST=             # SMTP server host (if SMTP_URL is not used)
+SMTP_PORT=587          # SMTP server port
+SMTP_SECURE=false      # true for implicit TLS, false for STARTTLS/plain
+SMTP_USER=             # SMTP username (optional if relay is open)
+SMTP_PASS=             # SMTP password
+SMTP_BREVO_LOGIN=      # Optional Brevo SMTP login alias accepted by backend
+SMTP_BREVO_API_KEY=    # Optional Brevo SMTP key alias accepted by backend
+MAIL_FROM=             # Sender email for password reset emails
+MAIL_FROM_NAME=        # Sender display name
+MAIL_REPLY_TO=         # Support/reply-to email
 # Cloudflare R2 (primary file storage)
 R2_ACCOUNT_ID=         # Cloudflare account ID
 R2_ACCESS_KEY_ID=      # R2 API token key ID
@@ -1123,6 +1135,15 @@ cdn  → pub-ac2067b6a2264561b99c6c807174ff78.r2.dev  (Proxied)
 > 2. Both build commands also pass `--prod=false` as belt-and-suspenders
 
 **Turbo Version on Render:** 2.8.14 (resolved from `^2.5.2` in root `package.json`)
+
+### Password Reset Mail
+
+- Backend password reset emails are sent by `apps/backend/src/modules/mail/mail.service.ts` using Nodemailer.
+- `apps/backend/src/modules/auth/auth.service.ts` generates the reset token, stores the hashed token in Redis for 1 hour, and builds the email link from `WEB_APP_URL`.
+- In non-production, forgot-password still exposes `userId`, `token`, and `resetUrl` when `AUTH_EXPOSE_RESET_TOKEN=true` or `NODE_ENV!=production`.
+- Brevo is supported via either canonical SMTP vars (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`) or Brevo aliases (`SMTP_BREVO_LOGIN`, `SMTP_BREVO_API_KEY`).
+- Brevo relay settings: host `smtp-relay.brevo.com`, port `587`, `SMTP_SECURE=false`.
+- `MAIL_FROM` must be a verified Brevo sender/domain for delivery to succeed.
 
 ### EAS Build Profiles
 ```
@@ -1202,6 +1223,8 @@ Authorization: Bearer {accessToken}
 | 2026-03-14 | § 11 Deployment — updated Render services table (names, URLs, build cmds), DNS CNAMEs, R2 storage note, pnpm+Render gotcha documented | Copilot |
 | 2026-03-15 | **Admin Infrastructure wired to Neon DB** — (1) Drizzle migration `0001_admin_infrastructure.sql` registered in journal + run against Neon (`npm run db:migrate:admin`); (2) 3 new DB tables: `vendor_profiles`, `listing_reports`, `admin_logs`; (3) 6 NestJS admin services fully wired to Neon: `AdminAnalyticsService`, `AdminUsersService`, `AdminListingsService`, `AdminVendorsService`, `AdminFinanceService`, `AuditLogService`; (4) Mobile `endpoints.ts` expanded to 34 admin routes; (5) `admin.api.ts` rewritten with 20 typed methods; (6) All 5 admin mobile screens wired to live Neon data: `DashboardScreen`, `UsersScreen`, `ContractsScreen`, `PaymentsScreen`, `MonitorSyncScreen` | Copilot |
 | 2026-03-15 | **R2 Media & CMS Architecture** — (1) `storage.config.ts` fixed: key names unified to match `media.service.ts` (`accountId`, `bucket`, `publicUrl`); default bucket name set to `jefflink-storage`; AWS S3 config removed. (2) `media.service.ts` — added `presignUpload(path, contentType)`: generates 5-min presigned R2 PUT URL so clients upload directly to R2 (zero backend bandwidth). (3) `media.controller.ts` — added `POST /api/v1/media/presign` endpoint. (4) `media_assets` schema — added `status VARCHAR(20) DEFAULT 'ACTIVE'` column. (5) New CMS DB tables: `cms_sliders`, `cms_banners`, `cms_content` (§ 5.3). (6) New NestJS `CmsModule` (`apps/backend/src/modules/cms/`) with `CmsService` + `CmsController` + DTOs. (7) Public endpoint `GET /api/v1/cms/homepage` returns sliders + banners + content map in one call. (8) Admin CRUD endpoints for sliders and content blocks (ADMIN/SYSTEM_ADMIN roles). (9) Drizzle migration `0002_cms_media_architecture.sql` added with seed data. (10) `.env.example` updated with all 5 `R2_*` vars and bucket folder structure. (11) `apps/web/app/commercial/[id]/page.tsx` — `fallbackIcon` fixed: import `BriefcaseBusiness` from `lucide-react` and pass as component reference instead of string. | Copilot |
+| 2026-03-20 | `apps/backend` — added SMTP-backed `MailService`, wired `/auth/forgot-password` to send reset emails, and documented required `SMTP_*` / `MAIL_*` environment variables. | Copilot |
+| 2026-03-20 | `apps/backend` — updated current mailer state to reflect Brevo relay support (`SMTP_BREVO_LOGIN`, `SMTP_BREVO_API_KEY`), `WEB_APP_URL`-based reset links, and Render-ready SMTP settings (`smtp-relay.brevo.com:587`, `SMTP_SECURE=false`). | Copilot |
 
 ---
 
