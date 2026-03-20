@@ -408,12 +408,6 @@ importers:
       '@jefflink/types':
         specifier: workspace:*
         version: link:../types
-      axios:
-        specifier: ^1.13.6
-        version: 1.13.6
-      jwt-decode:
-        specifier: ^4.0.0
-        version: 4.0.0
     devDependencies:
       '@types/node':
         specifier: ^22.0.0
