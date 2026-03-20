@@ -43,6 +43,7 @@ export class QueueModule {
           useFactory: (config: ConfigService) => ({
             connection: {
               url: config.get<string>('redis.url', 'redis://localhost:6379'),
+              enableReadyCheck: false,
             },
           }),
           inject: [ConfigService],

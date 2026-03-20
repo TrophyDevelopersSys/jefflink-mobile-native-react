@@ -17,6 +17,7 @@ export type DrizzleDB = NeonDatabase<typeof schema>;
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DatabaseService.name);
   private readonly startupMigrations = [
+    '0000_fancy_raza.sql',
     '0001_admin_infrastructure.sql',
     '0003_align_prod_schema.sql',
     '0004_add_password_hash.sql',
