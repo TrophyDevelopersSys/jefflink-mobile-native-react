@@ -1,8 +1,8 @@
 import { apiClient } from "./axios";
 import { endpoints } from "../constants/endpoints";
+import type { UserProfile } from "@jefflink/types";
 import type { ContractSummary } from "../types/contract.types";
 import type { PaymentRecord } from "../types/payment.types";
-import type { UserProfile } from "../types/user.types";
 
 // ── Neon-backed admin API ─────────────────────────────────────────────────────
 

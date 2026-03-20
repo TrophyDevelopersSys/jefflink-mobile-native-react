@@ -1,10 +1,10 @@
 import { ActivityIndicator, Alert, FlatList, Pressable, Text, View } from "react-native";
 import { useCallback, useEffect, useState } from "react";
+import type { UserProfile } from "@jefflink/types";
 import AppChrome from "../../components/layout/AppChrome";
 import Header from "../../components/layout/Header";
 import EmptyState from "../../components/ui/EmptyState";
 import { adminApi } from "../../api/admin.api";
-import type { UserProfile } from "../../types/user.types";
 
 const STATUS_COLORS: Record<string, string> = {
   ACTIVE: "#22c55e",

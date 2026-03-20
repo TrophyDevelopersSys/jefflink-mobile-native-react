@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { UserProfile } from "../types/user.types";
+import type { UserProfile } from "@jefflink/types";
 
 interface UserState {
   users: UserProfile[];

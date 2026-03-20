@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import type { AuthenticatedUser } from "@jefflink/types";
+import type { AuthenticatedUser, UserProfile } from "@jefflink/types";
 import {
   login as authLogin,
   register as authRegister,
@@ -10,7 +10,6 @@ import {
 import { useAuthStore } from "../store/auth.store";
 import { onboardingManager } from "../utils/onboardingManager";
 import { tokenManager } from "../utils/tokenManager";
-import type { UserProfile } from "../types/user.types";
 import { AuthMessages } from "../constants/authMessages";
 
 type ApiError = {

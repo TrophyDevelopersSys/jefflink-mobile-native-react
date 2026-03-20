@@ -1,5 +1,5 @@
 import { createContext, useContext, type PropsWithChildren } from "react";
-import type { UserProfile } from "../types/user.types";
+import type { UserProfile } from "@jefflink/types";
 import type { AuthStatus } from "../store/auth.store";
 import { useAuthStore } from "../store/auth.store";
 
