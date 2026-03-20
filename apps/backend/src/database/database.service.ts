@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { neonConfig, Pool } from '@neondatabase/serverless';
@@ -14,6 +16,11 @@ export type DrizzleDB = NeonDatabase<typeof schema>;
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DatabaseService.name);
+  private readonly startupMigrations = [
+    '0001_admin_infrastructure.sql',
+    '0003_align_prod_schema.sql',
+    '0004_add_password_hash.sql',
+  ];
   private pool!: Pool;
   private _db!: DrizzleDB;
 
@@ -33,6 +40,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     // Verify connectivity
     await this._db.execute(sql`SELECT 1`);
+    await this.runStartupCompatibilityMigrations();
     this.logger.log('✓ Neon PostgreSQL connected');
   }
 
@@ -79,5 +87,44 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     } finally {
       client.release();
     }
+  }
+
+  private async runStartupCompatibilityMigrations(): Promise<void> {
+    const drizzleDir = this.resolveDrizzleDirectory();
+    if (!drizzleDir) {
+      this.logger.warn('Startup compatibility migrations skipped: drizzle directory not found');
+      return;
+    }
+
+    this.logger.log('Applying startup compatibility migrations');
+
+    await this.withTransaction(async (client) => {
+      for (const migration of this.startupMigrations) {
+        const migrationPath = join(drizzleDir, migration);
+        const sqlText = readFileSync(migrationPath, 'utf-8');
+
+        this.logger.log(`Applying ${migration}`);
+        await client.query(sqlText);
+      }
+    });
+
+    this.logger.log('Startup compatibility migrations applied successfully');
+  }
+
+  private resolveDrizzleDirectory(): string | null {
+    const candidates = [
+      join(process.cwd(), 'drizzle'),
+      join(process.cwd(), 'apps', 'backend', 'drizzle'),
+      join(__dirname, '..', '..', 'drizzle'),
+      join(__dirname, '..', '..', '..', 'drizzle'),
+    ];
+
+    for (const candidate of candidates) {
+      if (existsSync(candidate)) {
+        return candidate;
+      }
+    }
+
+    return null;
   }
 }
