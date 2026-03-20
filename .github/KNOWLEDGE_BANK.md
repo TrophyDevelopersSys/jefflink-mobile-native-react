@@ -1130,7 +1130,15 @@ cdn  → pub-ac2067b6a2264561b99c6c807174ff78.r2.dev  (Proxied)
 
 **File Storage:** Cloudflare R2 (not AWS S3 — see `R2_*` env vars in render.yaml)
 
+**Production Render Checklist:**
+
+- API required secrets: `DATABASE_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `REDIS_URL`, `ADMIN_SEED_PASSWORD`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`.
+- API required fixed values: `NODE_ENV=production`, `ADMIN_SEED_EMAIL=admin@jefflinkcars.com`, `ADMIN_SEED_ROLE=SUPER_ADMIN`, `WEB_APP_URL=https://jefflinkcars.com`, `R2_PUBLIC_URL=https://cdn.jefflinkcars.com`, `CDN_BASE_URL=https://cdn.jefflinkcars.com`, `AUTH_EXPOSE_RESET_TOKEN=false`.
+- Web required fixed values: `NODE_ENV=production`, `NEXT_PUBLIC_API_BASE_URL=/api/v1`, `BACKEND_URL=http://jefflink-api:10000`, `INTERNAL_API_URL=http://jefflink-api:10000/api/v1`, `NEXT_PUBLIC_SITE_URL=https://jefflinkcars.com`, `NEXT_PUBLIC_CDN_URL=https://cdn.jefflinkcars.com`.
+- Drift check after any env change: redeploy `jefflink-api` first, then `jefflink-web`; verify `/api/health`, production admin login, password-reset email delivery, and CDN media URLs.
+
 > ⚠️ **pnpm + Render gotcha:** Render sets `NODE_ENV=production` before the build, which makes pnpm skip `devDependencies` (including `turbo`). Fixed by:
+>
 > 1. `.npmrc` → `production=false` (applies globally, regardless of build command)
 > 2. Both build commands also pass `--prod=false` as belt-and-suspenders
 
@@ -1225,6 +1233,7 @@ Authorization: Bearer {accessToken}
 | 2026-03-15 | **R2 Media & CMS Architecture** — (1) `storage.config.ts` fixed: key names unified to match `media.service.ts` (`accountId`, `bucket`, `publicUrl`); default bucket name set to `jefflink-storage`; AWS S3 config removed. (2) `media.service.ts` — added `presignUpload(path, contentType)`: generates 5-min presigned R2 PUT URL so clients upload directly to R2 (zero backend bandwidth). (3) `media.controller.ts` — added `POST /api/v1/media/presign` endpoint. (4) `media_assets` schema — added `status VARCHAR(20) DEFAULT 'ACTIVE'` column. (5) New CMS DB tables: `cms_sliders`, `cms_banners`, `cms_content` (§ 5.3). (6) New NestJS `CmsModule` (`apps/backend/src/modules/cms/`) with `CmsService` + `CmsController` + DTOs. (7) Public endpoint `GET /api/v1/cms/homepage` returns sliders + banners + content map in one call. (8) Admin CRUD endpoints for sliders and content blocks (ADMIN/SYSTEM_ADMIN roles). (9) Drizzle migration `0002_cms_media_architecture.sql` added with seed data. (10) `.env.example` updated with all 5 `R2_*` vars and bucket folder structure. (11) `apps/web/app/commercial/[id]/page.tsx` — `fallbackIcon` fixed: import `BriefcaseBusiness` from `lucide-react` and pass as component reference instead of string. | Copilot |
 | 2026-03-20 | `apps/backend` — added SMTP-backed `MailService`, wired `/auth/forgot-password` to send reset emails, and documented required `SMTP_*` / `MAIL_*` environment variables. | Copilot |
 | 2026-03-20 | `apps/backend` — updated current mailer state to reflect Brevo relay support (`SMTP_BREVO_LOGIN`, `SMTP_BREVO_API_KEY`), `WEB_APP_URL`-based reset links, and Render-ready SMTP settings (`smtp-relay.brevo.com:587`, `SMTP_SECURE=false`). | Copilot |
+| 2026-03-20 | `render.yaml` + § 11 Deployment — appended a short production Render env checklist covering required secrets, fixed values, and post-change drift checks for the cloud-only stack. | Copilot |
 
 ---
 
