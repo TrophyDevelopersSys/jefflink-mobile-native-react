@@ -1,8 +1,9 @@
 /**
  * run-admin-migration.cjs
  *
- * Applies the 0001_admin_infrastructure.sql migration against Neon PostgreSQL.
- * Idempotent — all CREATE TABLE / CREATE INDEX statements use IF NOT EXISTS.
+ * Applies the idempotent compatibility migrations required by the deployed
+ * backend. This keeps legacy/prod databases aligned with the current NestJS
+ * auth + admin schema before the API starts.
  *
  * Usage:
  *   node scripts/run-admin-migration.cjs
@@ -41,8 +42,20 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
-const SQL_PATH = join(__dirname, '..', 'drizzle', '0001_admin_infrastructure.sql');
-const sql = readFileSync(SQL_PATH, 'utf-8');
+const MIGRATIONS = [
+  {
+    name: '0001_admin_infrastructure.sql',
+    description: 'admin tables and indexes',
+  },
+  {
+    name: '0003_align_prod_schema.sql',
+    description: 'users/roles compatibility alignment',
+  },
+  {
+    name: '0004_add_password_hash.sql',
+    description: 'legacy auth password column backfill',
+  },
+];
 
 const pool = new Pool({ connectionString: DATABASE_URL });
 
@@ -50,20 +63,24 @@ async function run() {
   const client = await pool.connect();
   try {
     console.log('🔗 Connected to Neon PostgreSQL');
-    console.log('⚙️  Applying 0001_admin_infrastructure.sql …\n');
+    console.log('⚙️  Applying startup compatibility migrations …\n');
 
     await client.query('BEGIN');
-    await client.query(sql);
+
+    for (const migration of MIGRATIONS) {
+      const sqlPath = join(__dirname, '..', 'drizzle', migration.name);
+      const sql = readFileSync(sqlPath, 'utf-8');
+
+      console.log(`   • ${migration.name} (${migration.description})`);
+      await client.query(sql);
+    }
+
     await client.query('COMMIT');
 
-    console.log('✅  Migration applied successfully.\n');
-    console.log('Tables created / verified:');
-    console.log('  • vendor_profiles');
-    console.log('  • listing_reports');
-    console.log('  • admin_logs');
+    console.log('\n✅  Startup compatibility migrations applied successfully.\n');
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error('\n❌ Migration failed — rolled back.\n');
+    console.error('\n❌ Startup compatibility migrations failed — rolled back.\n');
     console.error(err instanceof Error ? err.message : String(err));
     process.exit(1);
   } finally {

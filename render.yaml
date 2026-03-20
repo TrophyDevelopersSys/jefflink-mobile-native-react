@@ -17,7 +17,7 @@ services:
     plan: starter
     rootDir: .
     buildCommand: "pnpm install --frozen-lockfile --prod=false && pnpm turbo run build --filter=jefflink-backend"
-    startCommand: sh -c "node apps/backend/scripts/seed-admin.cjs || true; node apps/backend/dist/main.js"
+    startCommand: sh -c "node apps/backend/scripts/run-admin-migration.cjs; node apps/backend/scripts/seed-admin.cjs || true; node apps/backend/dist/main.js"
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
