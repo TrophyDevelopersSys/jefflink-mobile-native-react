@@ -7,6 +7,7 @@ interface PasswordResetEmailInput {
   to: string;
   name?: string;
   resetUrl: string;
+  resendUrl: string;
   expiresInMinutes: number;
 }
 
@@ -42,6 +43,9 @@ export class MailService {
       `Use the link below within ${input.expiresInMinutes} minutes:`,
       input.resetUrl,
       '',
+      'Need a fresh link? Request another password reset here:',
+      input.resendUrl,
+      '',
       'If you did not request this, you can ignore this email.',
       '',
       'JeffLink Support',
@@ -63,6 +67,7 @@ export class MailService {
         </p>
         <p>If the button does not work, copy and paste this link into your browser:</p>
         <p><a href="${this.escapeHtml(input.resetUrl)}">${this.escapeHtml(input.resetUrl)}</a></p>
+        <p style="margin-top:16px;">Need a fresh link? <a href="${this.escapeHtml(input.resendUrl)}">Request another password reset email</a>.</p>
         <p>If you did not request this, you can ignore this email.</p>
         <p>JeffLink Support</p>
       </div>

@@ -271,9 +271,9 @@ export class AuthService {
         this.logger.log(`Password reset token generated for user ${result[0].id}`);
 
         const exposeResetToken =
-          this.config.get<string>('AUTH_EXPOSE_RESET_TOKEN') === 'true' ||
-          this.config.get<string>('NODE_ENV') !== 'production';
+          this.config.get<string>('AUTH_EXPOSE_RESET_TOKEN') === 'true';
         const resetUrl = this.buildPasswordResetUrl(result[0].id, token);
+        const resendUrl = this.buildForgotPasswordUrl(result[0].email);
 
         if (exposeResetToken) {
           return {
@@ -290,6 +290,7 @@ export class AuthService {
           to: result[0].email,
           name: result[0].name,
           resetUrl,
+          resendUrl,
           expiresInMinutes: Math.floor(this.resetTokenTtlSeconds / 60),
         });
 
@@ -1003,15 +1004,25 @@ export class AuthService {
   }
 
   private buildPasswordResetUrl(userId: string, token: string): string {
-    const webBase =
-      this.config.get<string>('WEB_APP_URL') ??
-      this.config.get<string>('NEXT_PUBLIC_SITE_URL') ??
-      'https://jefflinkcars.com';
-    const sanitizedWebBase = webBase.replace(/\/+$/, '');
+    const sanitizedWebBase = this.getSanitizedWebBaseUrl();
 
     return `${sanitizedWebBase}/reset-password?uid=${encodeURIComponent(
       userId,
     )}&token=${encodeURIComponent(token)}`;
+  }
+
+  private buildForgotPasswordUrl(email: string): string {
+    const sanitizedWebBase = this.getSanitizedWebBaseUrl();
+
+    return `${sanitizedWebBase}/forgot-password?email=${encodeURIComponent(email)}`;
+  }
+
+  private getSanitizedWebBaseUrl(): string {
+    const webBase =
+      this.config.get<string>('WEB_APP_URL') ??
+      this.config.get<string>('NEXT_PUBLIC_SITE_URL') ??
+      'https://jefflinkcars.com';
+    return webBase.replace(/\/+$/, '');
   }
 
   private async resolveAuthRecordById(

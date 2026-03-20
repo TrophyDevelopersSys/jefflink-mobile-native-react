@@ -6,6 +6,7 @@ import ScreenWrapper from "./ScreenWrapper";
 import TopBar from "../navigation/TopBar";
 import BottomNav, { type BottomNavItemKey } from "../navigation/BottomNav";
 import { useAuth } from "../../hooks/useAuth";
+import { navigateToCustomerTab } from "../../navigation/navigationHelpers";
 
 type AppChromeProps = PropsWithChildren<{
   title?: string;
@@ -84,22 +85,18 @@ function AppChrome({
     const target = navMap[key];
     if (!target) return;
 
-    navigation.navigate(target);
+    navigateToCustomerTab(navigation, target);
 
   }, [navigation, navMap]);
 
   const handleLogoPress = useCallback(() => {
-    // "Home" is nested inside CustomerTabs. On screens that live in the same
-    // root stack (e.g. Login) we navigate to CustomerTabs first; if not
-    // available (auth-only navigators) we do nothing.
     const state = navigation.getState();
     const routeNames: string[] = state?.routeNames ?? [];
     if (routeNames.includes("CustomerTabs")) {
-      navigation.navigate("CustomerTabs" as never);
+      navigateToCustomerTab(navigation, "Home");
     } else if (routeNames.includes("Home")) {
       navigation.navigate("Home" as never);
     }
-    // If neither exists (e.g. pure auth flow with no home), do nothing.
   }, [navigation]);
 
   const handleAccountPress = useCallback(() => {
@@ -108,10 +105,7 @@ function AppChrome({
     if (routeNames.includes("Profile")) {
       navigation.navigate("Profile" as never);
     } else if (routeNames.includes("CustomerTabs")) {
-      // Navigate into tabs and then to Profile
-      navigation.navigate("CustomerTabs" as never);
-      // Give the tab navigator a tick to mount, then navigate to Profile
-      setTimeout(() => navigation.navigate("Profile" as never), 0);
+      navigateToCustomerTab(navigation, "Profile");
     }
   }, [navigation]);
 

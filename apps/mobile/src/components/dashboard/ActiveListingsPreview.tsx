@@ -3,6 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "../../theme/useTheme";
+import { navigateToCustomerTab } from "../../navigation/navigationHelpers";
 
 const listings = [
   { name: "Toyota Harrier",   price: "UGX 85,000,000", status: "Active"  },
@@ -18,7 +19,7 @@ export default function ActiveListingsPreview() {
     <View className="mt-6">
       <View className="flex-row items-center justify-between mb-3">
         <Text className="text-white text-base font-semibold">Active Listings</Text>
-        <Pressable onPress={() => navigation.navigate("Listings")}>
+        <Pressable onPress={() => navigateToCustomerTab(navigation, "Listings")}>
           <Text className="text-brand-accent text-sm">View All</Text>
         </Pressable>
       </View>

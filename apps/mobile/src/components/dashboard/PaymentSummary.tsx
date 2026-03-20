@@ -3,6 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import { Wallet, Clock, History } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "../../theme/useTheme";
+import { navigateToCustomerTab } from "../../navigation/navigationHelpers";
 
 const transactions = [
   { label: "Ad Boost — Toyota Harrier", amount: "-UGX 30,000",  date: "Mar 4", type: "debit"  },
@@ -18,7 +19,7 @@ export default function PaymentSummary() {
     <View className="mt-6">
       <View className="flex-row items-center justify-between mb-3">
         <Text className="text-white text-base font-semibold">Payments</Text>
-        <Pressable onPress={() => navigation.navigate("Payments")}>
+        <Pressable onPress={() => navigateToCustomerTab(navigation, "Payments")}>
           <Text className="text-brand-accent text-sm">View All</Text>
         </Pressable>
       </View>

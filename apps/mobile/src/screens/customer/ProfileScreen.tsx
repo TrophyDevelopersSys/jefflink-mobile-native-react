@@ -24,6 +24,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useTheme } from "../../theme/useTheme";
 import { useNavigation } from "@react-navigation/native";
 import type { ThemePreference } from "../../theme/useTheme";
+import { navigateToCustomerTab } from "../../navigation/navigationHelpers";
 
 type MenuItem = {
   id: string;
@@ -99,7 +100,7 @@ export default function ProfileScreen() {
           icon: Tag,
           label: "Vehicles you're selling",
           description: "Create, edit and manage your ads",
-          onPress: () => navigation.navigate("Listings" as never),
+          onPress: () => navigateToCustomerTab(navigation, "Listings"),
         },
         {
           id: "vehicle-checks",
@@ -151,7 +152,7 @@ export default function ProfileScreen() {
           icon: History,
           label: "Payment history",
           description: "See your advert and payment history",
-          onPress: () => navigation.navigate("Payments" as never),
+          onPress: () => navigateToCustomerTab(navigation, "Payments"),
         },
         {
           id: "payment-methods",
