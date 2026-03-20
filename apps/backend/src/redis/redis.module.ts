@@ -23,7 +23,9 @@ const redisClientProvider = {
       return mock;
     }
 
-    return new Redis(url);
+    return new Redis(url, {
+      enableReadyCheck: false,
+    });
   },
   inject: [ConfigService],
 };
