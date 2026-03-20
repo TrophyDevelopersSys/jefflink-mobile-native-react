@@ -35,7 +35,7 @@ services:
       - key: REDIS_URL
         sync: false
       - key: ADMIN_SEED_EMAIL
-        value: trophy.vas@gmail.com
+        value: admin@jefflinkcars.com
       - key: ADMIN_SEED_PASSWORD
         sync: false
       - key: ADMIN_SEED_ROLE
