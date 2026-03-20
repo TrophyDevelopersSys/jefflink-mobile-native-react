@@ -610,3 +610,60 @@ export const listingReportsRelations = relations(listingReports, ({ one }) => ({
 export const adminLogsRelations = relations(adminLogs, ({ one }) => ({
   admin: one(users, { fields: [adminLogs.adminId], references: [users.id] }),
 }));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin Recovery Tokens (password recovery with full audit trail)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const adminRecoveryTokens = pgTable(
+  'admin_recovery_tokens',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    tokenHash: varchar('token_hash', { length: 128 }).notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+    usedAt: timestamp('used_at'),
+    revokedAt: timestamp('revoked_at'),
+    ipAddress: varchar('ip_address', { length: 45 }),
+    userAgent: text('user_agent'),
+    initiatedBy: uuid('initiated_by').references(() => users.id),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    userIdx: index('admin_recovery_tokens_user_idx').on(t.userId),
+    expiresIdx: index('admin_recovery_tokens_expires_idx').on(t.expiresAt),
+    hashIdx: index('admin_recovery_tokens_hash_idx').on(t.tokenHash),
+  }),
+);
+
+export const adminRecoveryAudit = pgTable(
+  'admin_recovery_audit',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id').references(() => users.id),
+    action: varchar('action', { length: 50 }).notNull(),
+    email: varchar('email', { length: 255 }),
+    ipAddress: varchar('ip_address', { length: 45 }),
+    userAgent: text('user_agent'),
+    metadata: jsonb('metadata'),
+    initiatedBy: uuid('initiated_by').references(() => users.id),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    userIdx: index('admin_recovery_audit_user_idx').on(t.userId),
+    actionIdx: index('admin_recovery_audit_action_idx').on(t.action),
+    createdAtIdx: index('admin_recovery_audit_created_at_idx').on(t.createdAt),
+  }),
+);
+
+export const adminRecoveryTokensRelations = relations(adminRecoveryTokens, ({ one }) => ({
+  user: one(users, { fields: [adminRecoveryTokens.userId], references: [users.id] }),
+  initiator: one(users, { fields: [adminRecoveryTokens.initiatedBy], references: [users.id] }),
+}));
+
+export const adminRecoveryAuditRelations = relations(adminRecoveryAudit, ({ one }) => ({
+  user: one(users, { fields: [adminRecoveryAudit.userId], references: [users.id] }),
+  initiator: one(users, { fields: [adminRecoveryAudit.initiatedBy], references: [users.id] }),
+}));

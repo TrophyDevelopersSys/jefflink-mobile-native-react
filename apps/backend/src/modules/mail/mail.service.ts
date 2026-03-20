@@ -130,6 +130,103 @@ export class MailService {
     });
   }
 
+  async sendAdminRecoveryEmail(input: {
+    to: string;
+    name?: string;
+    resetUrl: string;
+    resendUrl: string;
+    expiresInMinutes: number;
+    initiatedBy?: string;
+  }): Promise<boolean> {
+    if (!this.transporter) {
+      this.logger.warn(
+        `SMTP is not configured. Admin recovery email was skipped for ${input.to}.`,
+      );
+      return false;
+    }
+
+    const recipientName = input.name?.trim() || 'Admin';
+    const initiatorNote = input.initiatedBy
+      ? '<p style="color:#b45309;"><strong>Note:</strong> This recovery was initiated by a Super Admin on your behalf.</p>'
+      : '';
+    const initiatorText = input.initiatedBy
+      ? '\nNote: This recovery was initiated by a Super Admin on your behalf.\n'
+      : '';
+
+    const subject = 'JeffLink Admin Account Recovery';
+    const text = [
+      `Hi ${recipientName},`,
+      '',
+      'An account recovery request was made for your JeffLink admin account.',
+      initiatorText,
+      `Use the link below within ${input.expiresInMinutes} minutes to reset your password:`,
+      input.resetUrl,
+      '',
+      'Need a fresh link? Request another recovery here:',
+      input.resendUrl,
+      '',
+      'SECURITY NOTICE: If you did not request this, your account may be at risk.',
+      'Please contact the JeffLink platform team immediately.',
+      '',
+      'JeffLink Security',
+    ].join('\n');
+
+    const html = `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a;max-width:600px;margin:0 auto;">
+        <div style="background:#1e293b;padding:16px 20px;border-radius:8px 8px 0 0;">
+          <h2 style="margin:0;color:#ffffff;">&#x1f512; Admin Account Recovery</h2>
+        </div>
+        <div style="border:1px solid #e2e8f0;border-top:none;padding:24px;border-radius:0 0 8px 8px;">
+          <p>Hi ${this.escapeHtml(recipientName)},</p>
+          <p>An account recovery request was made for your <strong>JeffLink admin account</strong>.</p>
+          ${initiatorNote}
+          <p>This link expires in <strong>${input.expiresInMinutes} minutes</strong>.</p>
+          <p style="margin:24px 0;">
+            <a
+              href="${this.escapeHtml(input.resetUrl)}"
+              style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;"
+            >
+              Reset Admin Password
+            </a>
+          </p>
+          <p style="font-size:13px;">If the button does not work, copy and paste this link into your browser:</p>
+          <p style="font-size:13px;word-break:break-all;"><a href="${this.escapeHtml(input.resetUrl)}">${this.escapeHtml(input.resetUrl)}</a></p>
+          <p>Need a fresh link? <a href="${this.escapeHtml(input.resendUrl)}">Request another recovery email</a>.</p>
+          <div style="margin-top:24px;padding:12px;background:#fef2f2;border-radius:6px;border:1px solid #fecaca;">
+            <p style="margin:0;font-size:13px;color:#991b1b;">
+              <strong>&#x26a0; Security Notice:</strong> If you did not request this,
+              your admin account may be at risk. Contact the JeffLink team immediately.
+            </p>
+          </div>
+          <p style="margin-top:24px;color:#64748b;font-size:12px;">JeffLink Security</p>
+        </div>
+      </div>
+    `;
+
+    const options: SendMailOptions = {
+      to: input.to,
+      from: this.formatFromHeader(),
+      subject,
+      text,
+      html,
+    };
+
+    if (this.replyTo) {
+      options.replyTo = this.replyTo;
+    }
+
+    try {
+      await this.transporter.sendMail(options);
+      return true;
+    } catch (error) {
+      this.logger.error(
+        `Failed to send admin recovery email to ${input.to}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+      return false;
+    }
+  }
+
   private formatFromHeader(): string {
     return `${this.fromName} <${this.fromAddress}>`;
   }

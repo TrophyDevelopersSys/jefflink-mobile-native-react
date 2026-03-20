@@ -16,6 +16,7 @@ import { MediaModule } from './modules/media/media.module';
 import { SearchModule } from './modules/search/search.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { CmsModule } from './modules/cms/cms.module';
+import { AdminRecoveryModule } from './modules/admin-recovery/admin-recovery.module';
 import { HealthModule } from './health/health.module';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
@@ -71,6 +72,7 @@ import storageConfig from './config/storage.config';
     SearchModule,
     NotificationsModule,
     CmsModule,
+    AdminRecoveryModule,
     HealthModule,
   ],
 })

@@ -21,6 +21,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     '0001_admin_infrastructure.sql',
     '0003_align_prod_schema.sql',
     '0004_add_password_hash.sql',
+    '0005_admin_recovery.sql',
   ];
   private pool!: Pool;
   private _db!: DrizzleDB;

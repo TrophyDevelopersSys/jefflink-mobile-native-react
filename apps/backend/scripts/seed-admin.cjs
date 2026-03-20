@@ -400,7 +400,7 @@ async function run() {
 
     console.log('Admin seed complete');
     console.log(`email: ${ADMIN_EMAIL}`);
-    console.log(`password: ${ADMIN_PASSWORD}`);
+    console.log('password: [redacted]');
     console.log(`role: ${ADMIN_ROLE}`);
     console.log(`userId: ${userId}`);
   } catch (error) {
