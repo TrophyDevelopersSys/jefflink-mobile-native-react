@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -37,7 +37,7 @@ export default function RegisterScreen() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const { register, status, error: authError } = useAuth();
+  const { register, status, error: authError, user } = useAuth();
   const {
     control,
     handleSubmit,
@@ -79,6 +79,22 @@ export default function RegisterScreen() {
       setApiError(msg);
     }
   });
+
+  useEffect(() => {
+    if (status !== "authenticated" || !user) {
+      return;
+    }
+
+    const routeNames: string[] = navigation.getState?.()?.routeNames ?? [];
+    if (!routeNames.includes("CustomerTabs")) {
+      return;
+    }
+
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "CustomerTabs" }],
+    });
+  }, [navigation, status, user]);
 
   return (
     <AppChrome title="Register" activeKey="profile" variant="auth" showLogin={false}>

@@ -36,7 +36,7 @@ module.exports = {
         badge:  "6px",
       },
       fontFamily: {
-        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["Fabriga", "ui-sans-serif", "system-ui", "sans-serif"],
       },
     },
   },

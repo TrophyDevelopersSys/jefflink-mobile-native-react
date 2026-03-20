@@ -13,6 +13,7 @@
  */
 @layer base {
   :root {
+    --font-sans: "Fabriga", ui-sans-serif, system-ui, sans-serif;
     --color-background:  #FFFFFF;
     --color-surface:     #F5F5F5;
     --color-card:        #EFEFEF;
@@ -36,5 +37,37 @@
     --color-primary:     #0E7C3A;
     --color-danger:      #DC2626;
     --color-warning:     #F59E0B;
+  }
+
+  @font-face {
+    font-family: "Fabriga";
+    src: url("https://cdn.jefflinkcars.com/cloudflareStorage/fonts/fabriga.woff2") format("woff2"),
+         url("https://cdn.jefflinkcars.com/cloudflareStorage/fonts/fabriga.woff") format("woff");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Fabriga";
+    src: url("https://cdn.jefflinkcars.com/cloudflareStorage/fonts/fabrigaLight.woff2") format("woff2"),
+         url("https://cdn.jefflinkcars.com/cloudflareStorage/fonts/fabrigaLight.woff") format("woff");
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Fabriga";
+    src: url("https://cdn.jefflinkcars.com/cloudflareStorage/fonts/fabrigaBold.woff2") format("woff2"),
+         url("https://cdn.jefflinkcars.com/cloudflareStorage/fonts/fabrigaBold.woff") format("woff");
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+  }
+
+  html,
+  body {
+    font-family: var(--font-sans);
   }
 }

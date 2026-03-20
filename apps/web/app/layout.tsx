@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import React from "react";
+import { fonts } from "@jefflink/design-tokens";
 import "../src/globals.css";
 import { Providers } from "../src/components/Providers";
 import Navbar from "../src/components/Navbar";
@@ -38,9 +39,50 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const fontFaceCss = [
+    {
+      family: fonts.family.light,
+      weight: 300,
+      source: fonts.source.light,
+    },
+    {
+      family: fonts.family.regular,
+      weight: 400,
+      source: fonts.source.regular,
+    },
+    {
+      family: fonts.family.bold,
+      weight: 700,
+      source: fonts.source.bold,
+    },
+  ]
+    .map(
+      (font) => `
+        @font-face {
+          font-family: '${font.family}';
+          src: url('${font.source.woff2}') format('woff2'),
+               url('${font.source.woff}') format('woff');
+          font-style: normal;
+          font-weight: ${font.weight};
+          font-display: swap;
+        }
+      `,
+    )
+    .join('');
+
   return (
     <html lang="en" className="dark">
-      <body className="bg-background text-text min-h-screen antialiased flex flex-col">
+      <head>
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              :root { --font-sans: ${fonts.stack.sans}; }
+              ${fontFaceCss}
+            `,
+          }}
+        />
+      </head>
+      <body className="bg-background text-text min-h-screen antialiased flex flex-col font-sans">
         <Providers>
           <Navbar />
           <div className="flex-1">{children}</div>

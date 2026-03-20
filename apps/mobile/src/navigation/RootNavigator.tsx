@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { fonts } from "@jefflink/design-tokens";
 
 const AppTheme = {
   ...DefaultTheme,
@@ -10,6 +11,25 @@ const AppTheme = {
     card: "#FFFFFF",
     border: "#E5E7EB",
     text: "#0F172A",
+  },
+  fonts: {
+    ...DefaultTheme.fonts,
+    regular: {
+      ...DefaultTheme.fonts.regular,
+      fontFamily: fonts.family.regular,
+    },
+    medium: {
+      ...DefaultTheme.fonts.medium,
+      fontFamily: fonts.family.regular,
+    },
+    bold: {
+      ...DefaultTheme.fonts.bold,
+      fontFamily: fonts.family.bold,
+    },
+    heavy: {
+      ...DefaultTheme.fonts.heavy,
+      fontFamily: fonts.family.bold,
+    },
   },
 };
 import { useAuth } from "../hooks/useAuth";

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -32,7 +32,7 @@ export default function LoginScreen() {
   const [step, setStep] = useState(0);
   const [dealer, setDealer] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { signIn, status, error: authError } = useAuth();
+  const { signIn, status, error: authError, user } = useAuth();
   const {
     control,
     handleSubmit,
@@ -52,6 +52,22 @@ export default function LoginScreen() {
   const onSubmit = handleSubmit(async (values) => {
     await signIn(values.email.trim(), values.password);
   });
+
+  useEffect(() => {
+    if (status !== "authenticated" || !user) {
+      return;
+    }
+
+    const routeNames: string[] = navigation.getState?.()?.routeNames ?? [];
+    if (!routeNames.includes("CustomerTabs")) {
+      return;
+    }
+
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "CustomerTabs" }],
+    });
+  }, [navigation, status, user]);
 
   return (
     <AppChrome title="Login" activeKey="profile" variant="auth" showLogin={false}>

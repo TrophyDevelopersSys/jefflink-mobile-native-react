@@ -40,7 +40,7 @@ export class MediaService {
   ) {
     const storageConfig = this.config.get('storage');
     this.bucket = storageConfig.bucket;
-    this.publicUrl = storageConfig.publicUrl;
+    this.publicUrl = (storageConfig.publicUrl ?? '').replace(/\/+$/, '');
 
     this.s3 = new S3Client({
       region: 'auto',
@@ -77,7 +77,7 @@ export class MediaService {
     });
 
     const uploadUrl = await getSignedUrl(this.s3, command, { expiresIn: 300 });
-    const publicUrl = `${this.publicUrl}/${path}`;
+    const publicUrl = this.buildPublicUrl(path);
 
     return { uploadUrl, publicUrl, expiresIn: 300 };
   }
@@ -122,15 +122,13 @@ export class MediaService {
       }),
     );
 
-    const url = `${this.publicUrl}/${key}`;
-
     const [asset] = await this.db.db
       .insert(mediaAssets)
       .values({
         uploadedBy,
         bucket: this.bucket,
         key,
-        url,
+        url: key,
         mimeType: isImage ? 'image/webp' : file.mimetype,
         sizeBytes: processedBuffer.byteLength,
         referenceType: entityType,
@@ -146,7 +144,7 @@ export class MediaService {
       });
     }
 
-    return asset;
+    return this.toResponseAsset(asset);
   }
 
   async getSignedUrl(assetId: string, expiresIn = 3600) {
@@ -199,5 +197,25 @@ export class MediaService {
         }`,
       );
     }
+  }
+
+  private buildPublicUrl(key: string): string {
+    return `${this.publicUrl}/${key.replace(/^\/+/, '')}`;
+  }
+
+  private toResponseAsset<T extends { key: string; url: string; thumbnailUrl: string | null }>(asset: T) {
+    return {
+      ...asset,
+      url: this.buildPublicUrl(asset.key),
+      thumbnailUrl: asset.thumbnailUrl ? this.resolveStoredUrl(asset.thumbnailUrl) : null,
+    };
+  }
+
+  private resolveStoredUrl(value: string): string {
+    if (/^https?:\/\//i.test(value)) {
+      return value;
+    }
+
+    return this.buildPublicUrl(value);
   }
 }
