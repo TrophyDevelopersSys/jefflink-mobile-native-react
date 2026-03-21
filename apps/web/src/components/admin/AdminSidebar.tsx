@@ -17,15 +17,16 @@ import {
   Search,
   Settings,
   LogOut,
+  Newspaper,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 // ── Role → accessible admin sections ─────────────────────────────────────────
 const ROLE_MENUS: Record<string, string[]> = {
-  SUPER_ADMIN:    ["dashboard","users","vendors","listings","contracts","payments","reports","audit-logs","settings"],
-  ADMIN:          ["dashboard","users","vendors","listings","contracts","payments","reports"],
-  SYSTEM_ADMIN:   ["dashboard","users","vendors","listings","contracts","payments","reports","audit-logs"],
+  SUPER_ADMIN:    ["dashboard","users","vendors","listings","cms","contracts","payments","reports","audit-logs","settings"],
+  ADMIN:          ["dashboard","users","vendors","listings","cms","contracts","payments","reports"],
+  SYSTEM_ADMIN:   ["dashboard","users","vendors","listings","cms","contracts","payments","reports","audit-logs"],
   DIRECTOR:       ["dashboard","users","vendors","contracts","payments","audit-logs"],
   MANAGER:        ["dashboard","users","vendors","listings","reports"],
   FINANCE_ADMIN:  ["dashboard","contracts","payments","installments","withdrawals"],
@@ -40,6 +41,7 @@ const NAV_ITEMS: { key: string; label: string; Icon: LucideIcon }[] = [
   { key: "users",        label: "Users",        Icon: Users },
   { key: "vendors",      label: "Vendors",      Icon: Store },
   { key: "listings",     label: "Listings",     Icon: Car },
+  { key: "cms",          label: "CMS",          Icon: Newspaper },
   { key: "contracts",    label: "Contracts",    Icon: FileText },
   { key: "payments",     label: "Payments",     Icon: CreditCard },
   { key: "installments", label: "Installments", Icon: CalendarClock },

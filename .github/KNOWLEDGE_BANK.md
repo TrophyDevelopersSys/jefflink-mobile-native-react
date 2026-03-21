@@ -1,5 +1,5 @@
 # JeffLink Platform — Knowledge Bank
-> **Last Updated:** March 15, 2026  
+> **Last Updated:** March 21, 2026  
 > **Purpose:** Living reference document. Update this file after every major change to architecture, modules, or data flows. No need to re-analyse the codebase from scratch — start here.
 
 ---
@@ -30,7 +30,8 @@
 | Mobile App | Expo 55 + React Native 0.83.2 | EAS Build |
 | Web App | Next.js 15.2.3 | Vercel / Render |
 | Backend API | NestJS 10 + Drizzle ORM | Render |
-| Database | Neon PostgreSQL (serverless) | Neon Cloud |
+| Database (Core) | Neon PostgreSQL (serverless) | Neon Cloud |
+| Database (CMS/GPS/Docs) | MongoDB Atlas 8.x (driver 6.12) | Atlas Cloud |
 | Cache | Redis (ioredis) | Render Redis |
 | Search | Meilisearch | Render |
 | File Storage | Cloudflare R2 (`jefflink-storage` bucket) | Cloudflare |
@@ -219,6 +220,19 @@ jefflink-mobile/
 /users/me            GET   — Profile
 /users/me/avatar     POST  — Avatar upload
 /media/upload        POST  — Media upload
+# CMS (Atlas-backed, public + admin)
+/cms/homepage                          GET    — Homepage hero (sliders + banners + content)
+/cms/page/:slug                        GET    — Single CMS page by slug (?platform, ?locale, ?preview)
+/cms/page/:id/revisions                GET    — Page revision history
+/cms/navigation/:key                   GET    — Navigation menu by key (?platform)
+/cms/settings                          GET    — Global CMS settings
+/admin/cms/pages                       GET    — [Admin] List CMS pages
+/admin/cms/pages                       POST   — [Admin] Create CMS page (audit logged)
+/admin/cms/pages/:id                   PATCH  — [Admin] Update CMS page (audit logged, optimistic concurrency)
+/admin/cms/pages/:id/publish           POST   — [Admin] Publish or archive page (audit logged)
+/admin/cms/pages/:id                   DELETE — [Admin] Delete CMS page (audit logged)
+/admin/cms/navigation/:key             PUT    — [Admin] Upsert navigation menu (audit logged)
+/admin/cms/settings                    PUT    — [Admin] Update global settings (audit logged)
 ```
 
 ### 3.4 State Management (`src/store/`)
@@ -344,9 +358,11 @@ CUSTOMER | VENDOR | ADMIN
 | Concern | Solution |
 |---------|---------|
 | Framework | NestJS 10.3.10 |
-| Database ORM | Drizzle ORM 0.33.0 |
+| Database ORM | Drizzle ORM 0.33.0 (Neon PostgreSQL) |
+| MongoDB | Official driver 6.12.0 (NO Mongoose) |
 | Auth | JWT (passport-jwt) |
 | Validation | class-validator + ValidationPipe |
+| Schema Validation | zod 3.24 (internal store validation) |
 | Logging | nestjs-pino (structured JSON) |
 | Rate Limiting | @nestjs/throttler (120 req/min) |
 | Error Monitoring | @sentry/node |
@@ -358,8 +374,13 @@ CUSTOMER | VENDOR | ADMIN
 backend/src/
 ├── main.ts              ← Bootstrap: Sentry, Helmet, CORS, ValidationPipe, versioning
 ├── app.module.ts        ← Root: ConfigModule, LoggerModule, ThrottlerModule + all features
-├── config/              ← app, database, jwt, redis, storage config loaders
-├── database/            ← DatabaseModule + Drizzle schema
+├── config/              ← app, database, jwt, redis, storage, mongo config loaders
+├── database/            ← DatabaseModule + Drizzle schema (Neon PostgreSQL)
+├── mongo/               ← MongoModule (@Global) + MongoService + MongoHealthIndicator
+│     ├── mongo.module.ts    ← Global module, connects on init, exports MongoService
+│     ├── mongo.service.ts   ← Singleton MongoClient, typed collection<T> accessor
+│     ├── mongo.health.ts    ← Terminus health indicator (ping: 1)
+│     └── mongo.constants.ts ← DI tokens (MONGO_CLIENT, MONGO_DB)
 ├── redis/               ← RedisModule + RedisService (ioredis)
 ├── queue/               ← QueueModule (BullMQ)
 ├── common/
@@ -379,10 +400,15 @@ backend/src/
     │     │                 admin-vendors, admin-finance, audit-log services
     │     └── dto/       ← typed DTOs for all admin actions
     ├── media/           ← MediaModule: R2 upload (memory), presigned URLs, image optimization
-    ├── cms/             ← CmsModule: hero sliders, banners, content blocks (NEW)
+    ├── cms/             ← CmsModule: Atlas-backed CMS with facade pattern
+    │     ├── cms.facade.ts          ← Feature-flag store switcher + Redis caching + audit
+    │     ├── cms-public.controller  ← Public endpoints (homepage, page/:slug, nav, settings)
+    │     ├── cms-admin.controller   ← Admin CRUD (JwtAuth + RolesGuard + audit logging)
+    │     ├── stores/                ← CmsStore interface + CmsAtlasStore + CmsNeonStore
+    │     └── dto/                   ← 9 validation DTOs (class-validator)
     ├── search/          ← SearchModule: Meilisearch full-text
     ├── notifications/   ← NotificationsModule: push + in-app
-    └── health/          ← HealthModule: liveness probes
+    └── health/          ← HealthModule: liveness probes (DB + Redis + Mongo)
 ```
 
 ### 4.3 Auth Module
@@ -462,10 +488,32 @@ npm run db:studio       # Open Drizzle Studio (DB browser)
 
 ### 5.1 Overview
 
+#### Neon PostgreSQL (Financial Core)
+
 **Database:** Neon PostgreSQL (serverless)  
 **ORM:** Drizzle (TypeScript)  
 **Migration files:** `database/jefflink_finance_*.sql`  
 **Extension:** `pgcrypto` (UUID generation)
+
+#### MongoDB Atlas (CMS / GPS / Documents / Logs)
+
+**Database:** MongoDB Atlas 8.x (cloud)  
+**Driver:** Official `mongodb` 6.12.0 (NO Mongoose)  
+**Validation:** `zod` 3.24 (runtime schema validation in stores)  
+**Feature Flags:** `CMS_ATLAS_ENABLED`, `GPS_ATLAS_ENABLED`, `DOCUMENTS_ATLAS_ENABLED`  
+**Infrastructure:** `apps/backend/src/modules/mongo/` (MongoModule, MongoService, MongoHealthIndicator)
+
+**Collections:**
+
+| Collection | Purpose | Key Fields |
+|------------|---------|------------|
+| `cms_pages` | CMS page documents | slug, title, blocks[], platform, locale, status (DRAFT/PUBLISHED/ARCHIVED), version, publishedAt |
+| `cms_page_revisions` | Immutable page revision history | pageId, version, blocks[], changedBy, createdAt |
+| `cms_navigation` | Navigation menus | key, platform, items[]{label, href, icon, children[]} |
+| `cms_settings` | Global CMS key-value settings | key (unique), value, updatedBy, updatedAt |
+
+> **Boundary rule:** Auth, users, payments, contracts, finance, vendor wallets — always Neon PostgreSQL.  
+> CMS, GPS telemetry, document metadata, activity logs — MongoDB Atlas.
 
 ### 5.2 Entity-Relationship Overview
 
@@ -1025,34 +1073,74 @@ jefflink-storage/
 └── documents/            ← contracts, KYC (keep private)
 ```
 
-### 9.7 CMS Data Flow
+### 9.7 CMS Data Flow (Atlas-backed Facade)
 
 ```
-Frontend (homepage load)
+── PUBLIC READ ──────────────────────────────────────────
+
+Frontend / Mobile
         │
         ▼
-GET /api/v1/cms/homepage   (no auth required)
+GET /api/v1/cms/homepage   (no auth)
+GET /api/v1/cms/page/:slug (no auth)
         │
         ▼
-┌──────────────────────────────┐
-│  CmsService.getHomepage()    │
-│  3 parallel Neon DB queries: │
-│  1. cmsSliders (active, asc) │
-│  2. cmsBanners (placement=   │
-│     home_top, in-schedule)   │
-│  3. cmsContent (all keys)    │
-└──────────────┬───────────────┘
-               │
-               ▼
-{
-  heroSliders: [{ title, subtitle, imageUrl(R2), buttonLabel, buttonLink }],
-  heroBanners: [{ imageUrl(R2), linkUrl, altText }],
-  content: { "homepage_hero_title": "...", "seo_homepage_title": "..." }
-}
-               │
-               ▼
-Images load from cdn.jefflinkcars.com (Cloudflare edge)
-Text rendered directly — no extra fetches
+┌─────────────────────────────────────────┐
+│  CmsPublicController                    │
+│           │                             │
+│           ▼                             │
+│  CmsFacade.getHomepage()                │
+│  CmsFacade.getPageBySlug(slug,opts)     │
+│           │                             │
+│    ┌──────┴──────┐                      │
+│    │ Redis Cache  │  (5-min TTL)        │
+│    │ cms:homepage │                     │
+│    │ cms:page:*   │                     │
+│    └──────┬──────┘                      │
+│           │ MISS                        │
+│    ┌──────┴────────────────┐            │
+│    │ CMS_ATLAS_ENABLED ?   │            │
+│    │  true  → CmsAtlasStore│  (MongoDB) │
+│    │  false → CmsNeonStore │  (Neon PG) │
+│    └───────────────────────┘            │
+└─────────────────────────────────────────┘
+        │
+        ▼
+JSON response → images from cdn.jefflinkcars.com
+
+── ADMIN WRITE ──────────────────────────────────────────
+
+Admin Dashboard
+        │
+        ▼
+POST/PATCH/DELETE /api/v1/admin/cms/*
+   JwtAuthGuard + RolesGuard (ADMIN, SYSTEM_ADMIN)
+        │
+        ▼
+┌─────────────────────────────────────────┐
+│  CmsAdminController                     │
+│  @CurrentUser() → AuditActor            │
+│           │                             │
+│           ▼                             │
+│  CmsFacade.createPage(actor, dto)       │
+│           │                             │
+│    ┌──────┴────────────────┐            │
+│    │ Store write (Atlas or │            │
+│    │ Neon based on flag)   │            │
+│    └──────┬────────────────┘            │
+│           │                             │
+│    ┌──────┴──────┐                      │
+│    │ Redis cache  │ invalidate cms:*    │
+│    └──────┬──────┘                      │
+│           │                             │
+│    ┌──────┴──────────────────┐          │
+│    │ AuditLogService.log()   │          │
+│    │  → admin_logs (Neon PG) │          │
+│    │  action: CMS_CREATE_PAGE│          │
+│    │  entityType: CmsPage    │          │
+│    │  metadata: {slug,...}   │          │
+│    └─────────────────────────┘          │
+└─────────────────────────────────────────┘
 ```
 
 ---
@@ -1107,6 +1195,14 @@ R2_ACCESS_KEY_ID=      # R2 API token key ID
 R2_SECRET_ACCESS_KEY=  # R2 API token secret
 R2_BUCKET=jefflink-storage
 R2_PUBLIC_URL=https://cdn.jefflinkcars.com
+# MongoDB Atlas
+MONGO_URI=             # Atlas connection string (mongodb+srv://...)
+MONGO_DB_NAME=jefflink # Database name (default: jefflink)
+MONGO_APP_NAME=jefflink-api  # Connection appName for Atlas monitoring
+# Feature Flags (Atlas store toggles)
+CMS_ATLAS_ENABLED=false    # true → CMS reads/writes go to Atlas; false → Neon
+GPS_ATLAS_ENABLED=false    # (Phase 2) GPS telemetry store
+DOCUMENTS_ATLAS_ENABLED=false  # (Phase 3) Document metadata store
 MEILISEARCH_HOST=      # Meilisearch URL
 MEILISEARCH_API_KEY=   # Meilisearch API key
 SENTRY_DSN=            # Sentry error tracking
@@ -1235,6 +1331,9 @@ Authorization: Bearer {accessToken}
 | 2026-03-20 | `apps/backend` — updated current mailer state to reflect Brevo relay support (`SMTP_BREVO_LOGIN`, `SMTP_BREVO_API_KEY`), `WEB_APP_URL`-based reset links, and Render-ready SMTP settings (`smtp-relay.brevo.com:587`, `SMTP_SECURE=false`). | Copilot |
 | 2026-03-20 | `render.yaml` + § 11 Deployment — appended a short production Render env checklist covering required secrets, fixed values, and post-change drift checks for the cloud-only stack. | Copilot |
 | 2026-03-21 | Added `MONGODB_ATLAS_IMPLEMENTATION_PLAN.md` — concrete Atlas adoption plan covering exact NestJS modules, Atlas collections, DTOs, endpoints, feature flags, cache keys, and phased rollout for CMS, GPS, document metadata, activity logs, and realtime support while keeping Neon as the financial core. | Copilot |
+| 2026-03-21 | **MongoDB Atlas Infrastructure (Phase 0)** — (1) `MongoModule` (`apps/backend/src/modules/mongo/`) with `MongoService` (connection lifecycle, `getDb()`, `getCollection()`, `healthCheck()`), `MongoHealthIndicator` (Terminus), typed config via `mongo.config.ts` + `mongo.constants.ts`; (2) packages installed: `mongodb@^6.12.0`, `zod@^3.24.0`; (3) Health endpoint updated to include MongoDB ping. | Copilot |
+| 2026-03-21 | **Atlas-backed CMS (Phase 1)** — (1) `CmsStore` interface with dual implementations: `CmsAtlasStore` (MongoDB) + `CmsNeonStore` (Neon PG); (2) `CmsFacade` orchestrates store selection via `CMS_ATLAS_ENABLED` flag, Redis caching (5-min TTL, pattern-based invalidation), and audit logging; (3) `CmsPublicController` — 5 unauthenticated read endpoints; (4) `CmsAdminController` — 7 authenticated write endpoints (ADMIN/SYSTEM_ADMIN), all audit-logged via `AuditLogService`; (5) 9 DTOs with class-validator; (6) 4 MongoDB collections: `cms_pages`, `cms_page_revisions`, `cms_navigation`, `cms_settings`. | Copilot |
+| 2026-03-21 | **CMS Security Audit** — Verified all 4 enterprise security rules: no direct MongoDB from frontend ✅, no direct PostgreSQL from frontend ✅, role checks enforced on backend ✅, CMS edits without audit log ✅ (fixed by injecting `AuditLogService` into `CmsFacade` + extracting `@CurrentUser()` in `CmsAdminController`). | Copilot |
 
 ---
 

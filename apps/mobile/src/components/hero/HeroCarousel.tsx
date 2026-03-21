@@ -8,6 +8,8 @@ import {
   Pressable,
 } from "react-native";
 import { useTheme } from "../../theme/useTheme";
+import { useCmsHomepage } from "../../features/cms/cms.hooks";
+import type { CmsSliderItem } from "@jefflink/types";
 
 import HyundaiLogo from "../../assets/icons/hyundai.svg";
 import ToyotaLogo from "../../assets/icons/toyota.svg";
@@ -23,7 +25,7 @@ type HeroBannerItem = {
   Logo: any;
 };
 
-const banners: HeroBannerItem[] = [
+const staticBanners: HeroBannerItem[] = [
   {
     id: "1",
     image: require("../../assets/images/newCRETA.png"),
@@ -58,61 +60,98 @@ type Props = {
   onLogin?: () => void;
 };
 
+// ── Map CMS sliders to the carousel display format ──────────────────────────
+type DisplayItem =
+  | { kind: "static"; data: HeroBannerItem }
+  | { kind: "cms"; data: CmsSliderItem };
+
+function useSliders(): DisplayItem[] {
+  const { data: homepage } = useCmsHomepage();
+  const cmsSliders = homepage?.layout?.slider;
+
+  if (cmsSliders && cmsSliders.length > 0) {
+    return cmsSliders.map((s) => ({ kind: "cms", data: s }));
+  }
+
+  return staticBanners.map((b) => ({ kind: "static", data: b }));
+}
+
 export default React.memo(function HeroCarousel({ onLogin }: Props) {
   const { isDark } = useTheme();
+  const items = useSliders();
   const [index, setIndex] = useState(0);
   const indexRef = useRef(0);
 
   const goNext = useCallback(() => {
-    const next = (indexRef.current + 1) % banners.length;
+    const next = (indexRef.current + 1) % items.length;
     indexRef.current = next;
     setIndex(next);
-  }, []);
+  }, [items.length]);
 
   const goPrev = useCallback(() => {
-    const prev = (indexRef.current - 1 + banners.length) % banners.length;
+    const prev = (indexRef.current - 1 + items.length) % items.length;
     indexRef.current = prev;
     setIndex(prev);
-  }, []);
+  }, [items.length]);
 
   useEffect(() => {
     const timer = setInterval(goNext, 4500);
     return () => clearInterval(timer);
   }, [goNext]);
 
-  const item = banners[index];
-  const Logo = item.Logo;
+  // Clamp index if items list shrinks (e.g. CMS→static fallback)
+  const safeIndex = index < items.length ? index : 0;
+  const item = items[safeIndex];
 
   return (
     <View className="bg-background">
 
       <View className="items-center px-6 pb-4">
 
-        {/* Text Band */}
-        <View className="w-full items-center pt-6 pb-10">
-          <View className="items-center mb-1">
-            <Logo
-              width={90}
-              height={22}
-              style={isDark ? { tintColor: "#F9FAFB" } : undefined}
+        {item.kind === "static" ? (
+          <>
+            {/* Static banner: brand logo + heading + local image */}
+            <View className="w-full items-center pt-6 pb-10">
+              <View className="items-center mb-1">
+                <item.data.Logo
+                  width={90}
+                  height={22}
+                  style={isDark ? { tintColor: "#F9FAFB" } : undefined}
+                />
+              </View>
+              <Text className="text-[30px] font-extrabold text-text tracking-wide text-center">
+                {item.data.heading}
+              </Text>
+            </View>
+            <Image
+              source={item.data.image}
+              resizeMode="contain"
+              className="w-full h-[200px] -mt-20"
             />
-          </View>
-
-          <Text className="text-[30px] font-extrabold text-text tracking-wide text-center">
-            {item.heading}
-          </Text>
-        </View>
-
-        {/* Car Image */}
-        <Image
-          source={item.image}
-          resizeMode="contain"
-          className="w-full h-[200px] -mt-20"
-        />
-
-        <Text className="text-center text-text-muted mt-3 px-4">
-          {item.text}
-        </Text>
+            <Text className="text-center text-text-muted mt-3 px-4">
+              {item.data.text}
+            </Text>
+          </>
+        ) : (
+          <>
+            {/* CMS slider: title + CDN image + subtitle */}
+            <View className="w-full items-center pt-6 pb-10">
+              <Text className="text-[30px] font-extrabold text-text tracking-wide text-center">
+                {item.data.title}
+              </Text>
+            </View>
+            <Image
+              source={{ uri: item.data.imageUrl }}
+              resizeMode="contain"
+              className="w-full h-[200px] -mt-20"
+            />
+            {item.data.subtitle ? (
+              <Text className="text-center text-text-muted mt-3 px-4">
+                {item.data.subtitle}
+              </Text>
+            ) : null}
+          </>
+        )}
 
         {/* CTA */}
         <View className="w-full items-start px-1">
@@ -122,7 +161,9 @@ export default React.memo(function HeroCarousel({ onLogin }: Props) {
             className="mt-5 bg-accent px-7 py-3 rounded-full"
           >
             <Text className="font-semibold text-base text-white">
-              Check It
+              {item.kind === "cms" && item.data.buttonLabel
+                ? item.data.buttonLabel
+                : "Check It"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -142,11 +183,11 @@ export default React.memo(function HeroCarousel({ onLogin }: Props) {
 
       {/* Pagination */}
       <View className="flex-row justify-center py-3">
-        {banners.map((_, i) => (
+        {items.map((_, i) => (
           <View
             key={i}
             className={
-              i === index
+              i === safeIndex
                 ? "h-2 w-6 mx-1 rounded-full bg-accent"
                 : "h-2 w-2 mx-1 rounded-full bg-border"
             }

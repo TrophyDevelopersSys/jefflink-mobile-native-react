@@ -61,4 +61,11 @@ export const endpoints = {
   media: {
     upload: "/media/upload",
   },
+  cms: {
+    homepage:    "/cms/homepage",
+    page:        (slug: string) => `/cms/page/${slug}`,
+    revisions:   (id: string) => `/cms/page/${id}/revisions`,
+    navigation:  (key: string) => `/cms/navigation/${key}`,
+    settings:    "/cms/settings",
+  },
 };
