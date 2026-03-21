@@ -12,7 +12,7 @@ export default function SearchPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-background flex items-center justify-center">
-          <p className="text-brand-muted">Loading results…</p>
+          <p className="text-text-muted">Loading results…</p>
         </div>
       }
     >

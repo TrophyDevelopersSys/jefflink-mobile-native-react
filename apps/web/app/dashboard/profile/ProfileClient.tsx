@@ -80,15 +80,15 @@ export default function ProfilePage() {
     <main className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-10">
         {/* Breadcrumb */}
-        <nav className="text-sm text-brand-muted mb-6">
-          <Link href="/dashboard" className="hover:text-white transition-colors">
+        <nav className="text-sm text-text-muted mb-6">
+          <Link href="/dashboard" className="hover:text-text transition-colors">
             Dashboard
           </Link>
           {" / "}
-          <span className="text-white">Profile</span>
+          <span className="text-text">Profile</span>
         </nav>
 
-        <h1 className="text-2xl font-bold text-white mb-8">Edit Profile</h1>
+        <h1 className="text-2xl font-bold text-text mb-8">Edit Profile</h1>
 
         {/* Avatar placeholder */}
         <div className="flex items-center gap-5 mb-8 bg-card border border-border rounded-card p-5">
@@ -96,8 +96,8 @@ export default function ProfilePage() {
             {initials}
           </div>
           <div>
-            <p className="text-white font-semibold">{user.name ?? "Name not set"}</p>
-            <p className="text-brand-muted text-sm">{user.email}</p>
+            <p className="text-text font-semibold">{user.name ?? "Name not set"}</p>
+            <p className="text-text-muted text-sm">{user.email}</p>
             <span className="inline-block mt-1.5 text-xs bg-brand-primary/20 text-brand-accent px-2 py-0.5 rounded-full capitalize">
               {roleLabel(user.role)}
             </span>
@@ -107,7 +107,7 @@ export default function ProfilePage() {
         {/* Form */}
         <form onSubmit={handleSave} className="bg-card border border-border rounded-card p-6 space-y-5">
           <div>
-            <label htmlFor="name" className="block text-white text-sm font-medium mb-1.5">
+            <label htmlFor="name" className="block text-text text-sm font-medium mb-1.5">
               Full Name
             </label>
             <input
@@ -116,12 +116,12 @@ export default function ProfilePage() {
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="Your full name"
-              className="w-full bg-brand-slate border border-border rounded-input px-4 py-3 text-white placeholder-brand-muted text-sm focus:outline-none focus:border-brand-primary/60"
+              className="w-full bg-card border border-border rounded-input px-4 py-3 text-text placeholder-text-muted text-sm focus:outline-none focus:border-brand-primary/60"
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-white text-sm font-medium mb-1.5">
+            <label htmlFor="email" className="block text-text text-sm font-medium mb-1.5">
               Email Address
             </label>
             <input
@@ -130,13 +130,13 @@ export default function ProfilePage() {
               value={user.email ?? ""}
               readOnly
               disabled
-              className="w-full bg-brand-night border border-border rounded-input px-4 py-3 text-brand-muted text-sm cursor-not-allowed"
+              className="w-full bg-surface border border-border rounded-input px-4 py-3 text-text-muted text-sm cursor-not-allowed"
             />
-            <p className="text-brand-muted text-xs mt-1.5">Email cannot be changed here.</p>
+            <p className="text-text-muted text-xs mt-1.5">Email cannot be changed here.</p>
           </div>
 
           <div>
-            <label htmlFor="phone" className="block text-white text-sm font-medium mb-1.5">
+            <label htmlFor="phone" className="block text-text text-sm font-medium mb-1.5">
               Phone Number
             </label>
             <input
@@ -145,7 +145,7 @@ export default function ProfilePage() {
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
               placeholder="+256 700 000 000"
-              className="w-full bg-brand-slate border border-border rounded-input px-4 py-3 text-white placeholder-brand-muted text-sm focus:outline-none focus:border-brand-primary/60"
+              className="w-full bg-card border border-border rounded-input px-4 py-3 text-text placeholder-text-muted text-sm focus:outline-none focus:border-brand-primary/60"
             />
           </div>
 
@@ -171,7 +171,7 @@ export default function ProfilePage() {
             </button>
             <Link
               href="/dashboard"
-              className="bg-brand-slate border border-border text-white text-sm font-medium px-6 py-2.5 rounded-button hover:border-brand-primary/40 transition-colors"
+              className="bg-card border border-border text-text text-sm font-medium px-6 py-2.5 rounded-button hover:border-brand-primary/40 transition-colors"
             >
               Cancel
             </Link>

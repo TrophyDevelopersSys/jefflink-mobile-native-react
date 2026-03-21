@@ -65,7 +65,7 @@ export default function HowItWorksPage() {
       {/* Hero */}
       <section className="bg-surface border-b border-border py-16 px-4 text-center">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-4xl font-extrabold text-white mb-4">How It Works</h1>
+          <h1 className="text-4xl font-extrabold text-text mb-4">How It Works</h1>
           <p className="text-text-muted text-lg">
             JeffLink makes it simple to buy and sell cars, land, and property in
             Uganda — for everyone.
@@ -77,7 +77,7 @@ export default function HowItWorksPage() {
       <section className="max-w-4xl mx-auto px-4 py-14">
         <div className="flex items-center gap-3 mb-8">
           <span className="text-3xl">🛒</span>
-          <h2 className="text-2xl font-bold text-white">For Buyers</h2>
+          <h2 className="text-2xl font-bold text-text">For Buyers</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {BUYER_STEPS.map((s) => (
@@ -89,7 +89,7 @@ export default function HowItWorksPage() {
                 {s.step}
               </span>
               <div>
-                <h3 className="text-white font-semibold mb-1">{s.title}</h3>
+                <h3 className="text-text font-semibold mb-1">{s.title}</h3>
                 <p className="text-text-muted text-sm">{s.body}</p>
               </div>
             </div>
@@ -104,7 +104,7 @@ export default function HowItWorksPage() {
           </Link>
           <Link
             href="/cars"
-            className="bg-surface border border-border text-white font-semibold px-6 py-3 rounded-button hover:border-brand-primary/50 transition-colors"
+            className="bg-surface border border-border text-text font-semibold px-6 py-3 rounded-button hover:border-brand-primary/50 transition-colors"
           >
             Browse Cars
           </Link>
@@ -117,7 +117,7 @@ export default function HowItWorksPage() {
       <section className="max-w-4xl mx-auto px-4 py-14">
         <div className="flex items-center gap-3 mb-8">
           <Store size={32} strokeWidth={1.5} className="text-brand-accent" />
-          <h2 className="text-2xl font-bold text-white">For Sellers & Dealers</h2>
+          <h2 className="text-2xl font-bold text-text">For Sellers &amp; Dealers</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {SELLER_STEPS.map((s) => (
@@ -129,7 +129,7 @@ export default function HowItWorksPage() {
                 {s.step}
               </span>
               <div>
-                <h3 className="text-white font-semibold mb-1">{s.title}</h3>
+                <h3 className="text-text font-semibold mb-1">{s.title}</h3>
                 <p className="text-text-muted text-sm">{s.body}</p>
               </div>
             </div>
@@ -144,7 +144,7 @@ export default function HowItWorksPage() {
           </Link>
           <Link
             href="/sell"
-            className="bg-surface border border-border text-white font-semibold px-6 py-3 rounded-button hover:border-brand-primary/50 transition-colors"
+            className="bg-surface border border-border text-text font-semibold px-6 py-3 rounded-button hover:border-brand-primary/50 transition-colors"
           >
             Post a Listing
           </Link>
@@ -154,7 +154,7 @@ export default function HowItWorksPage() {
       {/* FAQ / quick answers */}
       <section className="bg-surface border-t border-border py-12 px-4">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-xl font-bold text-white mb-6">Common Questions</h2>
+          <h2 className="text-xl font-bold text-text mb-6">Common Questions</h2>
           <div className="space-y-4">
             {[
               {
@@ -174,7 +174,7 @@ export default function HowItWorksPage() {
                 key={faq.q}
                 className="bg-card border border-border rounded-card p-5"
               >
-                <h3 className="text-white font-semibold mb-1">{faq.q}</h3>
+                <h3 className="text-text font-semibold mb-1">{faq.q}</h3>
                 <p className="text-text-muted text-sm">{faq.a}</p>
               </div>
             ))}

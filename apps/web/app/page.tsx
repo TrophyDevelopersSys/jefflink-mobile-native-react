@@ -81,14 +81,14 @@ export default async function HomePage() {
       <HeroCarousel />
 
       {/* ── 2. GlobalSearchBar (web: SearchFilterBar) ── */}
-      <section className="bg-brand-night border-b border-border px-4 py-6">
+      <section className="bg-surface border-b border-border px-4 py-6">
         <div className="max-w-5xl mx-auto">
           <SearchFilterBar />
         </div>
       </section>
 
       {/* ── Stats Bar (web-only enhancement) ── */}
-      <section className="bg-brand-slate border-b border-border">
+      <section className="bg-card border-b border-border">
         <div className="max-w-5xl mx-auto px-4 py-5 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           {[
             { value: "500+", label: "Active Listings" },
@@ -98,7 +98,7 @@ export default async function HomePage() {
           ].map((s) => (
             <div key={s.label}>
               <p className="text-xl font-bold text-brand-accent">{s.value}</p>
-              <p className="text-brand-muted text-xs mt-0.5">{s.label}</p>
+              <p className="text-text-muted text-xs mt-0.5">{s.label}</p>
             </div>
           ))}
         </div>
@@ -134,7 +134,7 @@ export default async function HomePage() {
 
       {/* ── 5. Vendors on JeffLink — mirrors ListingCarousel type="vendors" ── */}
       {vendors.length > 0 && (
-        <section className="bg-brand-slate border-y border-border py-14 px-4">
+        <section className="bg-card border-y border-border py-14 px-4">
           <div className="max-w-6xl mx-auto">
             <SectionHeader title="Vendors on JeffLink" href="/vendors" linkLabel="View all vendors" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -151,8 +151,8 @@ export default async function HomePage() {
                       : v.businessName.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-brand-white font-semibold text-sm line-clamp-1">{v.businessName}</p>
-                    <p className="text-brand-muted text-xs mt-0.5">{v.city} · {v.listingCount} listings</p>
+                    <p className="text-text font-semibold text-sm line-clamp-1">{v.businessName}</p>
+                    <p className="text-text-muted text-xs mt-0.5">{v.city} · {v.listingCount} listings</p>
                   </div>
                   {v.isVerified && (
                     <span className="text-xs bg-brand-primary/20 text-brand-accent px-2 py-0.5 rounded-full font-medium">
@@ -179,9 +179,9 @@ export default async function HomePage() {
       )}
 
       {/* ── How It Works (web-only enhancement) ── */}
-      <section className="bg-brand-night border-t border-border py-14 px-4">
+      <section className="bg-surface border-t border-border py-14 px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-semibold text-brand-white mb-10 text-center">How JeffLink Works</h2>
+          <h2 className="text-2xl font-semibold text-text mb-10 text-center">How JeffLink Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { step: "01", title: "Search & Filter", desc: "Browse listings by category, location, and price range across Uganda.", Icon: Search },
@@ -191,8 +191,8 @@ export default async function HomePage() {
               <div key={item.step} className="flex flex-col items-center text-center gap-3">
                 <item.Icon size={40} strokeWidth={1.5} className="text-brand-accent" />
                 <span className="text-brand-accent text-xs font-bold tracking-widest">STEP {item.step}</span>
-                <h3 className="text-brand-white font-semibold text-lg">{item.title}</h3>
-                <p className="text-brand-muted text-sm leading-relaxed">{item.desc}</p>
+                <h3 className="text-text font-semibold text-lg">{item.title}</h3>
+                <p className="text-text-muted text-sm leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -202,10 +202,10 @@ export default async function HomePage() {
       {/* ── Post Listing CTA ── */}
       <section className="bg-brand-primary/10 border-t border-brand-primary/20 py-14 px-4">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-brand-white mb-3">
+          <h2 className="text-2xl md:text-3xl font-bold text-text mb-3">
             Have Something to Sell?
           </h2>
-          <p className="text-brand-muted mb-6">
+          <p className="text-text-muted mb-6">
             Post your car, land, or property for free and reach thousands of buyers across Uganda.
           </p>
           <Link
@@ -232,7 +232,7 @@ export default async function HomePage() {
 function SectionHeader({ title, href, linkLabel }: { title: string; href: string; linkLabel: string }) {
   return (
     <div className="flex items-center justify-between mb-7">
-      <h2 className="text-2xl font-semibold text-brand-white">{title}</h2>
+      <h2 className="text-2xl font-semibold text-text">{title}</h2>
       <Link href={href} className="text-brand-accent text-sm font-medium hover:underline">
         {linkLabel} →
       </Link>
@@ -241,7 +241,7 @@ function SectionHeader({ title, href, linkLabel }: { title: string; href: string
 }
 
 function EmptySlot({ label }: { label: string }) {
-  return <p className="text-brand-muted text-center py-16">{label}</p>;
+  return <p className="text-text-muted text-center py-16">{label}</p>;
 }
 
 function ListingCard({ listing, href, fallbackIcon: FallbackIcon }: { listing: ListingSummary; href: string; fallbackIcon: LucideIcon }) {
@@ -250,16 +250,16 @@ function ListingCard({ listing, href, fallbackIcon: FallbackIcon }: { listing: L
       href={href}
       className="bg-card border border-border rounded-card overflow-hidden hover:border-brand-primary/50 transition-colors group"
     >
-      <div className="aspect-[4/3] bg-brand-slate relative overflow-hidden">
+      <div className="aspect-[4/3] bg-card relative overflow-hidden">
         {listing.coverUrl
           // eslint-disable-next-line @next/next/no-img-element
           ? <img src={listing.coverUrl} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-          : <div className="w-full h-full flex items-center justify-center text-brand-muted"><FallbackIcon size={48} strokeWidth={1.5} /></div>
+          : <div className="w-full h-full flex items-center justify-center text-text-muted"><FallbackIcon size={48} strokeWidth={1.5} /></div>
         }
       </div>
       <div className="p-4">
-        <h3 className="text-brand-white font-semibold text-sm line-clamp-1 mb-1">{listing.title}</h3>
-        <p className="text-brand-muted text-xs mb-2">{listing.location}</p>
+        <h3 className="text-text font-semibold text-sm line-clamp-1 mb-1">{listing.title}</h3>
+        <p className="text-text-muted text-xs mb-2">{listing.location}</p>
         <p className="text-brand-accent font-bold text-sm">{listing.price}</p>
       </div>
     </Link>
@@ -277,11 +277,11 @@ function FeaturedListingCard({ listing }: { listing: ListingSummary }) {
       href={href}
       className="bg-card border border-border rounded-card overflow-hidden hover:border-brand-primary/50 transition-colors group relative"
     >
-      <div className="aspect-[4/3] bg-brand-night relative overflow-hidden">
+      <div className="aspect-[4/3] bg-surface relative overflow-hidden">
         {listing.coverUrl
           // eslint-disable-next-line @next/next/no-img-element
           ? <img src={listing.coverUrl} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-          : <div className="w-full h-full flex items-center justify-center text-brand-muted"><FallbackIcon size={48} strokeWidth={1.5} /></div>
+          : <div className="w-full h-full flex items-center justify-center text-text-muted"><FallbackIcon size={48} strokeWidth={1.5} /></div>
         }
         {/* Type badge — matches mobile FeedListingCard badge */}
         <span className="absolute top-2 left-2 bg-brand-primary/90 text-brand-white text-[10px] font-bold px-2 py-0.5 rounded-full">
@@ -293,8 +293,8 @@ function FeaturedListingCard({ listing }: { listing: ListingSummary }) {
         </span>
       </div>
       <div className="p-4">
-        <h3 className="text-brand-white font-semibold text-sm line-clamp-1 mb-1">{listing.title}</h3>
-        <p className="text-brand-muted text-xs mb-2">{listing.location}</p>
+        <h3 className="text-text font-semibold text-sm line-clamp-1 mb-1">{listing.title}</h3>
+        <p className="text-text-muted text-xs mb-2">{listing.location}</p>
         <p className="text-brand-accent font-bold text-sm">{listing.price}</p>
       </div>
     </Link>

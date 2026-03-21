@@ -23,7 +23,7 @@ export default function DashboardPage() {
       <main className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-brand-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-brand-muted text-sm">Loading dashboard…</p>
+          <p className="text-text-muted text-sm">Loading dashboard…</p>
         </div>
       </main>
     );
@@ -47,10 +47,10 @@ export default function DashboardPage() {
               {initials}
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">
+              <h1 className="text-xl font-bold text-text">
                 Welcome back, {displayName.split(" ")[0]}
               </h1>
-              <p className="text-brand-muted text-sm mt-0.5">
+              <p className="text-text-muted text-sm mt-0.5">
                 {isAdmin ? "Admin" : isDealer ? "Dealer Account" : "Customer Account"}
               </p>
             </div>
@@ -70,7 +70,7 @@ export default function DashboardPage() {
               ? "bg-brand-warning/20 text-brand-warning"
               : isDealer
               ? "bg-brand-primary/20 text-brand-accent"
-              : "bg-brand-slate text-brand-muted"
+              : "bg-card text-text-muted"
           }`}>
             {isAdmin ? "Admin" : isDealer ? "Verified Dealer" : "Customer"}
           </span>
@@ -78,7 +78,7 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         <section className="mb-8">
-          <h2 className="text-base font-semibold text-white mb-4">Quick Actions</h2>
+          <h2 className="text-base font-semibold text-text mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <QuickActionCard href="/search" icon={Search} label="Search Listings" />
             <QuickActionCard href="/cars" icon={Car} label="Browse Cars" />
@@ -96,7 +96,7 @@ export default function DashboardPage() {
           <>
             <section className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-white">My Listings</h2>
+                <h2 className="text-base font-semibold text-text">My Listings</h2>
                 <Link href="/dashboard/listings" className="text-xs text-brand-accent hover:underline">
                   View all →
                 </Link>
@@ -105,14 +105,14 @@ export default function DashboardPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-base font-semibold text-white mb-4">Performance Overview</h2>
+              <h2 className="text-base font-semibold text-text mb-4">Performance Overview</h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <StatCard label="Active Listings" value="–" />
                 <StatCard label="Total Views" value="–" />
                 <StatCard label="Leads" value="–" />
                 <StatCard label="Wallet" value="ZMW 0" />
               </div>
-              <p className="text-brand-muted text-xs mt-3">
+              <p className="text-text-muted text-xs mt-3">
                 Analytics update in real-time from the JeffLink backend.
               </p>
             </section>
@@ -122,8 +122,8 @@ export default function DashboardPage() {
         {/* Customer sections */}
         {!isDealer && !isAdmin && (
           <section className="mb-8">
-            <h2 className="text-base font-semibold text-white mb-4">Recent Activity</h2>
-            <div className="bg-card border border-border rounded-card p-6 text-center text-brand-muted text-sm">
+            <h2 className="text-base font-semibold text-text mb-4">Recent Activity</h2>
+            <div className="bg-card border border-border rounded-card p-6 text-center text-text-muted text-sm">
               <p className="mb-2">No recent activity yet.</p>
               <p>
                 Start by{" "}
@@ -142,23 +142,23 @@ export default function DashboardPage() {
 
         {/* Account info */}
         <section className="bg-card border border-border rounded-card p-6">
-          <h2 className="text-base font-semibold text-white mb-4">Account Details</h2>
+          <h2 className="text-base font-semibold text-text mb-4">Account Details</h2>
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <dt className="text-brand-muted text-xs uppercase tracking-wide mb-1">Name</dt>
-              <dd className="text-white text-sm">{user.name ?? "Not set"}</dd>
+              <dt className="text-text-muted text-xs uppercase tracking-wide mb-1">Name</dt>
+              <dd className="text-text text-sm">{user.name ?? "Not set"}</dd>
             </div>
             <div>
-              <dt className="text-brand-muted text-xs uppercase tracking-wide mb-1">Email</dt>
-              <dd className="text-white text-sm">{user.email ?? "Not set"}</dd>
+              <dt className="text-text-muted text-xs uppercase tracking-wide mb-1">Email</dt>
+              <dd className="text-text text-sm">{user.email ?? "Not set"}</dd>
             </div>
             <div>
-              <dt className="text-brand-muted text-xs uppercase tracking-wide mb-1">Role</dt>
-              <dd className="text-white text-sm">{roleLabel(user.role)}</dd>
+              <dt className="text-text-muted text-xs uppercase tracking-wide mb-1">Role</dt>
+              <dd className="text-text text-sm">{roleLabel(user.role)}</dd>
             </div>
             <div>
-              <dt className="text-brand-muted text-xs uppercase tracking-wide mb-1">User ID</dt>
-              <dd className="text-brand-muted text-xs font-mono">{user.id}</dd>
+              <dt className="text-text-muted text-xs uppercase tracking-wide mb-1">User ID</dt>
+              <dd className="text-text-muted text-xs font-mono">{user.id}</dd>
             </div>
           </dl>
           <div className="mt-5 pt-4 border-t border-border">
@@ -198,7 +198,7 @@ function QuickActionCard({
       }`}
     >
       <Icon size={24} strokeWidth={1.75} className="text-brand-accent" />
-      <span className="text-xs font-medium text-white leading-tight">{label}</span>
+      <span className="text-xs font-medium text-text leading-tight">{label}</span>
     </Link>
   );
 }
@@ -206,15 +206,15 @@ function QuickActionCard({
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-card border border-border rounded-card p-4">
-      <p className="text-brand-muted text-xs uppercase tracking-wide mb-1">{label}</p>
-      <p className="text-white font-bold text-xl">{value}</p>
+      <p className="text-text-muted text-xs uppercase tracking-wide mb-1">{label}</p>
+      <p className="text-text font-bold text-xl">{value}</p>
     </div>
   );
 }
 
 function DealerListingsPreview() {
   return (
-    <div className="bg-card border border-border rounded-card p-6 text-center text-brand-muted text-sm">
+    <div className="bg-card border border-border rounded-card p-6 text-center text-text-muted text-sm">
       <p className="mb-2">Your active listings will appear here.</p>
       <p>
         <Link href="/sell" className="text-brand-accent hover:underline">

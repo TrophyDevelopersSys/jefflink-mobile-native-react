@@ -25,7 +25,7 @@ const META_KEYS = new Set([
 
 function MetaBadge({ label }: { label: string }) {
   return (
-    <span className="text-xs bg-brand-slate border border-border text-brand-muted px-3 py-1 rounded-full capitalize whitespace-nowrap">
+    <span className="text-xs bg-card border border-border text-text-muted px-3 py-1 rounded-full capitalize whitespace-nowrap">
       {label}
     </span>
   );
@@ -33,9 +33,9 @@ function MetaBadge({ label }: { label: string }) {
 
 function SpecRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-brand-slate rounded-lg p-3.5 border border-border">
-      <p className="text-brand-muted text-[11px] uppercase tracking-wide mb-0.5">{label}</p>
-      <p className="text-brand-white text-sm font-semibold">{value}</p>
+    <div className="bg-card rounded-lg p-3.5 border border-border">
+      <p className="text-text-muted text-[11px] uppercase tracking-wide mb-0.5">{label}</p>
+      <p className="text-text text-sm font-semibold">{value}</p>
     </div>
   );
 }
@@ -46,7 +46,7 @@ function RelatedCard({ listing, href }: { listing: ListingSummary; href: string 
       href={href}
       className="bg-card border border-border rounded-card overflow-hidden hover:border-brand-primary/50 transition-colors group"
     >
-      <div className="aspect-[4/3] bg-brand-slate overflow-hidden">
+      <div className="aspect-[4/3] bg-card overflow-hidden">
         {listing.coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -61,8 +61,8 @@ function RelatedCard({ listing, href }: { listing: ListingSummary; href: string 
         )}
       </div>
       <div className="p-3">
-        <p className="text-brand-white text-xs font-semibold line-clamp-1 mb-0.5">{listing.title}</p>
-        <p className="text-brand-muted text-[11px] mb-1">{listing.location}</p>
+        <p className="text-text text-xs font-semibold line-clamp-1 mb-0.5">{listing.title}</p>
+        <p className="text-text-muted text-[11px] mb-1">{listing.location}</p>
         <p className="text-brand-accent text-xs font-bold">{listing.price}</p>
       </div>
     </Link>
@@ -120,14 +120,14 @@ export default function ListingDetailLayout({
       <div className="max-w-6xl mx-auto px-4 py-10">
 
         {/* ── Breadcrumb ── */}
-        <nav className="text-sm text-brand-muted mb-6 flex flex-wrap items-center gap-1.5">
-          <Link href="/" className="hover:text-brand-white transition-colors">Home</Link>
+        <nav className="text-sm text-text-muted mb-6 flex flex-wrap items-center gap-1.5">
+          <Link href="/" className="hover:text-text transition-colors">Home</Link>
           <span>/</span>
-          <Link href={`/${category}`} className="hover:text-brand-white transition-colors capitalize">
+          <Link href={`/${category}`} className="hover:text-text transition-colors capitalize">
             {categoryLabel}
           </Link>
           <span>/</span>
-          <span className="text-brand-white line-clamp-1">{listing.title}</span>
+          <span className="text-text line-clamp-1">{listing.title}</span>
         </nav>
 
         {/* ── Two-column grid (stacks on mobile) ── */}
@@ -137,7 +137,7 @@ export default function ListingDetailLayout({
           <div className="lg:col-span-2 flex flex-col gap-8">
 
             {/* Hero image */}
-            <div className="aspect-[16/9] bg-brand-slate rounded-card overflow-hidden relative">
+            <div className="aspect-[16/9] bg-card rounded-card overflow-hidden relative">
               {listing.coverUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -146,7 +146,7 @@ export default function ListingDetailLayout({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-brand-muted">
+                <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-text-muted">
                   <FallbackIcon size={72} strokeWidth={1.5} />
                   <span className="text-xs">No photos available</span>
                 </div>
@@ -160,8 +160,8 @@ export default function ListingDetailLayout({
             {/* About this listing */}
             {listing.description && (
               <section className="bg-card border border-border rounded-card p-6">
-                <h2 className="text-brand-white font-bold text-base mb-3">About This Listing</h2>
-                <p className="text-brand-muted text-sm leading-relaxed whitespace-pre-line">
+                <h2 className="text-text font-bold text-base mb-3">About This Listing</h2>
+                <p className="text-text-muted text-sm leading-relaxed whitespace-pre-line">
                   {listing.description}
                 </p>
               </section>
@@ -170,7 +170,7 @@ export default function ListingDetailLayout({
             {/* Key specifications — mirrors mobile ListingSpec grid */}
             {attrEntries.length > 0 && (
               <section className="bg-card border border-border rounded-card p-6">
-                <h2 className="text-brand-white font-semibold text-base mb-4">Key Specifications</h2>
+                <h2 className="text-text font-semibold text-base mb-4">Key Specifications</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {attrEntries.map(([key, value]) => (
                     <SpecRow key={key} label={humanise(key)} value={String(value)} />
@@ -182,7 +182,7 @@ export default function ListingDetailLayout({
             {/* Related listings */}
             {related.length > 0 && (
               <section>
-                <h2 className="text-brand-white font-semibold text-base mb-4">Similar Listings</h2>
+                <h2 className="text-text font-semibold text-base mb-4">Similar Listings</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {related.map((r) => {
                     const rHref = r.type === "vehicle" ? `/cars/${r.id}` : `/${category}/${r.id}`;
@@ -205,13 +205,13 @@ export default function ListingDetailLayout({
               </span>
 
               {/* Title */}
-              <h1 className="text-brand-white font-bold text-xl leading-snug">{listing.title}</h1>
+              <h1 className="text-text font-bold text-xl leading-snug">{listing.title}</h1>
 
               {/* Price — mirrors mobile ListingPrice */}
               <p className="text-brand-accent font-extrabold text-3xl">{listing.price}</p>
 
               {/* Location — mirrors mobile ListingHeader subtitle */}
-              <div className="flex items-center gap-2 text-brand-muted text-sm">
+              <div className="flex items-center gap-2 text-text-muted text-sm">
                 <span>📍</span>
                 <span>{listing.location}</span>
               </div>
@@ -224,14 +224,14 @@ export default function ListingDetailLayout({
               )}
 
               {postedDate && (
-                <p className="text-brand-muted text-xs">Posted {postedDate}</p>
+                <p className="text-text-muted text-xs">Posted {postedDate}</p>
               )}
             </div>
 
             {/* Vendor card */}
             {vendor && (
               <div className="bg-card border border-border rounded-card p-5 flex flex-col gap-3">
-                <p className="text-brand-muted text-xs uppercase tracking-wide font-semibold">Seller</p>
+                <p className="text-text-muted text-xs uppercase tracking-wide font-semibold">Seller</p>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-brand-primary/10 border border-border flex items-center justify-center font-bold text-brand-primary text-sm flex-shrink-0 overflow-hidden">
                     {vendor.logoUrl
@@ -240,8 +240,8 @@ export default function ListingDetailLayout({
                       : vendor.businessName.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-brand-white font-semibold text-sm line-clamp-1">{vendor.businessName}</p>
-                    <p className="text-brand-muted text-xs">{vendor.location}</p>
+                    <p className="text-text font-semibold text-sm line-clamp-1">{vendor.businessName}</p>
+                    <p className="text-text-muted text-xs">{vendor.location}</p>
                   </div>
                 </div>
                 {vendor.isVerified && (

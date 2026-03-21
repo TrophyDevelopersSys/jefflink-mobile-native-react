@@ -18,7 +18,7 @@ export default function ContactPage() {
       {/* Hero */}
       <section className="bg-surface border-b border-border py-14 px-4">
         <div className="max-w-2xl mx-auto text-center">
-          <h1 className="text-4xl font-extrabold text-white mb-3">Contact Us</h1>
+          <h1 className="text-4xl font-extrabold text-text mb-3">Contact Us</h1>
           <p className="text-text-muted text-lg">
             Questions, feedback, or partnership enquiries — we&apos;d love to
             hear from you.
@@ -29,7 +29,7 @@ export default function ContactPage() {
       <div className="max-w-4xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-2 gap-10">
         {/* Contact details */}
         <section>
-          <h2 className="text-xl font-bold text-white mb-6">Get In Touch</h2>
+          <h2 className="text-xl font-bold text-text mb-6">Get In Touch</h2>
           <div className="space-y-5">
             {[
               { Icon: Mail, label: "Email", value: "support@jefflink.ug", href: "mailto:support@jefflink.ug" },
@@ -39,7 +39,7 @@ export default function ContactPage() {
               <div key={c.label} className="flex gap-4 items-start bg-card border border-border rounded-card p-4">
                 <c.Icon size={24} strokeWidth={1.75} className="text-brand-accent flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-brand-muted text-xs uppercase tracking-wide mb-0.5">{c.label}</p>
+                  <p className="text-text-muted text-xs uppercase tracking-wide mb-0.5">{c.label}</p>
                   {c.href ? (
                     <a
                       href={c.href}
@@ -56,7 +56,7 @@ export default function ContactPage() {
           </div>
 
           <div className="mt-8">
-            <h3 className="text-white font-semibold mb-3">Quick Links</h3>
+            <h3 className="text-text font-semibold mb-3">Quick Links</h3>
             <ul className="space-y-2">
               {[
                 { href: "/how-it-works", label: "How JeffLink Works" },
@@ -67,7 +67,7 @@ export default function ContactPage() {
                 <li key={l.href}>
                   <Link
                     href={l.href}
-                    className="text-brand-muted text-sm hover:text-brand-accent transition-colors"
+                    className="text-text-muted text-sm hover:text-brand-accent transition-colors"
                   >
                     → {l.label}
                   </Link>
@@ -79,45 +79,45 @@ export default function ContactPage() {
 
         {/* Contact form note — backend form submission to be wired separately */}
         <section>
-          <h2 className="text-xl font-bold text-white mb-6">Send a Message</h2>
+          <h2 className="text-xl font-bold text-text mb-6">Send a Message</h2>
           <div className="bg-card border border-border rounded-card p-6 space-y-4">
             <p className="text-text-muted text-sm">
               Fill in the form below and our team will respond within 24 hours.
             </p>
             <div>
-              <label className="block text-white text-sm font-medium mb-1.5">
+              <label className="block text-text text-sm font-medium mb-1.5">
                 Full Name
               </label>
               <input
                 type="text"
                 placeholder="Your name"
-                className="w-full bg-brand-slate border border-border rounded-input px-4 py-3 text-white placeholder-brand-muted text-sm focus:outline-none focus:border-brand-primary/60"
+                className="w-full bg-card border border-border rounded-input px-4 py-3 text-text placeholder-text-muted text-sm focus:outline-none focus:border-brand-primary/60"
                 readOnly
               />
             </div>
             <div>
-              <label className="block text-white text-sm font-medium mb-1.5">
+              <label className="block text-text text-sm font-medium mb-1.5">
                 Email Address
               </label>
               <input
                 type="email"
                 placeholder="your@email.com"
-                className="w-full bg-brand-slate border border-border rounded-input px-4 py-3 text-white placeholder-brand-muted text-sm focus:outline-none focus:border-brand-primary/60"
+                className="w-full bg-card border border-border rounded-input px-4 py-3 text-text placeholder-text-muted text-sm focus:outline-none focus:border-brand-primary/60"
                 readOnly
               />
             </div>
             <div>
-              <label className="block text-white text-sm font-medium mb-1.5">
+              <label className="block text-text text-sm font-medium mb-1.5">
                 Message
               </label>
               <textarea
                 rows={4}
                 placeholder="How can we help?"
-                className="w-full bg-brand-slate border border-border rounded-input px-4 py-3 text-white placeholder-brand-muted text-sm focus:outline-none focus:border-brand-primary/60 resize-none"
+                className="w-full bg-card border border-border rounded-input px-4 py-3 text-text placeholder-text-muted text-sm focus:outline-none focus:border-brand-primary/60 resize-none"
                 readOnly
               />
             </div>
-            <p className="text-brand-muted text-xs">
+            <p className="text-text-muted text-xs">
               Contact form submission coming soon. For now, please reach us directly at{" "}
               <a href="mailto:support@jefflink.ug" className="text-brand-accent hover:underline">
                 support@jefflink.ug

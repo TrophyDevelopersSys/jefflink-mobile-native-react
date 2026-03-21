@@ -34,7 +34,7 @@ export default async function LandPage() {
     <main className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">Land &amp; Property</h1>
+          <h1 className="text-3xl font-bold text-text">Land &amp; Property</h1>
           <p className="text-text-muted mt-2">
             {listings.length > 0
               ? `${listings.length} properties available`
@@ -44,7 +44,7 @@ export default async function LandPage() {
 
         {listings.length === 0 ? (
           <div className="text-center py-24">
-            <p className="text-brand-muted text-lg">No property listings yet.</p>
+            <p className="text-text-muted text-lg">No property listings yet.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -54,7 +54,7 @@ export default async function LandPage() {
                 href={`/land/${listing.id}`}
                 className="bg-card border border-border rounded-card overflow-hidden hover:border-brand-primary/50 transition-colors group"
               >
-                <div className="aspect-[4/3] bg-brand-slate relative overflow-hidden">
+                <div className="aspect-[4/3] bg-card relative overflow-hidden">
                   {listing.coverUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -63,16 +63,16 @@ export default async function LandPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-brand-muted">
+                    <div className="w-full h-full flex items-center justify-center text-text-muted">
                       <LandPlot size={48} strokeWidth={1.5} />
                     </div>
                   )}
                 </div>
                 <div className="p-4">
-                  <h2 className="text-white font-semibold text-sm line-clamp-1 mb-1">
+                  <h2 className="text-text font-semibold text-sm line-clamp-1 mb-1">
                     {listing.title}
                   </h2>
-                  <p className="text-brand-muted text-xs mb-2">{listing.location}</p>
+                  <p className="text-text-muted text-xs mb-2">{listing.location}</p>
                   <p className="text-brand-accent font-bold">{listing.price}</p>
                 </div>
               </Link>

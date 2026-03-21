@@ -26,7 +26,7 @@ export default function SellPage() {
       {/* Hero */}
       <section className="bg-surface border-b border-border py-16 px-4 text-center">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-4xl font-extrabold text-white mb-4">
+          <h1 className="text-4xl font-extrabold text-text mb-4">
             Sell on <span className="text-brand-accent">JeffLink</span>
           </h1>
           <p className="text-text-muted text-lg leading-relaxed mb-8">
@@ -42,7 +42,7 @@ export default function SellPage() {
             </Link>
             <Link
               href="/login"
-              className="bg-surface border border-border text-white font-semibold px-8 py-3 rounded-button hover:border-brand-primary/50 transition-colors"
+              className="bg-surface border border-border text-text font-semibold px-8 py-3 rounded-button hover:border-brand-primary/50 transition-colors"
             >
               Sign In to Post
             </Link>
@@ -52,7 +52,7 @@ export default function SellPage() {
 
       {/* What you can list */}
       <section className="max-w-4xl mx-auto px-4 py-14">
-        <h2 className="text-2xl font-bold text-white mb-2 text-center">
+        <h2 className="text-2xl font-bold text-text mb-2 text-center">
           What Can You List?
         </h2>
         <p className="text-text-muted text-center mb-8">
@@ -66,7 +66,7 @@ export default function SellPage() {
             >
               <cat.Icon size={32} strokeWidth={1.75} className="text-brand-accent flex-shrink-0" />
               <div>
-                <h3 className="text-white font-semibold">{cat.label}</h3>
+                <h3 className="text-text font-semibold">{cat.label}</h3>
                 <p className="text-text-muted text-sm mt-1">{cat.description}</p>
               </div>
             </div>
@@ -77,7 +77,7 @@ export default function SellPage() {
       {/* How posting works */}
       <section className="bg-surface border-y border-border py-12 px-4">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-white mb-8 text-center">
+          <h2 className="text-2xl font-bold text-text mb-8 text-center">
             How It Works
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -90,7 +90,7 @@ export default function SellPage() {
                 <div className="w-12 h-12 rounded-full bg-brand-primary/20 text-brand-accent font-extrabold text-lg flex items-center justify-center mx-auto mb-3">
                   {s.step}
                 </div>
-                <h3 className="text-white font-semibold mb-1">{s.title}</h3>
+                <h3 className="text-text font-semibold mb-1">{s.title}</h3>
                 <p className="text-text-muted text-sm">{s.body}</p>
               </div>
             ))}
@@ -100,7 +100,7 @@ export default function SellPage() {
 
       {/* Why JeffLink */}
       <section className="max-w-3xl mx-auto px-4 py-12">
-        <h2 className="text-2xl font-bold text-white mb-6">
+        <h2 className="text-2xl font-bold text-text mb-6">
           Why Sell on JeffLink?
         </h2>
         <div className="space-y-4">
@@ -113,7 +113,7 @@ export default function SellPage() {
             <div key={v.title} className="flex gap-4 bg-card border border-border rounded-card p-5">
               <v.Icon size={24} strokeWidth={1.75} className="text-brand-accent flex-shrink-0" />
               <div>
-                <h3 className="text-white font-semibold mb-1">{v.title}</h3>
+                <h3 className="text-text font-semibold mb-1">{v.title}</h3>
                 <p className="text-text-muted text-sm">{v.body}</p>
               </div>
             </div>
@@ -124,7 +124,7 @@ export default function SellPage() {
       {/* CTA */}
       <section className="pb-16 px-4 text-center">
         <div className="max-w-xl mx-auto bg-card border border-border rounded-card p-8">
-          <h2 className="text-xl font-bold text-white mb-2">Ready to get started?</h2>
+          <h2 className="text-xl font-bold text-text mb-2">Ready to get started?</h2>
           <p className="text-text-muted text-sm mb-6">
             Join hundreds of verified dealers and private sellers on JeffLink today.
           </p>
@@ -137,7 +137,7 @@ export default function SellPage() {
             </Link>
             <Link
               href="/how-it-works"
-              className="bg-brand-slate border border-border text-white text-sm font-medium px-6 py-3 rounded-button hover:border-brand-primary/40 transition-colors"
+              className="bg-card border border-border text-text text-sm font-medium px-6 py-3 rounded-button hover:border-brand-primary/40 transition-colors"
             >
               Learn More
             </Link>

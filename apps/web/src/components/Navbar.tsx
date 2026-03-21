@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { brand, getThemedLogo } from "@jefflink/design-tokens";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -27,7 +27,11 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { isDark } = useTheme();
 
-  const logoSrc = getThemedLogo(isDark);
+  // Defer themed logo to after hydration so server and client render the same
+  // initial src, avoiding a hydration mismatch on the <img> tag.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const logoSrc = mounted ? getThemedLogo(isDark) : getThemedLogo(true);
 
   const handleSignOut = async () => {
     await signOut();
@@ -74,7 +78,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
             {status === "loading" ? (
-              <div className="w-8 h-8 rounded-full bg-brand-slate animate-pulse" />
+              <div className="w-8 h-8 rounded-full bg-card animate-pulse" />
             ) : isAuthenticated ? (
               <div className="relative">
                 <button
@@ -88,7 +92,7 @@ export default function Navbar() {
                   <span className="max-w-[120px] truncate">
                     {user?.name ?? user?.email ?? "Account"}
                   </span>
-                  <svg className="w-3 h-3 text-brand-muted" viewBox="0 0 12 12" fill="currentColor">
+                  <svg className="w-3 h-3 text-text-muted" viewBox="0 0 12 12" fill="currentColor">
                     <path d="M6 8L1 3h10L6 8z" />
                   </svg>
                 </button>

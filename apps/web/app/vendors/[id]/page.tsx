@@ -53,16 +53,16 @@ export default async function VendorProfilePage({
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Breadcrumb */}
         <nav className="text-sm text-text-muted mb-6">
-          <Link href="/" className="hover:text-white">Home</Link>
+          <Link href="/" className="hover:text-text">Home</Link>
           {" / "}
-          <Link href="/vendors" className="hover:text-white">Vendors</Link>
+          <Link href="/vendors" className="hover:text-text">Vendors</Link>
           {" / "}
-          <span className="text-white">{vendor.businessName}</span>
+          <span className="text-text">{vendor.businessName}</span>
         </nav>
 
         {/* Vendor Header */}
         <div className="bg-card border border-border rounded-card p-6 flex items-start gap-6 mb-8">
-          <div className="h-20 w-20 rounded-card bg-brand-slate flex items-center justify-center overflow-hidden flex-shrink-0">
+          <div className="h-20 w-20 rounded-card bg-card flex items-center justify-center overflow-hidden flex-shrink-0">
             {vendor.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -71,13 +71,13 @@ export default async function VendorProfilePage({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <Store size={32} strokeWidth={1.5} className="text-brand-muted" />
+              <Store size={32} strokeWidth={1.5} className="text-text-muted" />
             )}
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl font-bold text-white">{vendor.businessName}</h1>
+              <h1 className="text-2xl font-bold text-text">{vendor.businessName}</h1>
               {vendor.isVerified && (
                 <span className="bg-brand-success/20 text-brand-success text-xs font-medium px-2 py-0.5 rounded-badge">
                   ✓ Verified

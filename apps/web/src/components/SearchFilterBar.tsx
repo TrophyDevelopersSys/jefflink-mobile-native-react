@@ -96,14 +96,14 @@ function FilterSelect({
       id={id}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full h-full bg-transparent text-white text-sm font-medium appearance-none cursor-pointer focus:outline-none"
+      className="w-full h-full bg-transparent text-text text-sm font-medium appearance-none cursor-pointer focus:outline-none"
       aria-label={placeholder}
     >
-      <option value="" className="bg-brand-slate text-brand-muted">
+      <option value="" className="bg-card text-text-muted">
         {placeholder}
       </option>
       {options.map((opt) => (
-        <option key={opt.value} value={opt.value} className="bg-brand-slate text-white">
+        <option key={opt.value} value={opt.value} className="bg-card text-text">
           {opt.label}
         </option>
       ))}
@@ -146,9 +146,9 @@ export default function SearchFilterBar() {
       aria-label="Search marketplace listings"
     >
       {/* Desktop: 5-column grid */}
-      <div className="hidden md:grid md:grid-cols-5 gap-3 bg-brand-slate/80 backdrop-blur-sm border border-white/10 rounded-xl p-3 shadow-xl">
+      <div className="hidden md:grid md:grid-cols-5 gap-3 bg-card/80 backdrop-blur-sm border border-border rounded-xl p-3 shadow-xl">
         {/* Property Type */}
-        <div className="relative flex items-center bg-brand-night border border-white/10 rounded-lg px-3 h-12">
+        <div className="relative flex items-center bg-surface border border-border rounded-lg px-3 h-12">
           <FilterSelect
             id="prop-type"
             placeholder="Property Type ▼"
@@ -162,7 +162,7 @@ export default function SearchFilterBar() {
         </div>
 
         {/* Seller */}
-        <div className="relative flex items-center bg-brand-night border border-white/10 rounded-lg px-3 h-12">
+        <div className="relative flex items-center bg-surface border border-border rounded-lg px-3 h-12">
           <FilterSelect
             id="seller"
             placeholder="Seller ▼"
@@ -173,7 +173,7 @@ export default function SearchFilterBar() {
         </div>
 
         {/* Price */}
-        <div className="relative flex items-center bg-brand-night border border-white/10 rounded-lg px-3 h-12">
+        <div className="relative flex items-center bg-surface border border-border rounded-lg px-3 h-12">
           <FilterSelect
             id="price"
             placeholder="Price ▼"
@@ -184,7 +184,7 @@ export default function SearchFilterBar() {
         </div>
 
         {/* Location */}
-        <div className="relative flex items-center bg-brand-night border border-white/10 rounded-lg px-3 h-12">
+        <div className="relative flex items-center bg-surface border border-border rounded-lg px-3 h-12">
           <FilterSelect
             id="location"
             placeholder="Location ▼"
@@ -218,8 +218,8 @@ export default function SearchFilterBar() {
       </div>
 
       {/* Mobile: stacked layout */}
-      <div className="flex md:hidden flex-col gap-3 bg-brand-slate/80 backdrop-blur-sm border border-white/10 rounded-xl p-4 shadow-xl">
-        <div className="flex items-center bg-brand-night border border-white/10 rounded-lg px-3 h-12">
+      <div className="flex md:hidden flex-col gap-3 bg-card/80 backdrop-blur-sm border border-border rounded-xl p-4 shadow-xl">
+        <div className="flex items-center bg-surface border border-border rounded-lg px-3 h-12">
           <FilterSelect
             id="prop-type-m"
             placeholder="Property Type ▼"
@@ -232,7 +232,7 @@ export default function SearchFilterBar() {
           />
         </div>
 
-        <div className="flex items-center bg-brand-night border border-white/10 rounded-lg px-3 h-12">
+        <div className="flex items-center bg-surface border border-border rounded-lg px-3 h-12">
           <FilterSelect
             id="seller-m"
             placeholder="Seller ▼"
@@ -242,7 +242,7 @@ export default function SearchFilterBar() {
           />
         </div>
 
-        <div className="flex items-center bg-brand-night border border-white/10 rounded-lg px-3 h-12">
+        <div className="flex items-center bg-surface border border-border rounded-lg px-3 h-12">
           <FilterSelect
             id="location-m"
             placeholder="Location ▼"

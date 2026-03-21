@@ -18,7 +18,7 @@ export default function AboutPage() {
       {/* Hero */}
       <section className="bg-surface border-b border-border py-16 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-4xl font-extrabold text-white mb-4">
+          <h1 className="text-4xl font-extrabold text-text mb-4">
             About <span className="text-brand-accent">JeffLink</span>
           </h1>
           <p className="text-text-muted text-lg leading-relaxed">
@@ -30,7 +30,7 @@ export default function AboutPage() {
 
       {/* Mission */}
       <section className="max-w-3xl mx-auto px-4 py-12">
-        <h2 className="text-2xl font-bold text-white mb-4">Our Mission</h2>
+        <h2 className="text-2xl font-bold text-text mb-4">Our Mission</h2>
         <p className="text-text-muted leading-relaxed mb-6">
           JeffLink was built to close the gap between buyers and verified
           sellers in Uganda. Whether you are looking for a reliable second-hand
@@ -64,7 +64,7 @@ export default function AboutPage() {
 
       {/* Values */}
       <section className="max-w-3xl mx-auto px-4 py-12">
-        <h2 className="text-2xl font-bold text-white mb-6">What We Stand For</h2>
+        <h2 className="text-2xl font-bold text-text mb-6">What We Stand For</h2>
         <div className="space-y-4">
           {[
             {
@@ -89,7 +89,7 @@ export default function AboutPage() {
             >
               <span className="text-2xl flex-shrink-0">{v.icon}</span>
               <div>
-                <h3 className="text-white font-semibold mb-1">{v.title}</h3>
+                <h3 className="text-text font-semibold mb-1">{v.title}</h3>
                 <p className="text-text-muted text-sm">{v.body}</p>
               </div>
             </div>
@@ -99,7 +99,7 @@ export default function AboutPage() {
 
       {/* CTA */}
       <section className="max-w-3xl mx-auto px-4 pb-16 text-center">
-        <h2 className="text-xl font-bold text-white mb-4">
+        <h2 className="text-xl font-bold text-text mb-4">
           Ready to explore the marketplace?
         </h2>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -111,13 +111,13 @@ export default function AboutPage() {
           </Link>
           <Link
             href="/land"
-            className="bg-surface border border-border text-white font-semibold px-6 py-3 rounded-button hover:border-brand-primary/50 transition-colors"
+            className="bg-surface border border-border text-text font-semibold px-6 py-3 rounded-button hover:border-brand-primary/50 transition-colors"
           >
             Browse Land
           </Link>
           <Link
             href="/vendors"
-            className="bg-surface border border-border text-white font-semibold px-6 py-3 rounded-button hover:border-brand-primary/50 transition-colors"
+            className="bg-surface border border-border text-text font-semibold px-6 py-3 rounded-button hover:border-brand-primary/50 transition-colors"
           >
             Find Vendors
           </Link>

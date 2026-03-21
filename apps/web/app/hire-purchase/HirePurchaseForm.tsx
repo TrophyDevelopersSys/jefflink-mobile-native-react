@@ -374,19 +374,19 @@ export default function HirePurchaseForm() {
   };
 
   const fieldClass =
-    "w-full rounded-xl border border-border bg-brand-slate px-3 py-2.5 text-sm text-white placeholder:text-brand-muted focus:border-brand-primary focus:outline-none";
+    "w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-brand-primary focus:outline-none";
 
   return (
     <main className="min-h-screen bg-background text-text">
-      <section className="border-b border-border bg-brand-night/90 px-4 py-12">
+      <section className="border-b border-border bg-surface/90 px-4 py-12">
         <div className="mx-auto max-w-6xl">
           <p className="text-xs uppercase tracking-[0.2em] text-brand-accent">JeffLink Transfers (Uganda) Ltd</p>
-          <h1 className="mt-3 text-3xl font-black text-white md:text-4xl">Hire Purchase Application and Agreement</h1>
-          <p className="mt-3 max-w-3xl text-sm text-brand-muted">
+          <h1 className="mt-3 text-3xl font-black text-text md:text-4xl">Hire Purchase Application and Agreement</h1>
+          <p className="mt-3 max-w-3xl text-sm text-text-muted">
             Digital implementation of the JeffLink Application Form and Hire Purchase Agreement.
             Fill all required fields, review terms, and submit for internal approval.
           </p>
-          <div className="mt-6 flex flex-wrap gap-3 text-xs text-brand-muted">
+          <div className="mt-6 flex flex-wrap gap-3 text-xs text-text-muted">
             <span className="rounded-full border border-border px-3 py-1">Office: +256 (0)394 825303</span>
             <span className="rounded-full border border-border px-3 py-1">Mobile: +256 (0)752 360036</span>
             <span className="rounded-full border border-border px-3 py-1">Email: jefflinkstransfersltd@gmail.com</span>
@@ -400,8 +400,8 @@ export default function HirePurchaseForm() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {SECTIONS.map((section) => (
               <article key={section.title} className="rounded-card border border-border bg-card p-5">
-                <h2 className="text-lg font-bold text-white">{section.title}</h2>
-                <p className="mt-1 text-sm text-brand-muted">{section.description}</p>
+                <h2 className="text-lg font-bold text-text">{section.title}</h2>
+                <p className="mt-1 text-sm text-text-muted">{section.description}</p>
                 <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                   {section.fields.map((field) => {
                     const value = String(form[field.key] ?? "");
@@ -410,7 +410,7 @@ export default function HirePurchaseForm() {
 
                     return (
                       <label key={String(field.key)} className={`block ${containerClass}`}>
-                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-brand-muted">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted">
                           {field.label}
                         </span>
 
@@ -452,11 +452,11 @@ export default function HirePurchaseForm() {
             ))}
 
             <article className="rounded-card border border-border bg-card p-5">
-              <h2 className="text-lg font-bold text-white">Agreement Terms and Conditions</h2>
-              <p className="mt-1 text-sm text-brand-muted">
+              <h2 className="text-lg font-bold text-text">Agreement Terms and Conditions</h2>
+              <p className="mt-1 text-sm text-text-muted">
                 These clauses are adapted from the JeffLink Hire Purchase Agreement.
               </p>
-              <ol className="mt-4 space-y-2 text-sm leading-relaxed text-brand-muted">
+              <ol className="mt-4 space-y-2 text-sm leading-relaxed text-text-muted">
                 {AGREEMENT_TERMS.map((term, index) => (
                   <li key={term}>
                     <span className="mr-2 text-brand-accent">{String(index + 1).padStart(2, "0")}.</span>
@@ -465,7 +465,7 @@ export default function HirePurchaseForm() {
                 ))}
               </ol>
 
-              <div className="mt-5 space-y-3 rounded-xl border border-border bg-brand-night/60 p-4">
+              <div className="mt-5 space-y-3 rounded-xl border border-border bg-surface/60 p-4">
                 {DECLARATIONS.map((item, index) => (
                   <label key={item} className="flex cursor-pointer items-start gap-3">
                     <input
@@ -474,7 +474,7 @@ export default function HirePurchaseForm() {
                       onChange={() => toggleDeclaration(index)}
                       className="mt-1 h-4 w-4 rounded border-border bg-transparent accent-[var(--color-accent)]"
                     />
-                    <span className="text-sm text-brand-muted">{item}</span>
+                    <span className="text-sm text-text-muted">{item}</span>
                   </label>
                 ))}
 
@@ -485,7 +485,7 @@ export default function HirePurchaseForm() {
                     onChange={(event) => setAcceptAgreement(event.target.checked)}
                     className="mt-1 h-4 w-4 rounded border-border bg-transparent accent-[var(--color-accent)]"
                   />
-                  <span className="text-sm font-semibold text-white">
+                  <span className="text-sm font-semibold text-text">
                     I have read and accept the JeffLink Hire Purchase Agreement and agree to be bound by Ugandan law.
                   </span>
                 </label>
@@ -512,7 +512,7 @@ export default function HirePurchaseForm() {
                 </button>
                 <Link
                   href="/contact"
-                  className="rounded-button border border-border bg-brand-slate px-5 py-3 text-sm font-semibold text-white transition-colors hover:border-brand-primary/60"
+                  className="rounded-button border border-border bg-card px-5 py-3 text-sm font-semibold text-text transition-colors hover:border-brand-primary/60"
                 >
                   Contact JeffLink Office
                 </Link>
@@ -521,17 +521,17 @@ export default function HirePurchaseForm() {
           </form>
 
           <aside className="h-fit rounded-card border border-border bg-card p-5 lg:sticky lg:top-24">
-            <h2 className="text-lg font-bold text-white">Application Snapshot</h2>
-            <p className="mt-1 text-sm text-brand-muted">Live summary from your current entries.</p>
+            <h2 className="text-lg font-bold text-text">Application Snapshot</h2>
+            <p className="mt-1 text-sm text-text-muted">Live summary from your current entries.</p>
             <div className="mt-4 space-y-3 text-sm">
               {applicationSummary.map(([label, value]) => (
-                <div key={label} className="rounded-xl border border-border bg-brand-night/70 p-3">
-                  <p className="text-xs uppercase tracking-wide text-brand-muted">{label}</p>
-                  <p className="mt-1 font-semibold text-white">{value}</p>
+                <div key={label} className="rounded-xl border border-border bg-surface/70 p-3">
+                  <p className="text-xs uppercase tracking-wide text-text-muted">{label}</p>
+                  <p className="mt-1 font-semibold text-text">{value}</p>
                 </div>
               ))}
             </div>
-            <p className="mt-4 text-xs leading-relaxed text-brand-muted">
+            <p className="mt-4 text-xs leading-relaxed text-text-muted">
               Required attachments in physical processing still include signed postdated cheques,
               deposit slip, and supporting verification documents.
             </p>

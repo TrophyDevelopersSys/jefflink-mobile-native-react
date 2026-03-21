@@ -96,7 +96,7 @@ export default async function VendorsPage() {
                 </div>
 
                 <div className="flex items-center justify-between text-sm text-text-muted">
-                  <span className="flex items-center gap-1 text-brand-muted text-xs">
+                  <span className="flex items-center gap-1 text-text-muted text-xs">
                     <MapPin size={12} strokeWidth={1.75} />
                     {vendor.city}
                   </span>

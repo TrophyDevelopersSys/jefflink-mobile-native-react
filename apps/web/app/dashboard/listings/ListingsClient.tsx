@@ -21,7 +21,7 @@ export default function ListingsClient() {
       <main className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-brand-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-brand-muted text-sm">Loading listings…</p>
+          <p className="text-text-muted text-sm">Loading listings…</p>
         </div>
       </main>
     );
@@ -35,17 +35,17 @@ export default function ListingsClient() {
     return (
       <main className="min-h-screen bg-background">
         <div className="max-w-3xl mx-auto px-4 py-10">
-          <nav className="text-sm text-brand-muted mb-6">
-            <Link href="/dashboard" className="hover:text-white transition-colors">
+          <nav className="text-sm text-text-muted mb-6">
+            <Link href="/dashboard" className="hover:text-text transition-colors">
               Dashboard
             </Link>
             {" / "}
-            <span className="text-white">My Listings</span>
+            <span className="text-text">My Listings</span>
           </nav>
 
           <section className="bg-card border border-border rounded-card p-8 text-center">
-            <h1 className="text-xl font-bold text-white mb-2">My Listings</h1>
-            <p className="text-brand-muted text-sm mb-6">
+            <h1 className="text-xl font-bold text-text mb-2">My Listings</h1>
+            <p className="text-text-muted text-sm mb-6">
               Listings management is available to dealer and admin accounts.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -71,18 +71,18 @@ export default function ListingsClient() {
   return (
     <main className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 py-10">
-        <nav className="text-sm text-brand-muted mb-6">
-          <Link href="/dashboard" className="hover:text-white transition-colors">
+        <nav className="text-sm text-text-muted mb-6">
+          <Link href="/dashboard" className="hover:text-text transition-colors">
             Dashboard
           </Link>
           {" / "}
-          <span className="text-white">My Listings</span>
+          <span className="text-text">My Listings</span>
         </nav>
 
         <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-white">My Listings</h1>
-            <p className="text-brand-muted text-sm mt-1">
+            <h1 className="text-2xl font-bold text-text">My Listings</h1>
+            <p className="text-text-muted text-sm mt-1">
               Manage your posts, monitor status, and publish new inventory.
             </p>
           </div>
@@ -102,8 +102,8 @@ export default function ListingsClient() {
         </section>
 
         <section className="bg-card border border-border rounded-card p-8 text-center">
-          <h2 className="text-lg font-semibold text-white mb-2">No listings yet</h2>
-          <p className="text-brand-muted text-sm mb-6">
+          <h2 className="text-lg font-semibold text-text mb-2">No listings yet</h2>
+          <p className="text-text-muted text-sm mb-6">
             Your created listings will appear here after you publish them.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -115,7 +115,7 @@ export default function ListingsClient() {
             </Link>
             <Link
               href="/search"
-              className="bg-brand-slate border border-border text-white text-sm font-medium px-5 py-2.5 rounded-button hover:border-brand-primary/40 transition-colors"
+              className="bg-card border border-border text-text text-sm font-medium px-5 py-2.5 rounded-button hover:border-brand-primary/40 transition-colors"
             >
               Browse Marketplace
             </Link>
@@ -129,8 +129,8 @@ export default function ListingsClient() {
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-card border border-border rounded-card p-4">
-      <p className="text-brand-muted text-xs uppercase tracking-wide mb-1">{label}</p>
-      <p className="text-white font-bold text-2xl">{value}</p>
+      <p className="text-text-muted text-xs uppercase tracking-wide mb-1">{label}</p>
+      <p className="text-text font-bold text-2xl">{value}</p>
     </div>
   );
 }

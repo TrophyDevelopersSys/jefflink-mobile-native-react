@@ -35,11 +35,11 @@ export default function Footer() {
                 Jeff<span className="text-text">Link</span>
               </span>
             </Link>
-            <p className="text-brand-muted text-sm leading-relaxed">
+            <p className="text-text-muted text-sm leading-relaxed">
               Uganda&apos;s leading hire-purchase and marketplace platform for
               vehicles, properties, and financial products.
             </p>
-            <p className="text-brand-muted text-xs mt-4">
+            <p className="text-text-muted text-xs mt-4">
               API Base: <span className="text-brand-accent">api.jefflinkcars.com</span>
             </p>
           </div>

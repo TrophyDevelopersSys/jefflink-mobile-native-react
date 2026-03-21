@@ -100,16 +100,16 @@ export default function SearchResults() {
   return (
     <main className="min-h-screen bg-background">
       {/* Search header */}
-      <section className="bg-brand-slate border-b border-border py-8 px-4">
+      <section className="bg-card border-b border-border py-8 px-4">
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-xl font-bold text-white mb-4">Search Listings</h1>
+          <h1 className="text-xl font-bold text-text mb-4">Search Listings</h1>
           <form onSubmit={handleSearchSubmit} className="flex gap-3">
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search cars, land, properties…"
-              className="flex-1 bg-brand-night border border-border rounded-input px-4 py-3 text-white placeholder-brand-muted text-sm focus:outline-none focus:border-brand-primary/60"
+              className="flex-1 bg-surface border border-border rounded-input px-4 py-3 text-text placeholder-text-muted text-sm focus:outline-none focus:border-brand-primary/60"
             />
             <button
               type="submit"
@@ -124,11 +124,11 @@ export default function SearchResults() {
             <select
               value={type}
               onChange={(e) => pushSearch({ type: e.target.value })}
-              className="bg-brand-night border border-border rounded-input px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-primary/60"
+              className="bg-surface border border-border rounded-input px-3 py-2 text-sm text-text focus:outline-none focus:border-brand-primary/60"
               aria-label="Filter by category"
             >
               {CATEGORY_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value} className="bg-brand-night">
+                <option key={opt.value} value={opt.value} className="bg-surface">
                   {opt.label}
                 </option>
               ))}
@@ -137,11 +137,11 @@ export default function SearchResults() {
             <select
               value={sort}
               onChange={(e) => pushSearch({ sort: e.target.value })}
-              className="bg-brand-night border border-border rounded-input px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-primary/60"
+              className="bg-surface border border-border rounded-input px-3 py-2 text-sm text-text focus:outline-none focus:border-brand-primary/60"
               aria-label="Sort results"
             >
               {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value} className="bg-brand-night">
+                <option key={opt.value} value={opt.value} className="bg-surface">
                   {opt.label}
                 </option>
               ))}
@@ -153,7 +153,7 @@ export default function SearchResults() {
       <div className="max-w-6xl mx-auto px-4 py-10">
         {/* Stats row */}
         {(q || type) && !loading && (
-          <p className="text-brand-muted text-sm mb-6">
+          <p className="text-text-muted text-sm mb-6">
             {error ? null : (
               <>
                 {totalCount > 0
@@ -171,11 +171,11 @@ export default function SearchResults() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="bg-card border border-border rounded-card overflow-hidden animate-pulse">
-                <div className="aspect-[4/3] bg-brand-slate" />
+                <div className="aspect-[4/3] bg-card" />
                 <div className="p-4 space-y-2">
-                  <div className="h-3 bg-brand-slate rounded w-3/4" />
-                  <div className="h-3 bg-brand-slate rounded w-1/2" />
-                  <div className="h-4 bg-brand-slate rounded w-1/3 mt-1" />
+                  <div className="h-3 bg-card rounded w-3/4" />
+                  <div className="h-3 bg-card rounded w-1/2" />
+                  <div className="h-4 bg-card rounded w-1/3 mt-1" />
                 </div>
               </div>
             ))}
@@ -196,16 +196,16 @@ export default function SearchResults() {
 
         {!loading && !error && results.length === 0 && (q || type) && (
           <div className="text-center py-24">
-            <Search size={48} strokeWidth={1.5} className="text-brand-muted mx-auto mb-4" />
-            <p className="text-white font-semibold text-lg mb-2">No results found</p>
-            <p className="text-brand-muted text-sm mb-6">
+            <Search size={48} strokeWidth={1.5} className="text-text-muted mx-auto mb-4" />
+            <p className="text-text font-semibold text-lg mb-2">No results found</p>
+            <p className="text-text-muted text-sm mb-6">
               Try adjusting your search term or removing filters.
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
-              <Link href="/cars" className="bg-brand-slate border border-border text-white text-sm px-4 py-2 rounded-button hover:border-brand-primary/50">
+              <Link href="/cars" className="bg-card border border-border text-text text-sm px-4 py-2 rounded-button hover:border-brand-primary/50">
                 Browse Cars
               </Link>
-              <Link href="/land" className="bg-brand-slate border border-border text-white text-sm px-4 py-2 rounded-button hover:border-brand-primary/50">
+              <Link href="/land" className="bg-card border border-border text-text text-sm px-4 py-2 rounded-button hover:border-brand-primary/50">
                 Browse Land
               </Link>
             </div>
@@ -214,9 +214,9 @@ export default function SearchResults() {
 
         {!loading && !error && !q && !type && (
           <div className="text-center py-24">
-            <Store size={48} strokeWidth={1.5} className="text-brand-muted mx-auto mb-4" />
-            <p className="text-white font-semibold text-lg mb-2">Start Searching</p>
-            <p className="text-brand-muted text-sm">Enter a keyword above to find listings.</p>
+            <Store size={48} strokeWidth={1.5} className="text-text-muted mx-auto mb-4" />
+            <p className="text-text font-semibold text-lg mb-2">Start Searching</p>
+            <p className="text-text-muted text-sm">Enter a keyword above to find listings.</p>
           </div>
         )}
 
@@ -228,7 +228,7 @@ export default function SearchResults() {
                 href={listingHref(listing)}
                 className="bg-card border border-border rounded-card overflow-hidden hover:border-brand-primary/50 transition-colors group"
               >
-                <div className="aspect-[4/3] bg-brand-slate relative overflow-hidden">
+                <div className="aspect-[4/3] bg-card relative overflow-hidden">
                   {listing.coverUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -237,17 +237,17 @@ export default function SearchResults() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-brand-muted">
+                    <div className="w-full h-full flex items-center justify-center text-text-muted">
                       {listing.type === "vehicle" ? <Car size={48} strokeWidth={1.5} /> : <LandPlot size={48} strokeWidth={1.5} />}
                     </div>
                   )}
-                  <span className="absolute top-2 left-2 text-xs font-medium bg-brand-night/80 text-brand-muted px-2 py-0.5 rounded-badge capitalize">
+                  <span className="absolute top-2 left-2 text-xs font-medium bg-surface/80 text-text-muted px-2 py-0.5 rounded-badge capitalize">
                     {listing.type}
                   </span>
                 </div>
                 <div className="p-4">
-                  <h3 className="text-white font-semibold text-sm line-clamp-1 mb-1">{listing.title}</h3>
-                  <p className="text-brand-muted text-xs mb-2">{listing.location}</p>
+                  <h3 className="text-text font-semibold text-sm line-clamp-1 mb-1">{listing.title}</h3>
+                  <p className="text-text-muted text-xs mb-2">{listing.location}</p>
                   <p className="text-brand-accent font-bold text-sm">{listing.price}</p>
                 </div>
               </Link>
