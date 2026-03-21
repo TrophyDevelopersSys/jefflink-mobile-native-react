@@ -114,9 +114,69 @@ export const adminApi = {
     return ((r.data?.data ?? r.data)?.data ?? r.data?.data ?? r.data) as ContractSummary[];
   },
 
+  async getContract(id: string): Promise<unknown> {
+    const r = await apiClient.get(endpoints.admin.contract(id));
+    return r.data?.data ?? r.data;
+  },
+
   async listPayments(page = 1): Promise<PaymentRecord[]> {
     const r = await apiClient.get(endpoints.admin.payments, { params: { page } });
     return ((r.data?.data ?? r.data)?.data ?? r.data?.data ?? r.data) as PaymentRecord[];
+  },
+
+  // Installments
+  async listInstallments(page = 1, status?: string): Promise<unknown[]> {
+    const r = await apiClient.get(endpoints.admin.installments, { params: { page, status } });
+    return ((r.data?.data ?? r.data)?.data ?? r.data?.data ?? r.data) as unknown[];
+  },
+
+  // Withdrawals
+  async listWithdrawals(page = 1): Promise<unknown[]> {
+    const r = await apiClient.get(endpoints.admin.withdrawals, { params: { page } });
+    return ((r.data?.data ?? r.data)?.data ?? r.data?.data ?? r.data) as unknown[];
+  },
+
+  async approveWithdrawal(id: string): Promise<void> {
+    await apiClient.patch(endpoints.admin.approveWithdrawal(id));
+  },
+
+  async rejectWithdrawal(id: string, reason: string): Promise<void> {
+    await apiClient.patch(endpoints.admin.rejectWithdrawal(id), { reason });
+  },
+
+  // Wallets
+  async getWalletsSummary(): Promise<unknown> {
+    const r = await apiClient.get(endpoints.admin.walletsSummary);
+    return r.data?.data ?? r.data;
+  },
+
+  async getWalletTransactions(page = 1, limit = 25): Promise<unknown[]> {
+    const r = await apiClient.get(endpoints.admin.walletTransactions, { params: { page, limit } });
+    return ((r.data?.data ?? r.data)?.data ?? r.data?.data ?? r.data) as unknown[];
+  },
+
+  // Notifications
+  async listNotifications(tab = "all", page = 1, limit = 25): Promise<unknown[]> {
+    const r = await apiClient.get(endpoints.admin.notifications, { params: { tab, page, limit } });
+    return ((r.data?.data ?? r.data)?.data ?? r.data?.data ?? r.data) as unknown[];
+  },
+
+  // GPS Tracking
+  async listGpsDevices(tab = "all", page = 1, limit = 25): Promise<unknown[]> {
+    const r = await apiClient.get(endpoints.admin.gps, { params: { tab, page, limit } });
+    return ((r.data?.data ?? r.data)?.data ?? r.data?.data ?? r.data) as unknown[];
+  },
+
+  // System Monitoring
+  async getSystemHealth(): Promise<unknown> {
+    const r = await apiClient.get(endpoints.admin.systemHealth);
+    return r.data?.data ?? r.data;
+  },
+
+  // Audit Logs
+  async getAuditLogs(limit = 50): Promise<unknown[]> {
+    const r = await apiClient.get(endpoints.admin.auditLogs, { params: { limit } });
+    return ((r.data?.data ?? r.data)?.data ?? r.data?.data ?? r.data) as unknown[];
   },
 
   // Legacy / sync

@@ -1,30 +1,31 @@
-import { ActivityIndicator, Alert, FlatList, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Text, View } from "react-native";
 import { useCallback, useEffect, useState } from "react";
 import AppChrome from "../../components/layout/AppChrome";
 import Header from "../../components/layout/Header";
 import EmptyState from "../../components/ui/EmptyState";
 import { adminApi } from "../../api/admin.api";
 
-const SEVERITY_COLORS: Record<string, string> = {
-  HIGH: "#ef4444",
-  high: "#ef4444",
-  MEDIUM: "#f59e0b",
-  medium: "#f59e0b",
-  LOW: "#3b82f6",
-  low: "#3b82f6",
+const ACTION_COLORS: Record<string, string> = {
+  CREATE: "#22c55e",
+  UPDATE: "#3b82f6",
+  DELETE: "#ef4444",
+  LOGIN: "#8b5cf6",
+  APPROVE: "#22c55e",
+  REJECT: "#ef4444",
+  SUSPEND: "#f59e0b",
 };
 
-export default function RecoveryScreen() {
-  const [queue, setQueue] = useState<any[]>([]);
+export default function AuditLogsScreen() {
+  const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await adminApi.listRecoveryQueue();
-      setQueue(data as any[]);
+      const data = await adminApi.getAuditLogs();
+      setLogs(data as any[]);
     } catch {
-      Alert.alert("Error", "Could not load recovery queue.");
+      Alert.alert("Error", "Could not load audit logs.");
     } finally {
       setLoading(false);
     }
@@ -33,50 +34,45 @@ export default function RecoveryScreen() {
   useEffect(() => { void load(); }, [load]);
 
   return (
-    <AppChrome title="Recovery" activeKey="profile" variant="admin">
+    <AppChrome title="Audit Logs" activeKey="home" variant="admin">
       <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
-        <Header title="Recovery" subtitle="Delinquency tracking and asset recovery" />
+        <Header title="Audit Logs" subtitle="System activity and admin actions" />
         {loading ? (
           <ActivityIndicator color="#fff" size="large" style={{ marginTop: 40 }} />
-        ) : queue.length === 0 ? (
-          <EmptyState title="No recovery items" message="Recovery queue is empty." />
+        ) : logs.length === 0 ? (
+          <EmptyState title="No logs" message="No audit log entries found." />
         ) : (
           <FlatList
-            data={queue}
-            keyExtractor={(r) => r.id ?? r._id ?? String(Math.random())}
+            data={logs}
+            keyExtractor={(l) => l.id ?? l._id ?? String(Math.random())}
             contentContainerStyle={{ gap: 8, paddingTop: 16, paddingBottom: 32 }}
             renderItem={({ item }) => {
-              const severity = item.severity ?? item.priority ?? "MEDIUM";
+              const action = (item.action ?? item.type ?? "").toUpperCase();
               return (
                 <View style={{ backgroundColor: "#111827", borderRadius: 12, padding: 14 }}>
                   <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>
-                        {item.contractId ?? item.contractRef ?? "Recovery Case"}
+                      <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600" }}>
+                        {item.description ?? item.message ?? `${action} action`}
                       </Text>
                       <Text style={{ color: "#6b7280", fontSize: 12, marginTop: 2 }}>
-                        {item.customerName ?? item.borrower ?? "Unknown"} · {Number(item.overdueAmount ?? item.amountDue ?? 0).toLocaleString()} UGX
-                      </Text>
-                      <Text style={{ color: "#4b5563", fontSize: 11, marginTop: 1 }}>
-                        {item.daysPastDue ?? item.daysOverdue ?? 0} days overdue
+                        {item.adminName ?? item.adminEmail ?? item.performedBy ?? "System"} · {item.entity ?? item.resource ?? ""}
                       </Text>
                     </View>
                     <View
                       style={{
-                        backgroundColor: SEVERITY_COLORS[severity] ?? "#6b7280",
+                        backgroundColor: ACTION_COLORS[action] ?? "#6b7280",
                         borderRadius: 6,
                         paddingHorizontal: 8,
                         paddingVertical: 3,
                       }}
                     >
-                      <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700", textTransform: "uppercase" }}>
-                        {severity}
-                      </Text>
+                      <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>{action}</Text>
                     </View>
                   </View>
-                  {item.lastAction && (
+                  {item.createdAt && (
                     <Text style={{ color: "#4b5563", fontSize: 11, marginTop: 4 }}>
-                      Last action: {item.lastAction}
+                      {new Date(item.createdAt).toLocaleString()}
                     </Text>
                   )}
                 </View>

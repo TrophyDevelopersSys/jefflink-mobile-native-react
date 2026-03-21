@@ -49,6 +49,17 @@ export const endpoints = {
     withdrawals:        "/admin/withdrawals",
     approveWithdrawal:  (id: string) => `/admin/withdrawals/${id}/approve`,
     rejectWithdrawal:   (id: string) => `/admin/withdrawals/${id}/reject`,
+    // Wallets
+    walletsSummary:     "/admin/wallets/summary",
+    walletTransactions: "/admin/wallets/transactions",
+    // Notifications
+    notifications:      "/admin/notifications",
+    // GPS Tracking
+    gps:                "/admin/gps",
+    // System
+    systemHealth:       "/admin/system/health",
+    // Contract detail
+    contract:           (id: string) => `/admin/contracts/${id}`,
     // Legacy
     recovery:           "/admin/recovery",
     sync:               "/admin/sync",

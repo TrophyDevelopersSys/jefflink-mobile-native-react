@@ -88,10 +88,10 @@ export default function NewCmsPagePage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+            <label className="block text-sm font-medium text-[var(--color-text)] mb-1" htmlFor="cms-platform-filter">
               Platform
             </label>
-            <select
+            <select id="cms-platform-filter"
               value={platform}
               onChange={(e) => setPlatform(e.target.value as CmsPlatform)}
               className="w-full px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-[var(--color-text)]"
@@ -102,7 +102,7 @@ export default function NewCmsPagePage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+            <label className="block text-sm font-medium text-[var(--color-text)] mb-1" htmlFor="cms-locale-filter">
               Locale
             </label>
             <input

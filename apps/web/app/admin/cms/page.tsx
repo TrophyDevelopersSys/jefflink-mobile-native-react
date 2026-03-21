@@ -88,8 +88,9 @@ export default function CmsPagesListPage() {
 
       {/* Platform filter */}
       <div className="flex gap-2 items-center">
-        <label className="text-sm text-[var(--color-text-muted)]">Platform:</label>
+        <label htmlFor="cms-platform-filter" className="text-sm text-[var(--color-text-muted)]">Platform:</label>
         <select
+          id="cms-platform-filter"
           value={platform}
           onChange={(e) => setPlatform(e.target.value as CmsPlatform | "")}
           className="px-3 py-1.5 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-card)] text-[var(--color-text)]"

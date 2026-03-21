@@ -1,4 +1,6 @@
-import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
+"use client";
+
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { useCallback, useEffect, useState } from "react";
 import AppChrome from "../../components/layout/AppChrome";
 import Header from "../../components/layout/Header";
@@ -105,6 +107,43 @@ export default function DashboardScreen() {
             )}
 
             <Button label="Monitor sync" onPress={() => navigation.navigate("MonitorSync")} />
+
+            {/* Admin Tools Grid */}
+            <View style={{ gap: 8 }}>
+              <Text style={{ color: "#9ca3af", fontSize: 12, fontWeight: "600", textTransform: "uppercase" }}>
+                Admin Tools
+              </Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {([
+                  { label: "Vendors", screen: "Vendors" as const },
+                  { label: "Listings", screen: "Listings" as const },
+                  { label: "Installments", screen: "Installments" as const },
+                  { label: "Withdrawals", screen: "Withdrawals" as const },
+                  { label: "Wallets", screen: "Wallets" as const },
+                  { label: "Notifications", screen: "Notifications" as const },
+                  { label: "GPS Tracking", screen: "GpsTracking" as const },
+                  { label: "Reports", screen: "Reports" as const },
+                  { label: "System Health", screen: "SystemMonitoring" as const },
+                  { label: "Audit Logs", screen: "AuditLogs" as const },
+                  { label: "Settings", screen: "Settings" as const },
+                ]).map((item) => (
+                  <Pressable
+                    key={item.screen}
+                    onPress={() => navigation.navigate(item.screen)}
+                    style={{
+                      backgroundColor: "#1f2937",
+                      borderRadius: 10,
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                      minWidth: "45%",
+                      flex: 1,
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600" }}>{item.label}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
           </>
         )}
       </ScrollView>
