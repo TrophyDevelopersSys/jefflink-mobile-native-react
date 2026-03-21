@@ -188,6 +188,7 @@ export default function CmsSettingsPage() {
                 <button
                   type="button"
                   onClick={() => toggleFeature(key)}
+                  aria-label={`Toggle ${key} ${enabled ? "off" : "on"}`}
                   className={`relative w-10 h-5 rounded-full transition-colors ${
                     enabled
                       ? "bg-green-500"
