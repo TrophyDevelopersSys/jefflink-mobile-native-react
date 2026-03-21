@@ -4,6 +4,8 @@ import LoginScreen from "../screens/auth/LoginScreen";
 import RegisterScreen from "../screens/auth/RegisterScreen";
 import AdminRecoveryRequestScreen from "../screens/auth/AdminRecoveryRequestScreen";
 import AdminRecoveryResetScreen from "../screens/auth/AdminRecoveryResetScreen";
+import ForgotPasswordScreen from "../screens/auth/ForgotPasswordScreen";
+import ResetPasswordScreen from "../screens/auth/ResetPasswordScreen";
 import OnboardingOneScreen from "../screens/shared/onboarding/OnboardingOneScreen";
 import OnboardingTwoScreen from "../screens/shared/onboarding/OnboardingTwoScreen";
 import OnboardingThreeScreen from "../screens/shared/onboarding/OnboardingThreeScreen";
@@ -16,6 +18,8 @@ export type AuthStackParamList = {
   OnboardingThree: undefined;
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
+  ResetPassword: { userId?: string; token?: string } | undefined;
   AdminRecoveryRequest: undefined;
   AdminRecoveryReset: undefined;
 };
@@ -51,6 +55,8 @@ export default function AuthNavigator() {
       <Stack.Screen name="OnboardingThree" component={OnboardingThreeScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <Stack.Screen name="AdminRecoveryRequest" component={AdminRecoveryRequestScreen} />
       <Stack.Screen name="AdminRecoveryReset" component={AdminRecoveryResetScreen} />
     </Stack.Navigator>

@@ -195,7 +195,7 @@ export default function LoginScreen() {
                   )}
 
                   {/* Forgot Password */}
-                  <Pressable className="mt-3">
+                  <Pressable className="mt-3" onPress={() => navigation.navigate("ForgotPassword" as never)}>
                     <Text className="text-right text-sm text-white/80">Forgot Password?</Text>
                   </Pressable>
 

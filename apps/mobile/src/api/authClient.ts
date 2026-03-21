@@ -1,9 +1,11 @@
 import type {
   AuthTokensResponse,
   CurrentUserResponse,
+  ForgotPasswordResult,
   LoginCredentials,
   RefreshTokensResponse,
   RegisterInput,
+  ResetPasswordInput,
 } from "@jefflink/types";
 import type { AuthAdapter } from "@jefflink/auth";
 import { config } from "../constants/config";
@@ -146,6 +148,30 @@ export async function register(
 
   await adapter.setToken(data.accessToken);
   return data;
+}
+
+export async function forgotPassword(email: string): Promise<ForgotPasswordResult> {
+  return requestJson<ForgotPasswordResult>(
+    "/auth/forgot-password",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim().toLowerCase() }),
+    },
+    "Unable to start password reset",
+  );
+}
+
+export async function resetPassword(input: ResetPasswordInput): Promise<{ message: string }> {
+  return requestJson<{ message: string }>(
+    "/auth/reset-password",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    },
+    "Unable to reset password",
+  );
 }
 
 export async function refreshToken(
