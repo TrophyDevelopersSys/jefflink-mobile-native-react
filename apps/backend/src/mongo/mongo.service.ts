@@ -33,11 +33,18 @@ export class MongoService implements OnModuleDestroy {
       retryWrites: true,
       retryReads: true,
       compressors: ['zstd'],
+      tls: true,
     });
 
-    await this.client.connect();
-    this.db = this.client.db(dbName);
-    this.logger.log(`✓ MongoDB connected → ${dbName}`);
+    try {
+      await this.client.connect();
+      this.db = this.client.db(dbName);
+      this.logger.log(`✓ MongoDB connected → ${dbName}`);
+    } catch (err) {
+      this.logger.error(`MongoDB connection failed – Atlas features disabled: ${err instanceof Error ? err.message : err}`);
+      this.client = null;
+      this.db = null;
+    }
   }
 
   async onModuleDestroy(): Promise<void> {
