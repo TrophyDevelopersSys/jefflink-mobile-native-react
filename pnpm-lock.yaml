@@ -26,6 +26,9 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.600.0
         version: 3.1008.0
+      '@jefflink/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@neondatabase/serverless':
         specifier: ^0.9.5
         version: 0.9.5

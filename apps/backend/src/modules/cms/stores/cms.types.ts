@@ -13,4 +13,4 @@ export type {
   CmsNavigationItem,
   CmsNavigation,
   CmsSettings,
-} from '../../../../../../packages/types/src/cms';
+} from '@jefflink/types';
