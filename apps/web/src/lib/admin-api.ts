@@ -208,3 +208,14 @@ export async function getAuditLogs(limit = 50) {
   const res = await adminHttp.get("/audit-logs", { params: { limit } });
   return res.data?.data ?? res.data;
 }
+// ── Platform Settings ─────────────────────────────────────────────────────
+
+export async function getPlatformSettings() {
+  const res = await adminHttp.get("/settings");
+  return res.data?.data ?? res.data;
+}
+
+export async function updatePlatformSettings(settings: Record<string, unknown>) {
+  const res = await adminHttp.patch("/settings", settings);
+  return res.data?.data ?? res.data;
+}

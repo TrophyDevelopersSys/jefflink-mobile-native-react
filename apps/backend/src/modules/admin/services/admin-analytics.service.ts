@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { sql, gte, desc } from 'drizzle-orm';
+import { sql, gte, desc, eq } from 'drizzle-orm';
 import { DatabaseService } from '../../../database/database.service';
-import { users, vehicles, contracts, payments, adminLogs } from '../../../database/schema';
+import { users, vehicles, contracts, payments, adminLogs, notifications } from '../../../database/schema';
 import { RedisService } from '../../../redis/redis.service';
 
 @Injectable()
@@ -114,5 +114,127 @@ export class AdminAnalyticsService {
       ORDER BY 1`,
       [],
     );
+  }
+
+  // ── Notifications ─────────────────────────────────────────────────────────
+
+  async getNotifications(tab = 'all', page = 1, limit = 25) {
+    const offset = (page - 1) * limit;
+
+    const allNotifications = await this.db.db
+      .select({
+        id: notifications.id,
+        userId: notifications.userId,
+        type: notifications.type,
+        title: notifications.title,
+        body: notifications.body,
+        isRead: notifications.isRead,
+        createdAt: notifications.createdAt,
+      })
+      .from(notifications)
+      .orderBy(desc(notifications.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const [countResult] = await this.db.db
+      .select({ count: sql<number>`count(*)` })
+      .from(notifications);
+
+    const mapped = allNotifications.map((n) => ({
+      id: n.id,
+      channel: 'PUSH',
+      recipient: n.userId,
+      title: n.title,
+      status: n.isRead ? 'READ' : 'DELIVERED',
+      sentAt: n.createdAt?.toISOString() ?? '',
+    }));
+
+    return {
+      requests: { data: [], total: 0 },
+      notifications: {
+        data: mapped,
+        total: Number(countResult?.count ?? 0),
+      },
+    };
+  }
+
+  // ── GPS Tracking ──────────────────────────────────────────────────────────
+
+  async getGpsOverview(_tab = 'all', _page = 1, _limit = 25) {
+    // GPS device data requires hardware integration.
+    // Return structured placeholder until GPS module is integrated.
+    return {
+      devices: [],
+      alerts: [],
+      recoveryCases: [],
+      total: 0,
+    };
+  }
+
+  // ── System Health ─────────────────────────────────────────────────────────
+
+  async getSystemHealth() {
+    let dbOk = false;
+    try {
+      await this.db.executeRaw<{ ok: number }>('SELECT 1 AS ok', []);
+      dbOk = true;
+    } catch { /* db check failed */ }
+
+    const mem = process.memoryUsage();
+
+    return {
+      status: dbOk ? 'healthy' : 'degraded',
+      uptime: Math.floor(process.uptime()),
+      database: dbOk ? 'connected' : 'disconnected',
+      memory: {
+        rssBytes: mem.rss,
+        heapUsedBytes: mem.heapUsed,
+        heapTotalBytes: mem.heapTotal,
+      },
+      nodeVersion: process.version,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  // ── Platform Settings ─────────────────────────────────────────────────────
+
+  async getSettings() {
+    return this.redis.remember('admin:platform:settings', 300, async () => ({
+      finance: {
+        defaultInterestRate: 12,
+        maxInstallmentMonths: 60,
+        currency: 'UGX',
+        minDeposit: 10,
+      },
+      moderation: {
+        autoFlagReportThreshold: 3,
+        requireListingReview: true,
+        vendorVerificationRequired: true,
+      },
+      notifications: {
+        emailEnabled: true,
+        pushEnabled: true,
+        smsEnabled: false,
+      },
+      platform: {
+        maintenanceMode: false,
+        autoApproveVendors: false,
+      },
+      audit: {
+        adminActionLogging: true,
+        logRetention: 'indefinite',
+        ipCapture: true,
+      },
+    }));
+  }
+
+  async updateSettings(settings: Record<string, unknown>) {
+    // Persist to Redis and invalidate cache
+    const current = await this.getSettings();
+    const merged = { ...current, ...settings };
+    await this.redis.set('admin:platform:settings', JSON.stringify(merged));
+    await this.redis.del('admin:platform:settings');
+    await this.redis.set('admin:platform:settings:data', JSON.stringify(merged));
+    return merged;
   }
 }

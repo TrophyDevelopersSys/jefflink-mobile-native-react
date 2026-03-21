@@ -93,4 +93,29 @@ export class AdminService {
   rejectWithdrawal(actor: AuditActor, id: string, reason: string) {
     return this.finance.rejectWithdrawal(actor, id, reason);
   }
+
+  // ── Wallets ───────────────────────────────────────────────────────────────
+  getWalletsSummary() { return this.finance.getWalletsSummary(); }
+  getWalletTransactions(page: number, limit: number) {
+    return this.finance.getWalletTransactions(page, limit);
+  }
+
+  // ── Notifications ─────────────────────────────────────────────────────────
+  getNotifications(tab: string, page: number, limit: number) {
+    return this.analytics.getNotifications(tab, page, limit);
+  }
+
+  // ── GPS Tracking ──────────────────────────────────────────────────────────
+  getGpsOverview(tab: string, page: number, limit: number) {
+    return this.analytics.getGpsOverview(tab, page, limit);
+  }
+
+  // ── System Health ─────────────────────────────────────────────────────────
+  getSystemHealth() { return this.analytics.getSystemHealth(); }
+
+  // ── Platform Settings ─────────────────────────────────────────────────────
+  getSettings() { return this.analytics.getSettings(); }
+  updateSettings(settings: Record<string, unknown>) {
+    return this.analytics.updateSettings(settings);
+  }
 }

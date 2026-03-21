@@ -221,4 +221,104 @@ export class AdminFinanceService {
       pendingWithdrawals: Number(pendingWithdrawals?.count ?? 0),
     };
   }
+
+  // ── Wallets summary ───────────────────────────────────────────────────────
+
+  async getWalletsSummary() {
+    const vendorStats = await this.db.executeRaw<{
+      count: string;
+      total_balance: string;
+    }>(
+      `SELECT COUNT(*) AS count, COALESCE(SUM(balance), 0) AS total_balance FROM vendor_wallets`,
+      [],
+    );
+
+    const earningsResult = await this.db.executeRaw<{
+      total_earnings: string;
+    }>(
+      `SELECT COALESCE(SUM(amount) FILTER (WHERE status = 'APPROVED'), 0) AS total_earnings FROM withdrawals`,
+      [],
+    );
+
+    const revenueResult = await this.db.executeRaw<{
+      revenue: string;
+      fees: string;
+    }>(
+      `SELECT
+        COALESCE(SUM(amount) FILTER (WHERE status = 'SUCCESS'), 0) AS revenue,
+        COALESCE(SUM(amount * 0.05) FILTER (WHERE status = 'SUCCESS'), 0) AS fees
+      FROM payments`,
+      [],
+    );
+
+    const vs = vendorStats[0] ?? { count: '0', total_balance: '0' };
+    const es = earningsResult[0] ?? { total_earnings: '0' };
+    const rs = revenueResult[0] ?? { revenue: '0', fees: '0' };
+
+    return {
+      buyerWallets: { count: 0, totalBalance: 0 },
+      vendorWallets: {
+        count: Number(vs.count),
+        totalBalance: Number(vs.total_balance),
+        totalEarnings: Number(es.total_earnings),
+      },
+      systemWallet: {
+        revenue: Number(rs.revenue),
+        fees: Number(rs.fees),
+      },
+    };
+  }
+
+  // ── Wallet transactions ───────────────────────────────────────────────────
+
+  async getWalletTransactions(page = 1, limit = 25) {
+    const offset = (page - 1) * limit;
+
+    const data = await this.db.executeRaw<{
+      id: string;
+      wallet_owner_id: string;
+      owner_type: string;
+      type: string;
+      amount: string;
+      balance: string;
+      description: string;
+      created_at: string;
+    }>(
+      `SELECT
+        w.id,
+        w.vendor_id AS wallet_owner_id,
+        'VENDOR' AS owner_type,
+        w.status AS type,
+        w.amount,
+        COALESCE(vw.balance, '0') AS balance,
+        CONCAT('Withdrawal - ', w.status) AS description,
+        w.created_at
+      FROM withdrawals w
+      LEFT JOIN vendor_wallets vw ON vw.vendor_id = w.vendor_id
+      ORDER BY w.created_at DESC
+      LIMIT $1 OFFSET $2`,
+      [limit, offset],
+    );
+
+    const [countResult] = await this.db.executeRaw<{ count: string }>(
+      `SELECT COUNT(*) AS count FROM withdrawals`,
+      [],
+    );
+
+    return {
+      data: data.map((row) => ({
+        id: row.id,
+        walletOwnerId: row.wallet_owner_id,
+        ownerType: row.owner_type,
+        type: row.type,
+        amount: row.amount,
+        balance: row.balance,
+        description: row.description,
+        createdAt: row.created_at,
+      })),
+      total: Number(countResult?.count ?? 0),
+      page,
+      limit,
+    };
+  }
 }

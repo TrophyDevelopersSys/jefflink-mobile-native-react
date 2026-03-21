@@ -377,4 +377,91 @@ export class AdminController {
   ) {
     return this.svc.getRecentActivity(limit);
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Wallets & Balances
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Get('wallets/summary')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'FINANCE_ADMIN', 'FINANCE_OFFICER', 'DIRECTOR')
+  @ApiOperation({ summary: 'Wallet balances overview (buyer, vendor, system)' })
+  getWalletsSummary() {
+    return this.svc.getWalletsSummary();
+  }
+
+  @Get('wallets/transactions')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'FINANCE_ADMIN', 'FINANCE_OFFICER', 'DIRECTOR')
+  @ApiOperation({ summary: 'Recent wallet transactions' })
+  getWalletTransactions(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(25), ParseIntPipe) limit: number,
+  ) {
+    return this.svc.getWalletTransactions(page, limit);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Notifications
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Get('notifications')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_ADMIN', 'MANAGER', 'MODERATOR', 'SUPPORT')
+  @ApiOperation({ summary: 'List platform notifications and support requests' })
+  @ApiQuery({ name: 'tab', required: false })
+  getNotifications(
+    @Query('tab', new DefaultValuePipe('all')) tab: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(25), ParseIntPipe) limit: number,
+  ) {
+    return this.svc.getNotifications(tab, page, limit);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GPS Tracking
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Get('gps')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_ADMIN')
+  @ApiOperation({ summary: 'GPS device overview, alerts, and recovery cases' })
+  @ApiQuery({ name: 'tab', required: false })
+  getGpsOverview(
+    @Query('tab', new DefaultValuePipe('all')) tab: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(25), ParseIntPipe) limit: number,
+  ) {
+    return this.svc.getGpsOverview(tab, page, limit);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // System Health
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Get('system/health')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_ADMIN')
+  @ApiOperation({ summary: 'Platform health check (database, memory, uptime)' })
+  getSystemHealth() {
+    return this.svc.getSystemHealth();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Platform Settings
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Get('settings')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_ADMIN')
+  @ApiOperation({ summary: 'Read platform configuration settings' })
+  getSettings() {
+    return this.svc.getSettings();
+  }
+
+  @Patch('settings')
+  @Roles('SUPER_ADMIN')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update platform settings (SUPER_ADMIN only)' })
+  updateSettings(
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+  ) {
+    return this.svc.updateSettings(body);
+  }
 }

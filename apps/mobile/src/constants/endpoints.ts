@@ -58,6 +58,8 @@ export const endpoints = {
     gps:                "/admin/gps",
     // System
     systemHealth:       "/admin/system/health",
+    // Settings
+    settings:           "/admin/settings",
     // Contract detail
     contract:           (id: string) => `/admin/contracts/${id}`,
     // Legacy

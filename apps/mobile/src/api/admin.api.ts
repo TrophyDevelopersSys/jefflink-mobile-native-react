@@ -179,6 +179,17 @@ export const adminApi = {
     return ((r.data?.data ?? r.data)?.data ?? r.data?.data ?? r.data) as unknown[];
   },
 
+  // Settings
+  async getSettings(): Promise<unknown> {
+    const r = await apiClient.get(endpoints.admin.settings);
+    return r.data?.data ?? r.data;
+  },
+
+  async updateSettings(settings: Record<string, unknown>): Promise<unknown> {
+    const r = await apiClient.patch(endpoints.admin.settings, settings);
+    return r.data?.data ?? r.data;
+  },
+
   // Legacy / sync
   async listRecoveryQueue(): Promise<ContractSummary[]> {
     const r = await apiClient.get(endpoints.admin.recovery);
