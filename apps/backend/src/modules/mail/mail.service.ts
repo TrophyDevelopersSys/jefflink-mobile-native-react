@@ -137,6 +137,8 @@ export class MailService {
     resendUrl: string;
     expiresInMinutes: number;
     initiatedBy?: string;
+    requestIp?: string;
+    requestTimestamp?: string;
   }): Promise<boolean> {
     if (!this.transporter) {
       this.logger.warn(
@@ -153,12 +155,35 @@ export class MailService {
       ? '\nNote: This recovery was initiated by a Super Admin on your behalf.\n'
       : '';
 
+    // Point #6: Request context for security awareness
+    const requestContextParts: string[] = [];
+    const requestContextHtmlParts: string[] = [];
+    if (input.requestIp) {
+      requestContextParts.push(`IP address: ${input.requestIp}`);
+      requestContextHtmlParts.push(`<strong>IP address:</strong> ${this.escapeHtml(input.requestIp)}`);
+    }
+    if (input.requestTimestamp) {
+      const ts = new Date(input.requestTimestamp).toUTCString();
+      requestContextParts.push(`Time: ${ts}`);
+      requestContextHtmlParts.push(`<strong>Time:</strong> ${this.escapeHtml(ts)}`);
+    }
+    const requestContextText = requestContextParts.length
+      ? `\nRequest details:\n${requestContextParts.map((p) => `  - ${p}`).join('\n')}\n`
+      : '';
+    const requestContextHtml = requestContextHtmlParts.length
+      ? `<div style="margin:12px 0;padding:10px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;font-size:13px;color:#475569;">
+           <p style="margin:0 0 4px;font-weight:600;">Request details:</p>
+           ${requestContextHtmlParts.map((p) => `<p style="margin:2px 0;">${p}</p>`).join('')}
+         </div>`
+      : '';
+
     const subject = 'JeffLink Admin Account Recovery';
     const text = [
       `Hi ${recipientName},`,
       '',
       'An account recovery request was made for your JeffLink admin account.',
       initiatorText,
+      requestContextText,
       `Use the link below within ${input.expiresInMinutes} minutes to reset your password:`,
       input.resetUrl,
       '',
@@ -180,6 +205,7 @@ export class MailService {
           <p>Hi ${this.escapeHtml(recipientName)},</p>
           <p>An account recovery request was made for your <strong>JeffLink admin account</strong>.</p>
           ${initiatorNote}
+          ${requestContextHtml}
           <p>This link expires in <strong>${input.expiresInMinutes} minutes</strong>.</p>
           <p style="margin:24px 0;">
             <a

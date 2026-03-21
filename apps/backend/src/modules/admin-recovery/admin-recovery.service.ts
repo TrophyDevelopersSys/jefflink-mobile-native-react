@@ -28,6 +28,15 @@ const RATE_LIMIT_MAX_REQUESTS = 3;
 /** Rate window in seconds (15 minutes). */
 const RATE_LIMIT_WINDOW_SECONDS = 900;
 
+/** Per-IP rate-limit key prefix. */
+const IP_RATE_LIMIT_PREFIX = 'admin_recovery_ip_rate:';
+
+/** Maximum recovery attempts per IP within the IP rate window. */
+const IP_RATE_LIMIT_MAX_REQUESTS = 10;
+
+/** IP rate window in seconds (1 hour). */
+const IP_RATE_LIMIT_WINDOW_SECONDS = 3600;
+
 /** Admin roles eligible for this recovery flow. */
 const ADMIN_ROLES = new Set([
   'SUPER_ADMIN',
@@ -99,6 +108,9 @@ export class AdminRecoveryService {
     // Rate-limit by email (Redis-backed)
     await this.enforceEmailRateLimit(normalised);
 
+    // Rate-limit by IP (broader window, catches distributed abuse)
+    await this.enforceIpRateLimit(ctx.ipAddress);
+
     try {
       const user = await this.findAdminByEmail(normalised);
 
@@ -117,16 +129,6 @@ export class AdminRecoveryService {
           initiatedBy: null,
         });
 
-        await this.writeAudit({
-          userId: user.id,
-          action: 'REQUEST',
-          email: normalised,
-          ipAddress: ctx.ipAddress,
-          userAgent: ctx.userAgent,
-          metadata: null,
-          initiatedBy: null,
-        });
-
         const resetUrl = this.buildRecoveryUrl(user.id, rawToken);
         const resendUrl = this.buildRecoveryRequestUrl(user.email);
 
@@ -134,18 +136,41 @@ export class AdminRecoveryService {
         const exposeToken =
           this.config.get<string>('AUTH_EXPOSE_RESET_TOKEN') === 'true';
         if (exposeToken) {
+          await this.writeAudit({
+            userId: user.id,
+            action: 'REQUEST',
+            email: normalised,
+            ipAddress: ctx.ipAddress,
+            userAgent: ctx.userAgent,
+            metadata: { emailSent: false, devMode: true },
+            initiatedBy: null,
+          });
           return {
             message: 'Recovery link generated (dev mode).',
             ...({ userId: user.id, token: rawToken, resetUrl, expiresInSeconds: TOKEN_TTL_SECONDS } as Record<string, unknown>),
           } as RecoveryResult;
         }
 
-        const sent = await this.mail.sendAdminRecoveryEmail({
-          to: user.email,
-          name: user.name,
-          resetUrl,
-          resendUrl,
-          expiresInMinutes: Math.floor(TOKEN_TTL_SECONDS / 60),
+        const sent = await this.sendEmailWithRetry(() =>
+          this.mail.sendAdminRecoveryEmail({
+            to: user.email,
+            name: user.name,
+            resetUrl,
+            resendUrl,
+            expiresInMinutes: Math.floor(TOKEN_TTL_SECONDS / 60),
+            requestIp: ctx.ipAddress,
+            requestTimestamp: new Date().toISOString(),
+          }),
+        );
+
+        await this.writeAudit({
+          userId: user.id,
+          action: 'REQUEST',
+          email: normalised,
+          ipAddress: ctx.ipAddress,
+          userAgent: ctx.userAgent,
+          metadata: { emailSent: sent },
+          initiatedBy: null,
         });
 
         if (!sent) {
@@ -218,25 +243,29 @@ export class AdminRecoveryService {
       initiatedBy: initiatorId,
     });
 
+    const resetUrl = this.buildRecoveryUrl(target.id, rawToken);
+    const resendUrl = this.buildRecoveryRequestUrl(target.email);
+
+    const sent = await this.sendEmailWithRetry(() =>
+      this.mail.sendAdminRecoveryEmail({
+        to: target.email,
+        name: target.name,
+        resetUrl,
+        resendUrl,
+        expiresInMinutes: Math.floor(TOKEN_TTL_SECONDS / 60),
+        initiatedBy: initiatorId,
+        requestIp: ctx.ipAddress,
+        requestTimestamp: new Date().toISOString(),
+      }),
+    );
+
     await this.writeAudit({
       userId: target.id,
       action: 'INITIATE',
       email: target.email,
       ipAddress: ctx.ipAddress,
       userAgent: ctx.userAgent,
-      metadata: { initiatorId },
-      initiatedBy: initiatorId,
-    });
-
-    const resetUrl = this.buildRecoveryUrl(target.id, rawToken);
-    const resendUrl = this.buildRecoveryRequestUrl(target.email);
-
-    const sent = await this.mail.sendAdminRecoveryEmail({
-      to: target.email,
-      name: target.name,
-      resetUrl,
-      resendUrl,
-      expiresInMinutes: Math.floor(TOKEN_TTL_SECONDS / 60),
+      metadata: { initiatorId, emailSent: sent },
       initiatedBy: initiatorId,
     });
 
@@ -263,6 +292,9 @@ export class AdminRecoveryService {
     newPassword: string,
     ctx: RequestContext,
   ): Promise<RecoveryResult> {
+    // Per-IP rate limit on reset attempts to slow brute-force
+    await this.enforceIpRateLimit(ctx.ipAddress);
+
     const tokenHash = this.hashToken(rawToken);
 
     const tokenRecord = await this.findValidToken(userId, tokenHash);
@@ -277,6 +309,45 @@ export class AdminRecoveryService {
         initiatedBy: null,
       });
       throw new BadRequestException('Recovery token is invalid or expired');
+    }
+
+    // ── Point #9: Role revalidation — ensure user is still an admin ──
+    const currentUser = await this.findAdminById(userId);
+    if (!currentUser) {
+      await this.writeAudit({
+        userId,
+        action: 'RESET_FAILED',
+        email: null,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+        metadata: { reason: 'role_demoted_or_deactivated' },
+        initiatedBy: null,
+      });
+      throw new ForbiddenException(
+        'Account no longer holds an admin role. Recovery aborted.',
+      );
+    }
+
+    // ── Point #2: IP context anomaly detection ──
+    const ipAnomaly =
+      tokenRecord.requestIp && ctx.ipAddress && tokenRecord.requestIp !== ctx.ipAddress;
+    if (ipAnomaly) {
+      this.logger.warn(
+        `IP anomaly on admin reset: token issued to ${tokenRecord.requestIp}, reset from ${ctx.ipAddress} (user ${userId})`,
+      );
+      await this.writeAudit({
+        userId,
+        action: 'RESET_SUCCESS',
+        email: currentUser.email,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+        metadata: {
+          warning: 'ip_anomaly',
+          tokenIp: tokenRecord.requestIp,
+          resetIp: ctx.ipAddress,
+        },
+        initiatedBy: null,
+      });
     }
 
     // Hash new password with bcrypt (12 salt rounds)
@@ -524,12 +595,13 @@ export class AdminRecoveryService {
   private async findValidToken(
     userId: string,
     tokenHash: string,
-  ): Promise<{ id: string; initiatedBy: string | null } | null> {
+  ): Promise<{ id: string; initiatedBy: string | null; requestIp: string | null } | null> {
     const rows = await this.db.executeRaw<{
       id: string;
       initiatedBy: string | null;
+      requestIp: string | null;
     }>(
-      `SELECT id::text AS id, initiated_by AS "initiatedBy"
+      `SELECT id::text AS id, initiated_by AS "initiatedBy", ip_address AS "requestIp"
        FROM admin_recovery_tokens
        WHERE user_id = $1
          AND token_hash = $2
@@ -600,6 +672,47 @@ export class AdminRecoveryService {
         'Too many recovery requests. Please wait before trying again.',
       );
     }
+  }
+
+  private async enforceIpRateLimit(ip?: string): Promise<void> {
+    if (!ip) return; // No IP available — skip (e.g. internal calls)
+    const key = `${IP_RATE_LIMIT_PREFIX}${ip}`;
+    const count = await this.redis.increment(key);
+
+    if (count === 1) {
+      await this.redis.expire(key, IP_RATE_LIMIT_WINDOW_SECONDS);
+    }
+
+    if (count > IP_RATE_LIMIT_MAX_REQUESTS) {
+      throw new BadRequestException(
+        'Too many recovery attempts from this address. Please wait before trying again.',
+      );
+    }
+  }
+
+  /**
+   * Point #10: Retry email delivery up to 3 times with exponential backoff.
+   * Returns true if any attempt succeeds, false otherwise.
+   */
+  private async sendEmailWithRetry(
+    sendFn: () => Promise<boolean>,
+    maxAttempts = 3,
+  ): Promise<boolean> {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const sent = await sendFn();
+      if (sent) return true;
+      if (attempt < maxAttempts) {
+        const delayMs = 500 * Math.pow(2, attempt - 1); // 500ms, 1s, 2s
+        this.logger.warn(
+          `Admin recovery email attempt ${attempt}/${maxAttempts} failed, retrying in ${delayMs}ms`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+    this.logger.error(
+      `Admin recovery email failed after ${maxAttempts} attempts`,
+    );
+    return false;
   }
 
   private buildRecoveryUrl(userId: string, token: string): string {

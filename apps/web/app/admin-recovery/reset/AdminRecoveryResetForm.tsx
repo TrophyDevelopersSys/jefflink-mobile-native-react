@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { resetAdminPassword } from "../../../src/lib/adminRecoveryClient";
 
 type FormStatus = "idle" | "loading" | "success" | "error";
 
 export default function AdminRecoveryResetForm() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const stripped = useRef(false);
+
   const defaultUserId = useMemo(
     () => searchParams.get("uid") ?? searchParams.get("userId") ?? "",
     [searchParams],
@@ -24,6 +27,14 @@ export default function AdminRecoveryResetForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [status, setStatus] = useState<FormStatus>("idle");
   const [message, setMessage] = useState("");
+
+  // Point #7: Strip sensitive token from URL immediately after capturing it
+  useEffect(() => {
+    if (!stripped.current && (defaultToken || defaultUserId)) {
+      stripped.current = true;
+      router.replace("/admin-recovery/reset");
+    }
+  }, [defaultToken, defaultUserId, router]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
