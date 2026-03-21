@@ -180,7 +180,7 @@ export class CmsAtlasStore implements CmsStore {
     if (status === 'PUBLISHED') sets['publishedAt'] = now;
 
     const result = await this.pages().findOneAndUpdate(
-      { _id: this.toId(id) },
+      { _id: this.toId(id) } as any,
       { $set: sets, $inc: { version: 1 } },
       { returnDocument: 'after' },
     );
@@ -202,7 +202,7 @@ export class CmsAtlasStore implements CmsStore {
   }
 
   async deletePage(id: string): Promise<void> {
-    const result = await this.pages().deleteOne({ _id: this.toId(id) });
+    const result = await this.pages().deleteOne({ _id: this.toId(id) } as any);
     if (result.deletedCount === 0) throw new NotFoundException('Page not found');
   }
 

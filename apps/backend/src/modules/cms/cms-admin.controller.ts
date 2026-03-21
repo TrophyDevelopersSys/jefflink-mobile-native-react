@@ -67,10 +67,9 @@ export class CmsAdminController {
         platform: dto.platform,
         locale: dto.locale ?? 'en',
         title: dto.title,
-        layout: dto.layout,
+        layout: dto.layout as any,
         seo: dto.seo,
         status: (dto.status as any) ?? 'DRAFT',
-        createdAt: new Date(),
       },
     );
   }
@@ -125,6 +124,7 @@ export class CmsAdminController {
       key,
       platform: dto.platform,
       items: dto.items,
+      status: 'PUBLISHED',
     });
   }
 
