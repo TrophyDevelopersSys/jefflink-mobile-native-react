@@ -1234,11 +1234,13 @@ Authorization: Bearer {accessToken}
 | 2026-03-20 | `apps/backend` — added SMTP-backed `MailService`, wired `/auth/forgot-password` to send reset emails, and documented required `SMTP_*` / `MAIL_*` environment variables. | Copilot |
 | 2026-03-20 | `apps/backend` — updated current mailer state to reflect Brevo relay support (`SMTP_BREVO_LOGIN`, `SMTP_BREVO_API_KEY`), `WEB_APP_URL`-based reset links, and Render-ready SMTP settings (`smtp-relay.brevo.com:587`, `SMTP_SECURE=false`). | Copilot |
 | 2026-03-20 | `render.yaml` + § 11 Deployment — appended a short production Render env checklist covering required secrets, fixed values, and post-change drift checks for the cloud-only stack. | Copilot |
+| 2026-03-21 | Added `MONGODB_ATLAS_IMPLEMENTATION_PLAN.md` — concrete Atlas adoption plan covering exact NestJS modules, Atlas collections, DTOs, endpoints, feature flags, cache keys, and phased rollout for CMS, GPS, document metadata, activity logs, and realtime support while keeping Neon as the financial core. | Copilot |
 
 ---
 
 > **How to keep this updated:**
 > After any of these changes, update the relevant section above and add an entry to the Update Log:
+>
 > - New feature module added
 > - New API endpoint
 > - Schema migration
@@ -1246,3 +1248,4 @@ Authorization: Bearer {accessToken}
 > - Navigation route added or changed
 > - Environment variable added
 > - Deployment config changed
+

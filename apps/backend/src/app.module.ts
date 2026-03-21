@@ -18,12 +18,14 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { CmsModule } from './modules/cms/cms.module';
 import { AdminRecoveryModule } from './modules/admin-recovery/admin-recovery.module';
 import { HealthModule } from './health/health.module';
+import { MongoModule } from './mongo/mongo.module';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
 import mailConfig from './config/mail.config';
 import redisConfig from './config/redis.config';
 import storageConfig from './config/storage.config';
+import mongoConfig from './config/mongo.config';
 
 @Module({
   imports: [
@@ -31,7 +33,7 @@ import storageConfig from './config/storage.config';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
-      load: [appConfig, databaseConfig, jwtConfig, mailConfig, redisConfig, storageConfig],
+      load: [appConfig, databaseConfig, jwtConfig, mailConfig, redisConfig, storageConfig, mongoConfig],
       cache: true,
     }),
 
@@ -58,6 +60,7 @@ import storageConfig from './config/storage.config';
     // ── Infrastructure ─────────────────────────────────────────────────────
     DatabaseModule,
     RedisModule,
+    MongoModule,
     QueueModule.register(),
 
     // ── Feature modules ────────────────────────────────────────────────────

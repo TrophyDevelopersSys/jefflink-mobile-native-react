@@ -10,6 +10,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
 import { DatabaseService } from '../database/database.service';
 import { RedisService } from '../redis/redis.service';
+import { MongoHealthIndicator } from '../mongo/mongo.health';
 import { Injectable } from '@nestjs/common';
 import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
 import { sql } from 'drizzle-orm';
@@ -54,6 +55,7 @@ export class HealthController {
     private readonly memory: MemoryHealthIndicator,
     private readonly dbIndicator: DatabaseHealthIndicator,
     private readonly redisIndicator: RedisHealthIndicator,
+    private readonly mongoIndicator: MongoHealthIndicator,
   ) {}
 
   @Public()
@@ -63,6 +65,7 @@ export class HealthController {
     return this.health.check([
       () => this.dbIndicator.isHealthy('database'),
       () => this.redisIndicator.isHealthy('redis'),
+      () => this.mongoIndicator.isHealthy('mongo'),
       () => this.memory.checkHeap('memory_heap', 512 * 1024 * 1024),
     ]);
   }
