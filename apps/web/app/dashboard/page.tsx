@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import DashboardClient from "./DashboardClient";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Dashboard",
   description: "Manage your JeffLink account, listings, and activity from your personal dashboard.",
