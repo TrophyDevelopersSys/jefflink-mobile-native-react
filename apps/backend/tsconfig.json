@@ -21,8 +21,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "paths": {
-      "@/*": ["src/*"],
-      "@jefflink/types": ["../../packages/types/src/index.ts"]
+      "@/*": ["src/*"]
     }
   },
   "include": ["src"],
