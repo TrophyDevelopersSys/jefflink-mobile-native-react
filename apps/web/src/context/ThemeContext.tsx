@@ -37,7 +37,7 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function getSystemPreference(): ThemeMode {
-  if (typeof window === "undefined") return "dark";
+  if (typeof window === "undefined") return "light";
   return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light";
@@ -66,12 +66,12 @@ function applyMode(mode: ThemeMode) {
 export function ThemeProvider({ children }: PropsWithChildren) {
   // Initialize from what the blocking script already applied.
   const [preference, setPreferenceState] = useState<ThemePreference>(() => {
-    if (typeof window === "undefined") return "dark";
+    if (typeof window === "undefined") return "light";
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "light" || stored === "dark" || stored === "system") {
       return stored as ThemePreference;
     }
-    return "dark";
+    return "light";
   });
 
   const mode = resolveMode(preference);

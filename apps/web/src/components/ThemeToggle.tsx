@@ -12,12 +12,12 @@ import type { ThemePreference } from "@jefflink/design-tokens";
 export default function ThemeToggle() {
   const { isDark, preference, setPreference } = useTheme();
 
-  // Defer to after hydration so SSR output (dark) matches initial client render.
+  // Defer to after hydration so SSR output (light) matches initial client render.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const showDark = mounted ? isDark : true;
-  const displayPref = mounted ? preference : "dark";
+  const showDark = mounted ? isDark : false;
+  const displayPref = mounted ? preference : "light";
 
   const cycle = () => {
     const order: ThemePreference[] = ["light", "dark", "system"];

@@ -73,11 +73,12 @@ export default function RootLayout({
 
   // Anti-flicker: blocking script reads localStorage and applies the correct
   // class before the first paint. The ThemeProvider hydrates to the same value.
+  // Default to light mode on first visit (when no preference stored).
   const themeScript = `
     (function(){
       try {
         var p = localStorage.getItem('jefflink-theme');
-        var dark = p === 'dark' || (!p && window.matchMedia('(prefers-color-scheme:dark)').matches) || (p === 'system' && window.matchMedia('(prefers-color-scheme:dark)').matches);
+        var dark = p === 'dark' || (p === 'system' && window.matchMedia('(prefers-color-scheme:dark)').matches);
         document.documentElement.classList.toggle('dark', dark);
         document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
       } catch(e){}

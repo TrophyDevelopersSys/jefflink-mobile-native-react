@@ -31,7 +31,7 @@ export default function Navbar() {
   // initial src, avoiding a hydration mismatch on the <img> tag.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const logoSrc = mounted ? getThemedLogo(isDark) : getThemedLogo(true);
+  const logoSrc = mounted ? getThemedLogo(isDark) : getThemedLogo(false);
 
   const handleSignOut = async () => {
     await signOut();

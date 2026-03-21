@@ -48,7 +48,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
   const systemScheme = useSystemScheme() ?? "light";
   const safeSystem: "light" | "dark" = systemScheme === "dark" ? "dark" : "light";
 
-  const [preference, setPreferenceState] = useState<ThemePreference>("system");
+  const [preference, setPreferenceState] = useState<ThemePreference>("light");
   const { setColorScheme } = useNWScheme();
 
   // Load persisted preference once on mount.
