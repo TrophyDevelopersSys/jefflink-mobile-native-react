@@ -169,6 +169,39 @@ export async function rejectWithdrawal(id: string, reason: string) {
   return res.data?.data ?? res.data;
 }
 
+// ── Wallets ───────────────────────────────────────────────────────────────────
+
+export async function getWalletsSummary() {
+  const res = await adminHttp.get("/wallets/summary");
+  return res.data?.data ?? res.data;
+}
+
+export async function getWalletTransactions(page = 1, limit = 25) {
+  const res = await adminHttp.get("/wallets/transactions", { params: { page, limit } });
+  return res.data?.data ?? res.data;
+}
+
+// ── Notifications & Requests ──────────────────────────────────────────────────
+
+export async function getAdminNotifications(tab: string, page = 1, limit = 25) {
+  const res = await adminHttp.get("/notifications", { params: { tab, page, limit } });
+  return res.data?.data ?? res.data;
+}
+
+// ── GPS Tracking & Recovery ───────────────────────────────────────────────────
+
+export async function getGpsDevices(tab: string, page = 1, limit = 25) {
+  const res = await adminHttp.get("/gps", { params: { tab, page, limit } });
+  return res.data?.data ?? res.data;
+}
+
+// ── System Monitoring ─────────────────────────────────────────────────────────
+
+export async function getSystemHealth() {
+  const res = await adminHttp.get("/system/health");
+  return res.data?.data ?? res.data;
+}
+
 // ── Audit Logs ────────────────────────────────────────────────────────────────
 
 export async function getAuditLogs(limit = 50) {
