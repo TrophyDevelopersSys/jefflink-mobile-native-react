@@ -24,7 +24,7 @@ const ACCOUNT_LINKS = [
 
 export default function Footer() {
   return (
-    <footer className="bg-brand-night border-t border-border mt-auto">
+    <footer className="bg-surface border-t border-border mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
 
@@ -32,7 +32,7 @@ export default function Footer() {
           <div>
             <Link href="/" className="inline-flex items-center gap-2 mb-4">
               <span className="text-brand-accent font-black text-xl tracking-tight">
-                Jeff<span className="text-white">Link</span>
+                Jeff<span className="text-text">Link</span>
               </span>
             </Link>
             <p className="text-brand-muted text-sm leading-relaxed">
@@ -46,7 +46,7 @@ export default function Footer() {
 
           {/* Marketplace */}
           <div>
-            <h3 className="text-white font-semibold text-sm mb-4 uppercase tracking-wide">
+            <h3 className="text-text font-semibold text-sm mb-4 uppercase tracking-wide">
               Marketplace
             </h3>
             <ul className="space-y-2">
@@ -54,7 +54,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-brand-muted text-sm hover:text-white transition-colors"
+                    className="text-text-muted text-sm hover:text-text transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -65,7 +65,7 @@ export default function Footer() {
 
           {/* Company */}
           <div>
-            <h3 className="text-white font-semibold text-sm mb-4 uppercase tracking-wide">
+            <h3 className="text-text font-semibold text-sm mb-4 uppercase tracking-wide">
               Company
             </h3>
             <ul className="space-y-2">
@@ -73,7 +73,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-brand-muted text-sm hover:text-white transition-colors"
+                    className="text-text-muted text-sm hover:text-text transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -84,7 +84,7 @@ export default function Footer() {
 
           {/* Account */}
           <div>
-            <h3 className="text-white font-semibold text-sm mb-4 uppercase tracking-wide">
+            <h3 className="text-text font-semibold text-sm mb-4 uppercase tracking-wide">
               Account
             </h3>
             <ul className="space-y-2">
@@ -92,7 +92,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-brand-muted text-sm hover:text-white transition-colors"
+                    className="text-text-muted text-sm hover:text-text transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -104,15 +104,15 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-brand-muted text-xs text-center sm:text-left">
+          <p className="text-text-muted text-xs text-center sm:text-left">
             © {new Date().getFullYear()} JeffLink. All rights reserved.
           </p>
-          <div className="flex items-center gap-4 text-xs text-brand-muted">
-            <Link href="/privacy" className="hover:text-white transition-colors">
+          <div className="flex items-center gap-4 text-xs text-text-muted">
+            <Link href="/privacy" className="hover:text-text transition-colors">
               Privacy Policy
             </Link>
             <span>·</span>
-            <Link href="/terms" className="hover:text-white transition-colors">
+            <Link href="/terms" className="hover:text-text transition-colors">
               Terms of Service
             </Link>
           </div>

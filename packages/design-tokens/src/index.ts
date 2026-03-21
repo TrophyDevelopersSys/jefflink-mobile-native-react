@@ -7,7 +7,7 @@ export type { SpacingKey } from "./spacing";
 export { radius } from "./radius";
 export type { RadiusKey } from "./radius";
 
-export { brand } from "./brand";
+export { brand, getThemedLogo } from "./brand";
 export type { BrandAssetKey } from "./brand";
 
 export { fonts } from "./fonts";
@@ -21,3 +21,16 @@ export type { ShadowKey } from "./shadows";
 
 export { breakpoints } from "./breakpoints";
 export type { BreakpointKey } from "./breakpoints";
+
+export {
+  darkTheme,
+  lightTheme,
+  darkSemanticTokens,
+  lightSemanticTokens,
+} from "./themes";
+export type {
+  ThemeMode,
+  ThemePreference,
+  SemanticTokens,
+  ThemeDefinition,
+} from "./themes";

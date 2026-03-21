@@ -12,10 +12,10 @@ import RootNavigator from "./src/navigation/RootNavigator";
 
 export default function App() {
   return (
-    <GestureHandlerRootView className="flex-1 bg-white">
+    <GestureHandlerRootView className="flex-1 bg-background">
       <AppProviders>
         <RootNavigator />
-        <StatusBar style="light" />
+        <StatusBar style="auto" />
       </AppProviders>
     </GestureHandlerRootView>
   );

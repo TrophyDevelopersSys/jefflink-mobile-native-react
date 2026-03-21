@@ -71,9 +71,23 @@ export default function RootLayout({
     )
     .join('');
 
+  // Anti-flicker: blocking script reads localStorage and applies the correct
+  // class before the first paint. The ThemeProvider hydrates to the same value.
+  const themeScript = `
+    (function(){
+      try {
+        var p = localStorage.getItem('jefflink-theme');
+        var dark = p === 'dark' || (!p && window.matchMedia('(prefers-color-scheme:dark)').matches) || (p === 'system' && window.matchMedia('(prefers-color-scheme:dark)').matches);
+        document.documentElement.classList.toggle('dark', dark);
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+      } catch(e){}
+    })()
+  `;
+
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <style
           dangerouslySetInnerHTML={{
             __html: `

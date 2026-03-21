@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { brand } from "@jefflink/design-tokens";
+import { brand, getThemedLogo } from "@jefflink/design-tokens";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthContext } from "../context/AuthContext";
 import { canManageListings } from "../lib/roles";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "./ThemeToggle";
 
 const NAV_LINKS = [
   { href: "/cars", label: "Cars" },
@@ -23,6 +25,9 @@ export default function Navbar() {
   const { isAuthenticated, user, signOut, status } = useAuthContext();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const { isDark } = useTheme();
+
+  const logoSrc = getThemedLogo(isDark);
 
   const handleSignOut = async () => {
     await signOut();
@@ -31,14 +36,14 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-brand-night/95 backdrop-blur-sm border-b border-border">
+    <header className="sticky top-0 z-50 bg-surface/95 backdrop-blur-sm border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 flex-shrink-0">
             <img
-              src={brand.assets.logo.primary}
+              src={logoSrc}
               alt={brand.name}
               className="h-9 w-auto sm:h-10"
               draggable={false}
@@ -57,7 +62,7 @@ export default function Navbar() {
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   pathname.startsWith(link.href)
                     ? "bg-brand-primary/20 text-brand-accent"
-                    : "text-brand-muted hover:text-white hover:bg-white/5"
+                    : "text-text-muted hover:text-text hover:bg-surface"
                 }`}
               >
                 {link.label}
@@ -67,13 +72,14 @@ export default function Navbar() {
 
           {/* Desktop Right Actions */}
           <div className="hidden md:flex items-center gap-3">
+            <ThemeToggle />
             {status === "loading" ? (
               <div className="w-8 h-8 rounded-full bg-brand-slate animate-pulse" />
             ) : isAuthenticated ? (
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen((v) => !v)}
-                  className="flex items-center gap-2 bg-brand-slate border border-border rounded-button px-3 py-1.5 text-sm text-white hover:border-brand-primary/50 transition-colors"
+                  className="flex items-center gap-2 bg-card border border-border rounded-button px-3 py-1.5 text-sm text-text hover:border-brand-primary/50 transition-colors"
                   aria-haspopup="true"
                 >
                   <span className="w-7 h-7 rounded-full bg-brand-primary/20 text-brand-accent flex items-center justify-center font-bold text-xs flex-shrink-0">
@@ -97,14 +103,14 @@ export default function Navbar() {
                     <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-card shadow-lg py-1 z-50">
                       <Link
                         href="/dashboard"
-                        className="block px-4 py-2 text-sm text-white hover:bg-brand-slate transition-colors"
+                        className="block px-4 py-2 text-sm text-text hover:bg-surface transition-colors"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         Dashboard
                       </Link>
                       <Link
                         href="/dashboard/profile"
-                        className="block px-4 py-2 text-sm text-white hover:bg-brand-slate transition-colors"
+                        className="block px-4 py-2 text-sm text-text hover:bg-surface transition-colors"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         Profile
@@ -112,7 +118,7 @@ export default function Navbar() {
                       {canManageListings(user?.role) && (
                         <Link
                           href="/dashboard/listings"
-                          className="block px-4 py-2 text-sm text-white hover:bg-brand-slate transition-colors"
+                          className="block px-4 py-2 text-sm text-text hover:bg-surface transition-colors"
                           onClick={() => setUserMenuOpen(false)}
                         >
                           My Listings
@@ -121,7 +127,7 @@ export default function Navbar() {
                       <hr className="border-border my-1" />
                       <button
                         onClick={handleSignOut}
-                        className="w-full text-left px-4 py-2 text-sm text-brand-danger hover:bg-brand-slate transition-colors"
+                        className="w-full text-left px-4 py-2 text-sm text-brand-danger hover:bg-surface transition-colors"
                       >
                         Sign Out
                       </button>
@@ -133,7 +139,7 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="text-sm font-medium text-brand-muted hover:text-white transition-colors px-3 py-2"
+                  className="text-sm font-medium text-text-muted hover:text-text transition-colors px-3 py-2"
                 >
                   Sign In
                 </Link>
@@ -156,27 +162,30 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Hamburger */}
-          <button
-            className="md:hidden p-2 text-brand-muted hover:text-white transition-colors"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
+            <button
+              className="p-2 text-text-muted hover:text-text transition-colors"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="md:hidden border-t border-border bg-brand-night">
+        <div className="md:hidden border-t border-border bg-surface">
           <nav className="px-4 py-3 space-y-1">
             {NAV_LINKS.map((link) => (
               <Link
@@ -185,7 +194,7 @@ export default function Navbar() {
                 className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   pathname.startsWith(link.href)
                     ? "bg-brand-primary/20 text-brand-accent"
-                    : "text-brand-muted hover:text-white hover:bg-white/5"
+                    : "text-text-muted hover:text-text hover:bg-surface"
                 }`}
                 onClick={() => setMenuOpen(false)}
               >
@@ -198,7 +207,7 @@ export default function Navbar() {
               <>
                 <Link
                   href="/dashboard"
-                  className="block text-center bg-brand-slate border border-border text-white text-sm font-semibold px-4 py-2.5 rounded-button"
+                  className="block text-center bg-card border border-border text-text text-sm font-semibold px-4 py-2.5 rounded-button"
                   onClick={() => setMenuOpen(false)}
                 >
                   Dashboard
@@ -214,7 +223,7 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="block text-center bg-brand-slate border border-border text-white text-sm font-semibold px-4 py-2.5 rounded-button"
+                  className="block text-center bg-card border border-border text-text text-sm font-semibold px-4 py-2.5 rounded-button"
                   onClick={() => setMenuOpen(false)}
                 >
                   Sign In
