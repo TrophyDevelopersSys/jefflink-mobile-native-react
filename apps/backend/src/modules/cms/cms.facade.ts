@@ -80,7 +80,7 @@ export class CmsFacade {
   }
 
   async createPage(actor: AuditActor, page: Omit<CmsPage, '_id' | 'version' | 'updatedAt'>): Promise<CmsPage> {
-    const created = await this.store.createPage(page);
+    const created = await this.store.createPage({ ...page, updatedBy: actor.sub });
     await this.audit.log(actor, 'CMS_CREATE_PAGE', 'cms_page', created._id, {
       slug: created.slug,
       platform: created.platform,
@@ -90,7 +90,7 @@ export class CmsFacade {
   }
 
   async updatePage(actor: AuditActor, id: string, patch: Partial<CmsPage>, expectedVersion?: number): Promise<CmsPage> {
-    const updated = await this.store.updatePage(id, patch, expectedVersion);
+    const updated = await this.store.updatePage(id, { ...patch, updatedBy: actor.sub }, expectedVersion);
     await this.audit.log(actor, 'CMS_UPDATE_PAGE', 'cms_page', id, {
       fields: Object.keys(patch),
       version: updated.version,
@@ -100,7 +100,7 @@ export class CmsFacade {
   }
 
   async publishPage(actor: AuditActor, id: string, status: 'PUBLISHED' | 'ARCHIVED'): Promise<CmsPage> {
-    const page = await this.store.publishPage(id, status);
+    const page = await this.store.publishPage(id, status, actor.sub);
     await this.audit.log(actor, status === 'PUBLISHED' ? 'CMS_PUBLISH_PAGE' : 'CMS_ARCHIVE_PAGE', 'cms_page', id, {
       slug: page.slug,
       version: page.version,

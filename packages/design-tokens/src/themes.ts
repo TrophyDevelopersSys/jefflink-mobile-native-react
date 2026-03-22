@@ -29,7 +29,7 @@ export const lightSemanticTokens: SemanticTokens = {
   text: "#111827",
   textMuted: "#6B7280",
   accent: "#22C55E",
-  primary: "#0E7C3A",
+  primary: "#1F7A3E",
   danger: "#DC2626",
   warning: "#F59E0B",
 };
@@ -42,7 +42,7 @@ export const darkSemanticTokens: SemanticTokens = {
   text: "#F9FAFB",
   textMuted: "#9AA3AF",
   accent: "#22C55E",
-  primary: "#0E7C3A",
+  primary: "#1F7A3E",
   danger: "#DC2626",
   warning: "#F59E0B",
 };

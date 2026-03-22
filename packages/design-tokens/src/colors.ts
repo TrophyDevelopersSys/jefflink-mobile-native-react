@@ -4,7 +4,10 @@
  */
 export const colors = {
   // Core brand palette
-  brandPrimary:  "#0E7C3A",
+  brandPrimary:  "#1F7A3E",
+  brandPrimaryLight: "#22C55E",
+  brandBlue:     "#2DA5D7",
+  brandBlueDark: "#1A8BBF",
   brandDark:     "#0F1115",
   brandNight:    "#13161C",
   brandSlate:    "#1A1D23",

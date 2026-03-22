@@ -174,9 +174,10 @@ export class CmsAtlasStore implements CmsStore {
     return page;
   }
 
-  async publishPage(id: string, status: 'PUBLISHED' | 'ARCHIVED'): Promise<CmsPage> {
+  async publishPage(id: string, status: 'PUBLISHED' | 'ARCHIVED', updatedBy?: string): Promise<CmsPage> {
     const now = new Date().toISOString();
     const sets: Record<string, unknown> = { status, updatedAt: now };
+    if (updatedBy) sets['updatedBy'] = updatedBy;
     if (status === 'PUBLISHED') sets['publishedAt'] = now;
 
     const result = await this.pages().findOneAndUpdate(

@@ -23,7 +23,7 @@ export interface CmsStore {
   findPages(query: CmsPageQuery): Promise<CmsPage[]>;
   createPage(page: Omit<CmsPage, '_id' | 'version' | 'updatedAt'>): Promise<CmsPage>;
   updatePage(id: string, patch: Partial<CmsPage>, expectedVersion?: number): Promise<CmsPage>;
-  publishPage(id: string, status: 'PUBLISHED' | 'ARCHIVED'): Promise<CmsPage>;
+  publishPage(id: string, status: 'PUBLISHED' | 'ARCHIVED', updatedBy?: string): Promise<CmsPage>;
   deletePage(id: string): Promise<void>;
 
   // ── Revisions ────────────────────────────────────────────────────────────

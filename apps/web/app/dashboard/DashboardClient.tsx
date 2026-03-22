@@ -4,9 +4,13 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "../../src/context/AuthContext";
 import Link from "next/link";
-import { Search, Car, LandPlot, Store, Plus } from "lucide-react";
+import { Search, Car, LandPlot, Store, Plus, User, Shield, BadgeCheck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { isAdminRole, isDealerRole, roleLabel } from "../../src/lib/roles";
+import { Card, CardHeader } from "../../src/components/ui/Card";
+import { Badge } from "../../src/components/ui/Badge";
+import { Button } from "../../src/components/ui/Button";
+import { Section } from "../../src/components/ui/Section";
 
 export default function DashboardPage() {
   const { user, isAuthenticated, status } = useAuthContext();
@@ -65,20 +69,16 @@ export default function DashboardPage() {
 
         {/* Role badge */}
         <div className="flex gap-2 mb-8">
-          <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-            isAdmin
-              ? "bg-brand-warning/20 text-brand-warning"
-              : isDealer
-              ? "bg-brand-primary/20 text-brand-accent"
-              : "bg-card text-text-muted"
-          }`}>
+          <Badge
+            variant={isAdmin ? "warning" : isDealer ? "primary" : "default"}
+            icon={isAdmin ? Shield : isDealer ? BadgeCheck : User}
+          >
             {isAdmin ? "Admin" : isDealer ? "Verified Dealer" : "Customer"}
-          </span>
+          </Badge>
         </div>
 
         {/* Quick Actions */}
-        <section className="mb-8">
-          <h2 className="text-base font-semibold text-text mb-4">Quick Actions</h2>
+        <Section title="Quick Actions" className="mb-8">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <QuickActionCard href="/search" icon={Search} label="Search Listings" />
             <QuickActionCard href="/cars" icon={Car} label="Browse Cars" />
@@ -89,23 +89,22 @@ export default function DashboardPage() {
               <QuickActionCard href="/vendors" icon={Store} label="Find Vendors" />
             )}
           </div>
-        </section>
-
-        {/* Dealer-specific sections */}
+        </Section>
         {(isDealer || isAdmin) && (
           <>
-            <section className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-text">My Listings</h2>
+            <Section
+              title="My Listings"
+              className="mb-8"
+              action={
                 <Link href="/dashboard/listings" className="text-xs text-brand-accent hover:underline">
-                  View all →
+                  View all &rarr;
                 </Link>
-              </div>
+              }
+            >
               <DealerListingsPreview />
-            </section>
+            </Section>
 
-            <section className="mb-8">
-              <h2 className="text-base font-semibold text-text mb-4">Performance Overview</h2>
+            <Section title="Performance Overview" className="mb-8">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <StatCard label="Active Listings" value="–" />
                 <StatCard label="Total Views" value="–" />
@@ -115,61 +114,64 @@ export default function DashboardPage() {
               <p className="text-text-muted text-xs mt-3">
                 Analytics update in real-time from the JeffLink backend.
               </p>
-            </section>
+            </Section>
           </>
         )}
 
         {/* Customer sections */}
         {!isDealer && !isAdmin && (
-          <section className="mb-8">
-            <h2 className="text-base font-semibold text-text mb-4">Recent Activity</h2>
-            <div className="bg-card border border-border rounded-card p-6 text-center text-text-muted text-sm">
-              <p className="mb-2">No recent activity yet.</p>
-              <p>
-                Start by{" "}
-                <Link href="/cars" className="text-brand-accent hover:underline">
-                  browsing listings
-                </Link>{" "}
-                or{" "}
-                <Link href="/search" className="text-brand-accent hover:underline">
-                  searching the marketplace
-                </Link>
-                .
-              </p>
-            </div>
-          </section>
+          <Section title="Recent Activity" className="mb-8">
+            <Card>
+              <div className="p-6 text-center text-text-muted text-sm">
+                <p className="mb-2">No recent activity yet.</p>
+                <p>
+                  Start by{" "}
+                  <Link href="/cars" className="text-brand-accent hover:underline">
+                    browsing listings
+                  </Link>{" "}
+                  or{" "}
+                  <Link href="/search" className="text-brand-accent hover:underline">
+                    searching the marketplace
+                  </Link>
+                  .
+                </p>
+              </div>
+            </Card>
+          </Section>
         )}
 
         {/* Account info */}
-        <section className="bg-card border border-border rounded-card p-6">
-          <h2 className="text-base font-semibold text-text mb-4">Account Details</h2>
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <dt className="text-text-muted text-xs uppercase tracking-wide mb-1">Name</dt>
-              <dd className="text-text text-sm">{user.name ?? "Not set"}</dd>
+        <Card>
+          <CardHeader title="Account Details" />
+          <div className="px-6 pb-6">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <dt className="text-text-muted text-xs uppercase tracking-wide mb-1">Name</dt>
+                <dd className="text-text text-sm">{user.name ?? "Not set"}</dd>
+              </div>
+              <div>
+                <dt className="text-text-muted text-xs uppercase tracking-wide mb-1">Email</dt>
+                <dd className="text-text text-sm">{user.email ?? "Not set"}</dd>
+              </div>
+              <div>
+                <dt className="text-text-muted text-xs uppercase tracking-wide mb-1">Role</dt>
+                <dd className="text-text text-sm">{roleLabel(user.role)}</dd>
+              </div>
+              <div>
+                <dt className="text-text-muted text-xs uppercase tracking-wide mb-1">User ID</dt>
+                <dd className="text-text-muted text-xs font-mono">{user.id}</dd>
+              </div>
+            </dl>
+            <div className="mt-5 pt-4 border-t border-border">
+              <Link
+                href="/dashboard/profile"
+                className="inline-block bg-brand-primary text-white text-sm font-semibold px-4 py-2 rounded-button hover:bg-brand-primary/90 transition-colors"
+              >
+                Edit Profile
+              </Link>
             </div>
-            <div>
-              <dt className="text-text-muted text-xs uppercase tracking-wide mb-1">Email</dt>
-              <dd className="text-text text-sm">{user.email ?? "Not set"}</dd>
-            </div>
-            <div>
-              <dt className="text-text-muted text-xs uppercase tracking-wide mb-1">Role</dt>
-              <dd className="text-text text-sm">{roleLabel(user.role)}</dd>
-            </div>
-            <div>
-              <dt className="text-text-muted text-xs uppercase tracking-wide mb-1">User ID</dt>
-              <dd className="text-text-muted text-xs font-mono">{user.id}</dd>
-            </div>
-          </dl>
-          <div className="mt-5 pt-4 border-t border-border">
-            <Link
-              href="/dashboard/profile"
-              className="inline-block bg-brand-primary text-white text-sm font-semibold px-5 py-2.5 rounded-button hover:bg-brand-primary/90 transition-colors"
-            >
-              Edit Profile
-            </Link>
           </div>
-        </section>
+        </Card>
       </div>
     </main>
   );
@@ -205,22 +207,24 @@ function QuickActionCard({
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-card border border-border rounded-card p-4">
+    <Card padding="sm">
       <p className="text-text-muted text-xs uppercase tracking-wide mb-1">{label}</p>
       <p className="text-text font-bold text-xl">{value}</p>
-    </div>
+    </Card>
   );
 }
 
 function DealerListingsPreview() {
   return (
-    <div className="bg-card border border-border rounded-card p-6 text-center text-text-muted text-sm">
-      <p className="mb-2">Your active listings will appear here.</p>
-      <p>
-        <Link href="/sell" className="text-brand-accent hover:underline">
-          Post your first listing →
-        </Link>
-      </p>
-    </div>
+    <Card>
+      <div className="p-6 text-center text-text-muted text-sm">
+        <p className="mb-2">Your active listings will appear here.</p>
+        <p>
+          <Link href="/sell" className="text-brand-accent hover:underline">
+            Post your first listing &rarr;
+          </Link>
+        </p>
+      </div>
+    </Card>
   );
 }

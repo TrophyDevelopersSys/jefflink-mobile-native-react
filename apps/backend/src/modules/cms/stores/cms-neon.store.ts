@@ -76,7 +76,7 @@ export class CmsNeonStore implements CmsStore {
     throw new Error('Page CRUD requires Atlas. Enable CMS_ATLAS_ENABLED=true.');
   }
 
-  async publishPage(_id: string, _status: 'PUBLISHED' | 'ARCHIVED'): Promise<CmsPage> {
+  async publishPage(_id: string, _status: 'PUBLISHED' | 'ARCHIVED', _updatedBy?: string): Promise<CmsPage> {
     throw new Error('Page CRUD requires Atlas. Enable CMS_ATLAS_ENABLED=true.');
   }
 

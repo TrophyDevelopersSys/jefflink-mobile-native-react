@@ -1,14 +1,40 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronUp, ChevronDown, Plus, Trash2 } from "lucide-react";
+import {
+  ChevronUp,
+  ChevronDown,
+  Plus,
+  Trash2,
+  Sliders,
+  Image as ImageIcon,
+  LayoutGrid,
+  ListOrdered,
+  Zap,
+  Type,
+  MousePointer,
+  BarChart3,
+  MessageSquareQuote,
+  HelpCircle,
+  FileText,
+} from "lucide-react";
 import type {
   CmsLayout,
   CmsSliderItem,
   CmsBannerItem,
   CmsContentBlock,
   CmsListBlock,
+  CmsHeroBlock,
+  CmsTextBlock,
+  CmsImageBlock,
+  CmsCtaBlock,
+  CmsStatsBlock,
+  CmsTestimonialsBlock,
+  CmsFaqBlock,
 } from "@jefflink/types";
+import dynamic from "next/dynamic";
+
+const RichTextEditor = dynamic(() => import("./RichTextEditor"), { ssr: false });
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
 
@@ -310,9 +336,16 @@ function BodyEditor({
             placeholder="Value"
             value={c.value}
             onChange={(e) => update(i, { value: e.target.value })}
-            rows={c.type === "html" || c.type === "json" ? 4 : 2}
-            className="w-full px-2 py-1.5 text-sm border border-[var(--color-border)] rounded bg-[var(--color-surface)] text-[var(--color-text)] font-mono"
+            rows={c.type === "json" ? 4 : 2}
+            className={`w-full px-2 py-1.5 text-sm border border-[var(--color-border)] rounded bg-[var(--color-surface)] text-[var(--color-text)] font-mono ${c.type === "html" ? "hidden" : ""}`}
           />
+          {c.type === "html" && (
+            <RichTextEditor
+              value={c.value}
+              onChange={(html) => update(i, { value: html })}
+              placeholder="Write HTML content…"
+            />
+          )}
           <input
             placeholder="Description (optional)"
             value={c.description ?? ""}
@@ -433,6 +466,330 @@ function ListEditor({
 
 /* ─── Main SectionEditor ───────────────────────────────────────────────────── */
 
+/* ─── Sub-editor: Hero Blocks ──────────────────────────────────────────────── */
+
+function HeroEditor({
+  items,
+  onChange,
+}: {
+  items: CmsHeroBlock[];
+  onChange: (v: CmsHeroBlock[]) => void;
+}) {
+  function update(idx: number, patch: Partial<CmsHeroBlock>) {
+    onChange(items.map((h, i) => (i === idx ? { ...h, ...patch } : h)));
+  }
+
+  function add() {
+    onChange([...items, { id: uid(), heading: "" }]);
+  }
+
+  return (
+    <fieldset className="space-y-3">
+      <legend className="text-sm font-semibold text-text">Hero Sections</legend>
+      {items.map((h, i) => (
+        <div key={h.id} className="border border-border rounded-lg p-3 space-y-2 bg-card">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-text-muted">#{i + 1}</span>
+            <button type="button" onClick={() => onChange(items.filter((_, j) => j !== i))} className="p-1 text-brand-danger hover:text-brand-danger/80">
+              <Trash2 size={14} />
+            </button>
+          </div>
+          <input placeholder="Heading" value={h.heading} onChange={(e) => update(i, { heading: e.target.value })} className="w-full px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+          <input placeholder="Subheading (optional)" value={h.subheading ?? ""} onChange={(e) => update(i, { subheading: e.target.value || undefined })} className="w-full px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+          <input placeholder="Background Image URL" value={h.backgroundImageUrl ?? ""} onChange={(e) => update(i, { backgroundImageUrl: e.target.value || undefined })} className="w-full px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+          <div className="grid grid-cols-2 gap-2">
+            <input placeholder="CTA Label" value={h.ctaLabel ?? ""} onChange={(e) => update(i, { ctaLabel: e.target.value || undefined })} className="px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+            <input placeholder="CTA Link" value={h.ctaLink ?? ""} onChange={(e) => update(i, { ctaLink: e.target.value || undefined })} className="px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+          </div>
+          <select value={h.alignment ?? "center"} onChange={(e) => update(i, { alignment: e.target.value as CmsHeroBlock["alignment"] })} className="px-2 py-1.5 text-sm border border-border rounded bg-surface text-text">
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+          </select>
+        </div>
+      ))}
+      <button type="button" onClick={add} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus size={14} /> Add hero</button>
+    </fieldset>
+  );
+}
+
+/* ─── Sub-editor: Text Blocks ──────────────────────────────────────────────── */
+
+function TextBlockEditor({
+  items,
+  onChange,
+}: {
+  items: CmsTextBlock[];
+  onChange: (v: CmsTextBlock[]) => void;
+}) {
+  function update(idx: number, patch: Partial<CmsTextBlock>) {
+    onChange(items.map((t, i) => (i === idx ? { ...t, ...patch } : t)));
+  }
+
+  function add() {
+    onChange([...items, { id: uid(), content: "", format: "html" }]);
+  }
+
+  return (
+    <fieldset className="space-y-3">
+      <legend className="text-sm font-semibold text-text">Text Blocks</legend>
+      {items.map((t, i) => (
+        <div key={t.id} className="border border-border rounded-lg p-3 space-y-2 bg-card">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-text-muted">#{i + 1}</span>
+            <div className="flex gap-1">
+              <select value={t.format} onChange={(e) => update(i, { format: e.target.value as CmsTextBlock["format"] })} className="px-2 py-1 text-xs border border-border rounded bg-surface text-text">
+                <option value="plain">Plain</option>
+                <option value="html">HTML</option>
+                <option value="markdown">Markdown</option>
+              </select>
+              <button type="button" onClick={() => onChange(items.filter((_, j) => j !== i))} className="p-1 text-brand-danger hover:text-brand-danger/80"><Trash2 size={14} /></button>
+            </div>
+          </div>
+          {t.format === "html" ? (
+            <RichTextEditor value={t.content} onChange={(html) => update(i, { content: html })} placeholder="Write content…" />
+          ) : (
+            <textarea placeholder="Content" value={t.content} onChange={(e) => update(i, { content: e.target.value })} rows={4} className="w-full px-2 py-1.5 text-sm border border-border rounded bg-surface text-text font-mono" />
+          )}
+        </div>
+      ))}
+      <button type="button" onClick={add} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus size={14} /> Add text block</button>
+    </fieldset>
+  );
+}
+
+/* ─── Sub-editor: Image Blocks ─────────────────────────────────────────────── */
+
+function ImageBlockEditor({
+  items,
+  onChange,
+}: {
+  items: CmsImageBlock[];
+  onChange: (v: CmsImageBlock[]) => void;
+}) {
+  function update(idx: number, patch: Partial<CmsImageBlock>) {
+    onChange(items.map((im, i) => (i === idx ? { ...im, ...patch } : im)));
+  }
+
+  function add() {
+    onChange([...items, { id: uid(), imageUrl: "" }]);
+  }
+
+  return (
+    <fieldset className="space-y-3">
+      <legend className="text-sm font-semibold text-text">Image Blocks</legend>
+      {items.map((im, i) => (
+        <div key={im.id} className="border border-border rounded-lg p-3 space-y-2 bg-card">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-text-muted">#{i + 1}</span>
+            <button type="button" onClick={() => onChange(items.filter((_, j) => j !== i))} className="p-1 text-brand-danger hover:text-brand-danger/80"><Trash2 size={14} /></button>
+          </div>
+          <input placeholder="Image URL" value={im.imageUrl} onChange={(e) => update(i, { imageUrl: e.target.value })} className="w-full px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+          <input placeholder="Alt text" value={im.alt ?? ""} onChange={(e) => update(i, { alt: e.target.value || undefined })} className="w-full px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+          <input placeholder="Caption (optional)" value={im.caption ?? ""} onChange={(e) => update(i, { caption: e.target.value || undefined })} className="w-full px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+        </div>
+      ))}
+      <button type="button" onClick={add} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus size={14} /> Add image</button>
+    </fieldset>
+  );
+}
+
+/* ─── Sub-editor: CTA Blocks ──────────────────────────────────────────────── */
+
+function CtaEditor({
+  items,
+  onChange,
+}: {
+  items: CmsCtaBlock[];
+  onChange: (v: CmsCtaBlock[]) => void;
+}) {
+  function update(idx: number, patch: Partial<CmsCtaBlock>) {
+    onChange(items.map((c, i) => (i === idx ? { ...c, ...patch } : c)));
+  }
+
+  function add() {
+    onChange([...items, { id: uid(), heading: "", buttonLabel: "", buttonLink: "" }]);
+  }
+
+  return (
+    <fieldset className="space-y-3">
+      <legend className="text-sm font-semibold text-text">Call-to-Action Blocks</legend>
+      {items.map((c, i) => (
+        <div key={c.id} className="border border-border rounded-lg p-3 space-y-2 bg-card">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-text-muted">#{i + 1}</span>
+            <button type="button" onClick={() => onChange(items.filter((_, j) => j !== i))} className="p-1 text-brand-danger hover:text-brand-danger/80"><Trash2 size={14} /></button>
+          </div>
+          <input placeholder="Heading" value={c.heading} onChange={(e) => update(i, { heading: e.target.value })} className="w-full px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+          <input placeholder="Description (optional)" value={c.description ?? ""} onChange={(e) => update(i, { description: e.target.value || undefined })} className="w-full px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+          <div className="grid grid-cols-2 gap-2">
+            <input placeholder="Button Label" value={c.buttonLabel} onChange={(e) => update(i, { buttonLabel: e.target.value })} className="px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+            <input placeholder="Button Link" value={c.buttonLink} onChange={(e) => update(i, { buttonLink: e.target.value })} className="px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+          </div>
+          <select value={c.variant ?? "primary"} onChange={(e) => update(i, { variant: e.target.value as CmsCtaBlock["variant"] })} className="px-2 py-1.5 text-sm border border-border rounded bg-surface text-text">
+            <option value="primary">Primary</option>
+            <option value="secondary">Secondary</option>
+            <option value="outline">Outline</option>
+          </select>
+        </div>
+      ))}
+      <button type="button" onClick={add} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus size={14} /> Add CTA</button>
+    </fieldset>
+  );
+}
+
+/* ─── Sub-editor: Stats Blocks ────────────────────────────────────────────── */
+
+function StatsEditor({
+  items,
+  onChange,
+}: {
+  items: CmsStatsBlock[];
+  onChange: (v: CmsStatsBlock[]) => void;
+}) {
+  function updateItem(blockIdx: number, itemIdx: number, patch: Partial<CmsStatsBlock["items"][0]>) {
+    onChange(items.map((s, i) => i === blockIdx ? { ...s, items: s.items.map((it, j) => j === itemIdx ? { ...it, ...patch } : it) } : s));
+  }
+
+  function addStat(blockIdx: number) {
+    onChange(items.map((s, i) => i === blockIdx ? { ...s, items: [...s.items, { label: "", value: "" }] } : s));
+  }
+
+  function add() {
+    onChange([...items, { id: uid(), items: [{ label: "", value: "" }] }]);
+  }
+
+  return (
+    <fieldset className="space-y-3">
+      <legend className="text-sm font-semibold text-text">Stats Blocks</legend>
+      {items.map((s, bi) => (
+        <div key={s.id} className="border border-border rounded-lg p-3 space-y-2 bg-card">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-text-muted">Block #{bi + 1}</span>
+            <button type="button" onClick={() => onChange(items.filter((_, j) => j !== bi))} className="p-1 text-brand-danger hover:text-brand-danger/80"><Trash2 size={14} /></button>
+          </div>
+          {s.items.map((it, ii) => (
+            <div key={ii} className="grid grid-cols-3 gap-2">
+              <input placeholder="Label" value={it.label} onChange={(e) => updateItem(bi, ii, { label: e.target.value })} className="px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+              <input placeholder="Value" value={it.value} onChange={(e) => updateItem(bi, ii, { value: e.target.value })} className="px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+              <div className="flex gap-1">
+                <input placeholder="Icon (optional)" value={it.icon ?? ""} onChange={(e) => updateItem(bi, ii, { icon: e.target.value || undefined })} className="flex-1 px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+                <button type="button" onClick={() => onChange(items.map((sb, si) => si === bi ? { ...sb, items: sb.items.filter((_, j) => j !== ii) } : sb))} className="p-1 text-brand-danger hover:text-brand-danger/80"><Trash2 size={14} /></button>
+              </div>
+            </div>
+          ))}
+          <button type="button" onClick={() => addStat(bi)} className="text-xs text-primary hover:underline">+ Add stat</button>
+        </div>
+      ))}
+      <button type="button" onClick={add} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus size={14} /> Add stats block</button>
+    </fieldset>
+  );
+}
+
+/* ─── Sub-editor: Testimonials ─────────────────────────────────────────────── */
+
+function TestimonialsEditor({
+  items,
+  onChange,
+}: {
+  items: CmsTestimonialsBlock[];
+  onChange: (v: CmsTestimonialsBlock[]) => void;
+}) {
+  function updateItem(blockIdx: number, itemIdx: number, patch: Partial<CmsTestimonialsBlock["items"][0]>) {
+    onChange(items.map((t, i) => i === blockIdx ? { ...t, items: t.items.map((it, j) => j === itemIdx ? { ...it, ...patch } : it) } : t));
+  }
+
+  function addTestimonial(blockIdx: number) {
+    onChange(items.map((t, i) => i === blockIdx ? { ...t, items: [...t.items, { name: "", quote: "" }] } : t));
+  }
+
+  function add() {
+    onChange([...items, { id: uid(), items: [{ name: "", quote: "" }] }]);
+  }
+
+  return (
+    <fieldset className="space-y-3">
+      <legend className="text-sm font-semibold text-text">Testimonials</legend>
+      {items.map((t, bi) => (
+        <div key={t.id} className="border border-border rounded-lg p-3 space-y-2 bg-card">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-text-muted">Block #{bi + 1}</span>
+            <button type="button" onClick={() => onChange(items.filter((_, j) => j !== bi))} className="p-1 text-brand-danger hover:text-brand-danger/80"><Trash2 size={14} /></button>
+          </div>
+          {t.items.map((it, ii) => (
+            <div key={ii} className="border border-border/50 rounded p-2 space-y-1">
+              <div className="grid grid-cols-2 gap-2">
+                <input placeholder="Name" value={it.name} onChange={(e) => updateItem(bi, ii, { name: e.target.value })} className="px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+                <input placeholder="Role (optional)" value={it.role ?? ""} onChange={(e) => updateItem(bi, ii, { role: e.target.value || undefined })} className="px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+              </div>
+              <textarea placeholder="Quote" value={it.quote} onChange={(e) => updateItem(bi, ii, { quote: e.target.value })} rows={2} className="w-full px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+              <div className="flex gap-2">
+                <input placeholder="Avatar URL" value={it.avatarUrl ?? ""} onChange={(e) => updateItem(bi, ii, { avatarUrl: e.target.value || undefined })} className="flex-1 px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+                <select value={it.rating ?? ""} onChange={(e) => updateItem(bi, ii, { rating: e.target.value ? Number(e.target.value) : undefined })} className="px-2 py-1.5 text-sm border border-border rounded bg-surface text-text">
+                  <option value="">No rating</option>
+                  {[1, 2, 3, 4, 5].map((r) => <option key={r} value={r}>{r} star{r !== 1 ? "s" : ""}</option>)}
+                </select>
+                <button type="button" onClick={() => onChange(items.map((tb, si) => si === bi ? { ...tb, items: tb.items.filter((_, j) => j !== ii) } : tb))} className="p-1 text-brand-danger hover:text-brand-danger/80"><Trash2 size={14} /></button>
+              </div>
+            </div>
+          ))}
+          <button type="button" onClick={() => addTestimonial(bi)} className="text-xs text-primary hover:underline">+ Add testimonial</button>
+        </div>
+      ))}
+      <button type="button" onClick={add} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus size={14} /> Add testimonials block</button>
+    </fieldset>
+  );
+}
+
+/* ─── Sub-editor: FAQ Blocks ──────────────────────────────────────────────── */
+
+function FaqEditor({
+  items,
+  onChange,
+}: {
+  items: CmsFaqBlock[];
+  onChange: (v: CmsFaqBlock[]) => void;
+}) {
+  function updateItem(blockIdx: number, itemIdx: number, patch: Partial<CmsFaqBlock["items"][0]>) {
+    onChange(items.map((f, i) => i === blockIdx ? { ...f, items: f.items.map((it, j) => j === itemIdx ? { ...it, ...patch } : it) } : f));
+  }
+
+  function addFaq(blockIdx: number) {
+    onChange(items.map((f, i) => i === blockIdx ? { ...f, items: [...f.items, { question: "", answer: "" }] } : f));
+  }
+
+  function add() {
+    onChange([...items, { id: uid(), items: [{ question: "", answer: "" }] }]);
+  }
+
+  return (
+    <fieldset className="space-y-3">
+      <legend className="text-sm font-semibold text-text">FAQ Blocks</legend>
+      {items.map((f, bi) => (
+        <div key={f.id} className="border border-border rounded-lg p-3 space-y-2 bg-card">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-text-muted">Block #{bi + 1}</span>
+            <button type="button" onClick={() => onChange(items.filter((_, j) => j !== bi))} className="p-1 text-brand-danger hover:text-brand-danger/80"><Trash2 size={14} /></button>
+          </div>
+          {f.items.map((it, ii) => (
+            <div key={ii} className="border border-border/50 rounded p-2 space-y-1">
+              <div className="flex gap-2">
+                <input placeholder="Question" value={it.question} onChange={(e) => updateItem(bi, ii, { question: e.target.value })} className="flex-1 px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+                <button type="button" onClick={() => onChange(items.map((fb, si) => si === bi ? { ...fb, items: fb.items.filter((_, j) => j !== ii) } : fb))} className="p-1 text-brand-danger hover:text-brand-danger/80"><Trash2 size={14} /></button>
+              </div>
+              <textarea placeholder="Answer" value={it.answer} onChange={(e) => updateItem(bi, ii, { answer: e.target.value })} rows={2} className="w-full px-2 py-1.5 text-sm border border-border rounded bg-surface text-text" />
+            </div>
+          ))}
+          <button type="button" onClick={() => addFaq(bi)} className="text-xs text-primary hover:underline">+ Add FAQ item</button>
+        </div>
+      ))}
+      <button type="button" onClick={add} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus size={14} /> Add FAQ section</button>
+    </fieldset>
+  );
+}
+
+/* ─── Main SectionEditor (updated) ─────────────────────────────────────────── */
+
 interface SectionEditorProps {
   layout: CmsLayout;
   onChange: (layout: CmsLayout) => void;
@@ -442,10 +799,17 @@ export default function SectionEditor({ layout, onChange }: SectionEditorProps) 
   const [active, setActive] = useState<string>("slider");
 
   const tabs = [
-    { key: "slider",  label: "Slider",  count: layout.slider?.length ?? 0 },
-    { key: "header",  label: "Banners", count: layout.header?.length ?? 0 },
-    { key: "body",    label: "Content", count: layout.body?.length ?? 0 },
-    { key: "lists",   label: "Lists",   count: layout.lists?.length ?? 0 },
+    { key: "slider",       label: "Slider",       icon: Sliders,                count: layout.slider?.length ?? 0 },
+    { key: "header",       label: "Banners",      icon: LayoutGrid,             count: layout.header?.length ?? 0 },
+    { key: "body",         label: "Content",       icon: FileText,              count: layout.body?.length ?? 0 },
+    { key: "lists",        label: "Lists",         icon: ListOrdered,           count: layout.lists?.length ?? 0 },
+    { key: "hero",         label: "Hero",          icon: Zap,                   count: layout.hero?.length ?? 0 },
+    { key: "textBlocks",   label: "Text",          icon: Type,                  count: layout.textBlocks?.length ?? 0 },
+    { key: "images",       label: "Images",        icon: ImageIcon,             count: layout.images?.length ?? 0 },
+    { key: "cta",          label: "CTA",           icon: MousePointer,          count: layout.cta?.length ?? 0 },
+    { key: "stats",        label: "Stats",         icon: BarChart3,             count: layout.stats?.length ?? 0 },
+    { key: "testimonials", label: "Testimonials",  icon: MessageSquareQuote,    count: layout.testimonials?.length ?? 0 },
+    { key: "faq",          label: "FAQ",           icon: HelpCircle,            count: layout.faq?.length ?? 0 },
   ];
 
   return (
@@ -496,6 +860,48 @@ export default function SectionEditor({ layout, onChange }: SectionEditorProps) 
         <ListEditor
           items={layout.lists ?? []}
           onChange={(lists) => onChange({ ...layout, lists })}
+        />
+      )}
+      {active === "hero" && (
+        <HeroEditor
+          items={layout.hero ?? []}
+          onChange={(hero) => onChange({ ...layout, hero })}
+        />
+      )}
+      {active === "textBlocks" && (
+        <TextBlockEditor
+          items={layout.textBlocks ?? []}
+          onChange={(textBlocks) => onChange({ ...layout, textBlocks })}
+        />
+      )}
+      {active === "images" && (
+        <ImageBlockEditor
+          items={layout.images ?? []}
+          onChange={(images) => onChange({ ...layout, images })}
+        />
+      )}
+      {active === "cta" && (
+        <CtaEditor
+          items={layout.cta ?? []}
+          onChange={(cta) => onChange({ ...layout, cta })}
+        />
+      )}
+      {active === "stats" && (
+        <StatsEditor
+          items={layout.stats ?? []}
+          onChange={(stats) => onChange({ ...layout, stats })}
+        />
+      )}
+      {active === "testimonials" && (
+        <TestimonialsEditor
+          items={layout.testimonials ?? []}
+          onChange={(testimonials) => onChange({ ...layout, testimonials })}
+        />
+      )}
+      {active === "faq" && (
+        <FaqEditor
+          items={layout.faq ?? []}
+          onChange={(faq) => onChange({ ...layout, faq })}
         />
       )}
     </div>

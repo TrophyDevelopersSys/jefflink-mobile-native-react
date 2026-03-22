@@ -5,17 +5,20 @@ module.exports = {
     extend: {
       colors: {
         // Immutable brand palette — single source of truth
-        "brand-black":   "#0F1115",
-        "brand-white":   "#F9FAFB",
-        "brand-primary": "#0E7C3A",
-        "brand-dark":    "#0F1115",
-        "brand-night":   "#13161C",
-        "brand-slate":   "#1A1D23",
-        "brand-accent":  "#22C55E",
-        "brand-success": "#22C55E",
-        "brand-warning": "#F59E0B",
-        "brand-danger":  "#DC2626",
-        "brand-muted":   "#9AA3AF",
+        "brand-black":         "#0F1115",
+        "brand-white":         "#F9FAFB",
+        "brand-primary":       "#1F7A3E",
+        "brand-primary-light": "#22C55E",
+        "brand-blue":          "#2DA5D7",
+        "brand-blue-dark":     "#1A8BBF",
+        "brand-dark":          "#0F1115",
+        "brand-night":         "#13161C",
+        "brand-slate":         "#1A1D23",
+        "brand-accent":        "#22C55E",
+        "brand-success":       "#22C55E",
+        "brand-warning":       "#F59E0B",
+        "brand-danger":        "#DC2626",
+        "brand-muted":         "#9AA3AF",
 
         // Semantic tokens (CSS-variable backed, auto-swap on dark mode)
         background:   "var(--color-background)",
